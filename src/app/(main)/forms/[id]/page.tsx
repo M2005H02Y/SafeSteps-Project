@@ -31,11 +31,11 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Retour
             </Button>
             <Button onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
-              Print
+              Imprimer
             </Button>
           </div>
         </PageHeader>
@@ -45,14 +45,14 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
         <div className="md:hidden mb-4">
             <CardHeader className="p-0">
                 <CardTitle>{form.name}</CardTitle>
-                <CardDescription>Type: <Badge variant="secondary">{form.type}</Badge> | Last Updated: {form.lastUpdated}</CardDescription>
+                <CardDescription>Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}</CardDescription>
             </CardHeader>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             {pdfFile ? (
               <Card>
-                  <CardHeader><CardTitle>Form Preview</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>Aperçu du formulaire</CardTitle></CardHeader>
                   <CardContent>
                       <iframe src={pdfFile.url} className="w-full h-[800px] border rounded-md" title={pdfFile.name}></iframe>
                   </CardContent>
@@ -60,8 +60,8 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
             ) : (
               <Card className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center text-muted-foreground p-8 border-dashed border-2 rounded-lg">
-                    <p>No preview available for this form.</p>
-                    <p className="text-sm">Upload a PDF to see it here.</p>
+                    <p>Aucun aperçu disponible pour ce formulaire.</p>
+                    <p className="text-sm">Téléchargez un PDF pour le voir ici.</p>
                 </div>
               </Card>
             )}
@@ -73,7 +73,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
             {form.files && form.files.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Attached Files</CardTitle>
+                  <CardTitle>Fichiers joints</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {form.files.map(file => (
@@ -85,7 +85,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={file.url} download={file.name}>
                           <Download className="h-4 w-4"/>
-                          <span className="sr-only">Download</span>
+                          <span className="sr-only">Télécharger</span>
                         </Link>
                       </Button>
                     </div>

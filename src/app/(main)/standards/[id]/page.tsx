@@ -30,11 +30,11 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Retour
             </Button>
             <Button onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
-              Print
+              Imprimer
             </Button>
           </div>
         </PageHeader>
@@ -44,7 +44,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
         <div className="md:hidden mb-4">
             <CardHeader className="p-0">
                 <CardTitle>{standard.name}</CardTitle>
-                <CardDescription>Category: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                <CardDescription>Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
             </CardHeader>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
@@ -52,7 +52,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
             <Card>
                 <CardHeader className="hidden md:block">
                     <CardTitle>{standard.name}</CardTitle>
-                    <CardDescription>Category: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                    <CardDescription>Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {standard.image && (
@@ -60,7 +60,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
                             <Image src={standard.image} alt={standard.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="certificate document"/>
                         </div>
                     )}
-                    <p className="text-muted-foreground">Detailed information about the standard would be displayed here. This can include text content, embedded documents, and more.</p>
+                    <p className="text-muted-foreground">Des informations détaillées sur la norme seraient affichées ici. Cela peut inclure du contenu textuel, des documents intégrés, et plus encore.</p>
                 </CardContent>
             </Card>
           </div>
@@ -71,7 +71,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
             {standard.files && standard.files.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Attached Files</CardTitle>
+                  <CardTitle>Fichiers joints</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {standard.files.map(file => (
@@ -83,7 +83,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={file.url} download={file.name}>
                           <Download className="h-4 w-4"/>
-                          <span className="sr-only">Download</span>
+                          <span className="sr-only">Télécharger</span>
                         </Link>
                       </Button>
                     </div>

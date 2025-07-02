@@ -18,23 +18,23 @@ export default function NewWorkstationPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Workstation Created",
-      description: "The new workstation has been successfully saved.",
+      title: "Poste de travail créé",
+      description: "Le nouveau poste de travail a été enregistré avec succès.",
     });
     setTimeout(() => router.push('/workstations'), 1500);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <PageHeader title="Create New Workstation">
+      <PageHeader title="Créer un nouveau poste de travail">
         <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Cancel
+            Annuler
             </Button>
             <Button type="submit">
             <Save className="mr-2 h-4 w-4" />
-            Save Workstation
+            Enregistrer le poste de travail
             </Button>
         </div>
       </PageHeader>
@@ -42,25 +42,25 @@ export default function NewWorkstationPage() {
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Provide a name and description for the new workstation.</CardDescription>
+            <CardTitle>Informations de base</CardTitle>
+            <CardDescription>Fournissez un nom et une description pour le nouveau poste de travail.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ws-name">Workstation Name</Label>
-              <Input id="ws-name" placeholder="e.g., Assembly Line Alpha" required />
+              <Label htmlFor="ws-name">Nom du poste de travail</Label>
+              <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ws-desc">Description</Label>
-              <Textarea id="ws-desc" placeholder="Describe the purpose of this workstation." />
+              <Textarea id="ws-desc" placeholder="Décrivez le but de ce poste de travail." />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Procedures Table</CardTitle>
-            <CardDescription>Add steps, tasks, or any other structured data in a table format.</CardDescription>
+            <CardTitle>Tableau des procédures</CardTitle>
+            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
           </CardHeader>
           <CardContent>
             <DynamicTable />
@@ -69,8 +69,8 @@ export default function NewWorkstationPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>File Attachments</CardTitle>
-            <CardDescription>Upload relevant images, PDFs, or spreadsheets.</CardDescription>
+            <CardTitle>Pièces jointes</CardTitle>
+            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

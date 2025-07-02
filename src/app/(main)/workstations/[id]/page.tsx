@@ -32,11 +32,11 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Retour
             </Button>
             <Button onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
-              Print
+              Imprimer
             </Button>
           </div>
         </PageHeader>
@@ -68,7 +68,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
             {workstation.tableData && workstation.tableData.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Procedures</CardTitle>
+                        <CardTitle>Procédures</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="overflow-x-auto rounded-md border">
@@ -98,7 +98,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
             {workstation.files && workstation.files.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Attached Files</CardTitle>
+                  <CardTitle>Fichiers joints</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {workstation.files.map(file => (
@@ -110,7 +110,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={file.url} download={file.name}>
                           <Download className="h-4 w-4"/>
-                          <span className="sr-only">Download</span>
+                          <span className="sr-only">Télécharger</span>
                         </Link>
                       </Button>
                     </div>

@@ -16,11 +16,11 @@ import {
 export default function WorkstationsPage() {
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title="Workstations">
+      <PageHeader title="Postes de travail">
         <Button asChild>
           <Link href="/workstations/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Workstation
+            Créer un poste de travail
           </Link>
         </Button>
       </PageHeader>
@@ -30,9 +30,9 @@ export default function WorkstationsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Nom</TableHead>
                   <TableHead className="hidden md:table-cell">Description</TableHead>
-                  <TableHead className="hidden sm:table-cell">Resources</TableHead>
+                  <TableHead className="hidden sm:table-cell">Ressources</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
@@ -47,8 +47,8 @@ export default function WorkstationsPage() {
                     <TableCell className="text-muted-foreground max-w-sm truncate hidden md:table-cell">{ws.description}</TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <div className="flex gap-1">
-                        {ws.files && <Badge variant="secondary">{ws.files.length} Files</Badge>}
-                        {ws.tableData && <Badge variant="secondary">{ws.tableData.length} Steps</Badge>}
+                        {ws.files && <Badge variant="secondary">{ws.files.length} Fichiers</Badge>}
+                        {ws.tableData && <Badge variant="secondary">{ws.tableData.length} Étapes</Badge>}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -60,9 +60,9 @@ export default function WorkstationsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild><Link href={`/workstations/${ws.id}`}>View</Link></DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href={`/workstations/${ws.id}`}>Voir</Link></DropdownMenuItem>
+                          <DropdownMenuItem>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem>Supprimer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -16,11 +16,11 @@ import {
 export default function StandardsPage() {
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title="Standards">
+      <PageHeader title="Normes">
         <Button asChild>
           <Link href="/standards/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Standard
+            Créer une norme
           </Link>
         </Button>
       </PageHeader>
@@ -30,8 +30,8 @@ export default function StandardsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Catégorie</TableHead>
                   <TableHead>Version</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
@@ -57,9 +57,9 @@ export default function StandardsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                           <DropdownMenuItem asChild><Link href={`/standards/${standard.id}`}>View</Link></DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                           <DropdownMenuItem asChild><Link href={`/standards/${standard.id}`}>Voir</Link></DropdownMenuItem>
+                          <DropdownMenuItem>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem>Supprimer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

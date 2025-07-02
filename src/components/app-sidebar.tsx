@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, tooltip: "Dashboard" },
-  { href: "/workstations", label: "Workstations", icon: Building2, tooltip: "Workstations" },
-  { href: "/standards", label: "Standards", icon: BookCheck, tooltip: "Standards" },
-  { href: "/forms", label: "Forms", icon: FileText, tooltip: "Forms" },
+  { href: "/dashboard", label: "Tableau de bord", icon: LayoutGrid, tooltip: "Tableau de bord" },
+  { href: "/workstations", label: "Postes de travail", icon: Building2, tooltip: "Postes de travail" },
+  { href: "/standards", label: "Normes", icon: BookCheck, tooltip: "Normes" },
+  { href: "/forms", label: "Formulaires", icon: FileText, tooltip: "Formulaires" },
 ];
 
 export default function AppSidebar() {
@@ -55,9 +55,9 @@ export default function AppSidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip={{ children: "Settings", side: "right" }}>
+            <SidebarMenuButton tooltip={{ children: "Paramètres", side: "right" }}>
               <Settings />
-              <span>Settings</span>
+              <span>Paramètres</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

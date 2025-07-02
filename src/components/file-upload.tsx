@@ -61,9 +61,9 @@ export default function FileUpload() {
         <div className="text-center">
           <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
-            Click to select files or drag and drop
+            Cliquez pour sélectionner des fichiers ou glissez-déposez
           </p>
-          <p className="text-xs text-muted-foreground">Images, PDF, and Excel files are supported</p>
+          <p className="text-xs text-muted-foreground">Les images, PDF et fichiers Excel sont pris en charge</p>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function FileUpload() {
                 onClick={(e) => { e.stopPropagation(); removeFile(f.file); }}
               >
                 <X className="h-4 w-4" />
-                <span className="sr-only">Remove file</span>
+                <span className="sr-only">Supprimer le fichier</span>
               </Button>
             </div>
           ))}

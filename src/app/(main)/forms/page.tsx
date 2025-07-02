@@ -16,11 +16,11 @@ import {
 export default function FormsPage() {
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title="Forms">
+      <PageHeader title="Formulaires">
         <Button asChild>
           <Link href="/forms/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Form
+            Créer un formulaire
           </Link>
         </Button>
       </PageHeader>
@@ -30,9 +30,9 @@ export default function FormsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Nom</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Last Updated</TableHead>
+                  <TableHead>Dernière mise à jour</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
@@ -57,9 +57,9 @@ export default function FormsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                           <DropdownMenuItem asChild><Link href={`/forms/${form.id}`}>View</Link></DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                           <DropdownMenuItem asChild><Link href={`/forms/${form.id}`}>Voir</Link></DropdownMenuItem>
+                          <DropdownMenuItem>Modifier</DropdownMenuItem>
+                          <DropdownMenuItem>Supprimer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

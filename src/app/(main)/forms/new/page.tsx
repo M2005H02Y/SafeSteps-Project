@@ -16,23 +16,23 @@ export default function NewFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Form Created",
-      description: "The new form has been successfully saved.",
+      title: "Formulaire créé",
+      description: "Le nouveau formulaire a été enregistré avec succès.",
     });
     setTimeout(() => router.push('/forms'), 1500);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <PageHeader title="Create New Form">
+      <PageHeader title="Créer un nouveau formulaire">
         <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Cancel
+            Annuler
             </Button>
             <Button type="submit">
             <Save className="mr-2 h-4 w-4" />
-            Save Form
+            Enregistrer le formulaire
             </Button>
         </div>
       </PageHeader>
@@ -40,18 +40,18 @@ export default function NewFormPage() {
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Form Details</CardTitle>
-            <CardDescription>Provide details for the new form.</CardDescription>
+            <CardTitle>Détails du formulaire</CardTitle>
+            <CardDescription>Fournissez les détails du nouveau formulaire.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="form-name">Form Name</Label>
-                <Input id="form-name" placeholder="e.g., Daily Equipment Checklist" required />
+                <Label htmlFor="form-name">Nom du formulaire</Label>
+                <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="form-type">Form Type</Label>
-                <Input id="form-type" placeholder="e.g., Safety" required />
+                <Label htmlFor="form-type">Type de formulaire</Label>
+                <Input id="form-type" placeholder="ex: Sécurité" required />
               </div>
             </div>
           </CardContent>
@@ -59,8 +59,8 @@ export default function NewFormPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Upload Form File</CardTitle>
-            <CardDescription>Upload the primary file for this form (e.g., PDF, Excel). The first PDF uploaded will be used for the preview.</CardDescription>
+            <CardTitle>Télécharger le fichier du formulaire</CardTitle>
+            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

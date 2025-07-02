@@ -9,9 +9,9 @@ import { Trash2, PlusCircle } from 'lucide-react';
 type Row = Record<string, string>;
 
 export default function DynamicTable() {
-  const [headers, setHeaders] = useState<string[]>(['Step', 'Task', 'Duration']);
+  const [headers, setHeaders] = useState<string[]>(['Étape', 'Tâche', 'Durée']);
   const [rows, setRows] = useState<Row[]>([
-    { 'Step': '1', 'Task': 'Initial Inspection', 'Duration': '10 mins' },
+    { 'Étape': '1', 'Tâche': 'Inspection initiale', 'Durée': '10 min' },
   ]);
 
   const addRow = () => {
@@ -85,7 +85,7 @@ export default function DynamicTable() {
                 <TableCell className="text-right">
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeRow(rowIndex)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Delete row</span>
+                    <span className="sr-only">Supprimer la ligne</span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -95,7 +95,7 @@ export default function DynamicTable() {
       </div>
       <Button type="button" variant="outline" onClick={addRow}>
         <PlusCircle className="mr-2 h-4 w-4" />
-        Add Row
+        Ajouter une ligne
       </Button>
     </div>
   );

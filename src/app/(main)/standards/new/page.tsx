@@ -17,23 +17,23 @@ export default function NewStandardPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Standard Created",
-      description: "The new standard has been successfully saved.",
+      title: "Norme créée",
+      description: "La nouvelle norme a été enregistrée avec succès.",
     });
     setTimeout(() => router.push('/standards'), 1500);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <PageHeader title="Create New Standard">
+      <PageHeader title="Créer une nouvelle norme">
         <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Cancel
+            Annuler
             </Button>
             <Button type="submit">
             <Save className="mr-2 h-4 w-4" />
-            Save Standard
+            Enregistrer la norme
             </Button>
         </div>
       </PageHeader>
@@ -41,35 +41,35 @@ export default function NewStandardPage() {
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Standard Details</CardTitle>
-            <CardDescription>Provide details for the new operational standard.</CardDescription>
+            <CardTitle>Détails de la norme</CardTitle>
+            <CardDescription>Fournissez les détails de la nouvelle norme opérationnelle.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="std-name">Standard Name</Label>
-                <Input id="std-name" placeholder="e.g., ISO 9001:2015" required />
+                <Label htmlFor="std-name">Nom de la norme</Label>
+                <Input id="std-name" placeholder="ex: ISO 9001:2015" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="std-category">Category</Label>
-                <Input id="std-category" placeholder="e.g., Quality Management" required />
+                <Label htmlFor="std-category">Catégorie</Label>
+                <Input id="std-category" placeholder="ex: Management de la qualité" required />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="std-version">Version</Label>
-              <Input id="std-version" placeholder="e.g., 2015" />
+              <Input id="std-version" placeholder="ex: 2015" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="std-desc">Description</Label>
-              <Textarea id="std-desc" placeholder="Describe the standard." />
+              <Textarea id="std-desc" placeholder="Décrivez la norme." />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>File Attachments</CardTitle>
-            <CardDescription>Upload relevant documentation or summary files.</CardDescription>
+            <CardTitle>Pièces jointes</CardTitle>
+            <CardDescription>Téléchargez la documentation pertinente ou les fichiers de résumé.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

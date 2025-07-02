@@ -6,14 +6,14 @@ import { Building2, BookCheck, FileText, ArrowRight } from 'lucide-react';
 
 export default function DashboardPage() {
   const stats = [
-    { title: 'Workstations', count: 2, icon: <Building2 className="h-6 w-6 text-muted-foreground" />, href: '/workstations' },
-    { title: 'Standards', count: 2, icon: <BookCheck className="h-6 w-6 text-muted-foreground" />, href: '/standards' },
-    { title: 'Forms', count: 3, icon: <FileText className="h-6 w-6 text-muted-foreground" />, href: '/forms' },
+    { title: 'Postes de travail', count: 2, icon: <Building2 className="h-6 w-6 text-muted-foreground" />, href: '/workstations' },
+    { title: 'Normes', count: 2, icon: <BookCheck className="h-6 w-6 text-muted-foreground" />, href: '/standards' },
+    { title: 'Formulaires', count: 3, icon: <FileText className="h-6 w-6 text-muted-foreground" />, href: '/forms' },
   ];
 
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title="Dashboard" />
+      <PageHeader title="Tableau de bord" />
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {stats.map((stat) => (
@@ -24,10 +24,10 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.count}</div>
-                <p className="text-xs text-muted-foreground">Total active items</p>
+                <p className="text-xs text-muted-foreground">Total d'éléments actifs</p>
                 <Button variant="outline" size="sm" className="mt-4" asChild>
                   <Link href={stat.href}>
-                    View All <ArrowRight className="ml-2 h-4 w-4" />
+                    Voir tout <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </CardContent>
@@ -36,14 +36,14 @@ export default function DashboardPage() {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Welcome to WorkHub Central</CardTitle>
-                <CardDescription>Your central point for managing operational resources.</CardDescription>
+                <CardTitle>Bienvenue sur WorkHub Central</CardTitle>
+                <CardDescription>Votre point central pour la gestion des ressources opérationnelles.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p>Use the navigation on the left to manage workstations, operational standards, and forms. You can create, view, and print details including QR codes for quick access on the shop floor.</p>
+                <p>Utilisez la navigation à gauche pour gérer les postes de travail, les normes opérationnelles et les formulaires. Vous pouvez créer, afficher et imprimer les détails, y compris les codes QR pour un accès rapide en atelier.</p>
                 <div className="mt-4">
                     <Button asChild>
-                        <Link href="/workstations/new">Create New Workstation</Link>
+                        <Link href="/workstations/new">Créer un nouveau poste de travail</Link>
                     </Button>
                 </div>
             </CardContent>

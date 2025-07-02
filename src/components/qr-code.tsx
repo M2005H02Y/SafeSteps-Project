@@ -19,14 +19,14 @@ export default function QRCode() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick Access</CardTitle>
-        <CardDescription>Scan to view this page on any device.</CardDescription>
+        <CardTitle>Accès rapide</CardTitle>
+        <CardDescription>Scannez pour afficher cette page sur n'importe quel appareil.</CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center items-center">
         {qrCodeUrl ? (
           <Image
             src={qrCodeUrl}
-            alt="QR Code for this page"
+            alt="Code QR pour cette page"
             width={150}
             height={150}
             unoptimized
