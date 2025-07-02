@@ -1,11 +1,14 @@
+"use client";
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { MoreVertical, PlusCircle } from 'lucide-react';
-import { workstations } from '@/lib/data';
+import { getWorkstations, Workstation } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +17,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function WorkstationsPage() {
+  const [workstations, setWorkstations] = useState<Workstation[]>([]);
+
+  useEffect(() => {
+    setWorkstations(getWorkstations());
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <PageHeader title="Postes de travail">
@@ -47,8 +56,8 @@ export default function WorkstationsPage() {
                     <TableCell className="text-muted-foreground max-w-sm truncate hidden md:table-cell">{ws.description}</TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <div className="flex gap-1">
-                        {ws.files && <Badge variant="secondary">{ws.files.length} Fichiers</Badge>}
-                        {ws.tableData && <Badge variant="secondary">{ws.tableData.length} Étapes</Badge>}
+                        {ws.files && ws.files.length > 0 && <Badge variant="secondary">{ws.files.length} Fichiers</Badge>}
+                        {ws.tableData && ws.tableData.length > 0 && <Badge variant="secondary">{ws.tableData.length} Étapes</Badge>}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

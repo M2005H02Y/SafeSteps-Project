@@ -11,17 +11,30 @@ import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { addWorkstation } from '@/lib/data';
+import { useState } from 'react';
 
 export default function NewWorkstationPage() {
   const router = useRouter();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+        toast({
+            title: "Erreur de validation",
+            description: "Le nom du poste de travail est obligatoire.",
+            variant: "destructive",
+        });
+        return;
+    }
+    addWorkstation({ name, description });
     toast({
       title: "Poste de travail créé",
       description: "Le nouveau poste de travail a été enregistré avec succès.",
     });
-    setTimeout(() => router.push('/workstations'), 1500);
+    router.push('/workstations');
   };
 
   return (
@@ -48,11 +61,11 @@ export default function NewWorkstationPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="ws-name">Nom du poste de travail</Label>
-              <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required />
+              <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ws-desc">Description</Label>
-              <Textarea id="ws-desc" placeholder="Décrivez le but de ce poste de travail." />
+              <Textarea id="ws-desc" placeholder="Décrivez le but de ce poste de travail." value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
           </CardContent>
         </Card>
@@ -60,7 +73,7 @@ export default function NewWorkstationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tableau des procédures</CardTitle>
-            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
+            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau. (Non enregistré dans cette démo)</CardDescription>
           </CardHeader>
           <CardContent>
             <DynamicTable />
@@ -70,7 +83,7 @@ export default function NewWorkstationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
-            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents.</CardDescription>
+            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. (Non enregistré dans cette démo)</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

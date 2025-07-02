@@ -1,11 +1,14 @@
+"use client";
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { MoreVertical, PlusCircle } from 'lucide-react';
-import { forms } from '@/lib/data';
+import { getForms, Form } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +17,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function FormsPage() {
+  const [forms, setForms] = useState<Form[]>([]);
+
+  useEffect(() => {
+    setForms(getForms());
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <PageHeader title="Formulaires">

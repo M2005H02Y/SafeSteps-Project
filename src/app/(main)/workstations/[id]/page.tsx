@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, useRouter } from 'next/navigation';
-import { workstations } from '@/lib/data';
+import { getWorkstationById, Workstation } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,10 +10,45 @@ import Image from 'next/image';
 import { ArrowLeft, Printer, File, FileText as FileTextIcon, Download } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function WorkstationDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const workstation = workstations.find((ws) => ws.id === params.id);
+  const [workstation, setWorkstation] = useState<Workstation | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const ws = getWorkstationById(params.id);
+    if (ws) {
+      setWorkstation(ws);
+    }
+    setLoading(false);
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full p-4 md:p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-1/2" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-[200px] w-full" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-[250px] w-full" />
+            <Skeleton className="h-[150px] w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!workstation) {
     notFound();

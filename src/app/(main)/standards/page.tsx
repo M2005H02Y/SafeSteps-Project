@@ -1,11 +1,14 @@
+"use client";
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { MoreVertical, PlusCircle } from 'lucide-react';
-import { standards } from '@/lib/data';
+import { getStandards, Standard } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +17,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function StandardsPage() {
+  const [standards, setStandards] = useState<Standard[]>([]);
+
+  useEffect(() => {
+    setStandards(getStandards());
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <PageHeader title="Normes">

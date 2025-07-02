@@ -24,7 +24,7 @@ export type Form = {
   files?: { name: string; url: string; type: 'pdf' | 'excel' }[];
 };
 
-export const workstations: Workstation[] = [
+const initialWorkstations: Workstation[] = [
   {
     id: 'ws-001',
     name: "Ligne d'assemblage Alpha",
@@ -52,13 +52,106 @@ export const workstations: Workstation[] = [
   },
 ];
 
-export const standards: Standard[] = [
+const initialStandards: Standard[] = [
   { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', image: 'https://placehold.co/600x400.png', files: [{ name: 'resume-iso-9001.pdf', url: '/resume-iso-9001.pdf', type: 'pdf' }] },
   { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', image: 'https://placehold.co/600x400.png' },
 ];
 
-export const forms: Form[] = [
+const initialForms: Form[] = [
   { id: 'form-01', name: "Check-list quotidienne de l'équipement", type: 'Sécurité', lastUpdated: '2024-05-20' },
   { id: 'form-02', name: "Formulaire de rapport d'incident", type: 'Sécurité', lastUpdated: '2024-01-15' },
   { id: 'form-03', name: 'Journal de production', type: 'Opérations', lastUpdated: '2024-06-01', files: [{ name: 'exemple-journal.pdf', url: '/sample-log.pdf', type: 'pdf' }, { name: 'modele-journal.xlsx', url: '#', type: 'excel' }] },
 ];
+
+function getFromStorage<T>(key: string, initialValue: T): T {
+  if (typeof window === 'undefined') {
+    return initialValue;
+  }
+  try {
+    const item = window.localStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    } else {
+      window.localStorage.setItem(key, JSON.stringify(initialValue));
+      return initialValue;
+    }
+  } catch (error) {
+    console.warn(`Error reading localStorage key “${key}”:`, error);
+    return initialValue;
+  }
+}
+
+function saveToStorage<T>(key: string, value: T) {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.warn(`Error setting localStorage key “${key}”:`, error);
+    }
+}
+
+export function getWorkstations(): Workstation[] {
+  return getFromStorage('workstations', initialWorkstations);
+}
+
+export function addWorkstation(workstation: Omit<Workstation, 'id' | 'image' | 'files' | 'tableData'>) {
+  const workstations = getWorkstations();
+  const newWorkstation: Workstation = { 
+      ...workstation, 
+      id: `ws-${Date.now()}`,
+      image: 'https://placehold.co/600x400.png',
+      files: [],
+      tableData: []
+  };
+  const updatedWorkstations = [newWorkstation, ...workstations];
+  saveToStorage('workstations', updatedWorkstations);
+}
+
+export function getWorkstationById(id: string): Workstation | undefined {
+  const workstations = getWorkstations();
+  return workstations.find(ws => ws.id === id);
+}
+
+export function getStandards(): Standard[] {
+  return getFromStorage('standards', initialStandards);
+}
+
+export function addStandard(standard: Omit<Standard, 'id' | 'image' | 'files'>) {
+  const standards = getStandards();
+  const newStandard: Standard = { 
+      ...standard, 
+      id: `std-${Date.now()}`,
+      image: 'https://placehold.co/600x400.png',
+      files: []
+  };
+  const updatedStandards = [newStandard, ...standards];
+  saveToStorage('standards', updatedStandards);
+}
+
+export function getStandardById(id: string): Standard | undefined {
+    const standards = getStandards();
+    return standards.find(s => s.id === id);
+}
+
+export function getForms(): Form[] {
+  return getFromStorage('forms', initialForms);
+}
+
+export function addForm(form: Omit<Form, 'id' | 'lastUpdated' | 'files'>) {
+    const forms = getForms();
+    const newForm: Form = { 
+        ...form, 
+        id: `form-${Date.now()}`,
+        lastUpdated: new Date().toISOString().split('T')[0],
+        files: []
+    };
+    const updatedForms = [newForm, ...forms];
+    saveToStorage('forms', updatedForms);
+}
+
+export function getFormById(id: string): Form | undefined {
+    const forms = getForms();
+    return forms.find(f => f.id === id);
+}

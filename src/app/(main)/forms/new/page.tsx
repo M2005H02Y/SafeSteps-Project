@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,17 +10,31 @@ import { Label } from '@/components/ui/label';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { addForm } from '@/lib/data';
 
 export default function NewFormPage() {
   const router = useRouter();
+  const [name, setName] = useState('');
+  const [type, setType] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if(!name.trim() || !type.trim()) {
+        toast({
+            title: "Erreur de validation",
+            description: "Le nom et le type du formulaire sont obligatoires.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    addForm({ name, type });
+
     toast({
       title: "Formulaire créé",
       description: "Le nouveau formulaire a été enregistré avec succès.",
     });
-    setTimeout(() => router.push('/forms'), 1500);
+    router.push('/forms');
   };
 
   return (
@@ -47,11 +62,11 @@ export default function NewFormPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="form-name">Nom du formulaire</Label>
-                <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required />
+                <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="form-type">Type de formulaire</Label>
-                <Input id="form-type" placeholder="ex: Sécurité" required />
+                <Input id="form-type" placeholder="ex: Sécurité" required value={type} onChange={e => setType(e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -60,7 +75,7 @@ export default function NewFormPage() {
         <Card>
           <CardHeader>
             <CardTitle>Télécharger le fichier du formulaire</CardTitle>
-            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
+            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu. (Non enregistré dans cette démo)</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />
