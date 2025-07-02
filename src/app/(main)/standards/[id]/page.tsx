@@ -1,0 +1,99 @@
+"use client";
+
+import { notFound, useRouter } from 'next/navigation';
+import { standards } from '@/lib/data';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import Image from 'next/image';
+import { ArrowLeft, Printer, File, FileText as FileTextIcon, Download } from 'lucide-react';
+import QRCode from '@/components/qr-code';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+
+export default function StandardDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const standard = standards.find((s) => s.id === params.id);
+
+  if (!standard) {
+    notFound();
+  }
+  
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="print-hidden">
+        <PageHeader title={standard.name}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+          </div>
+        </PageHeader>
+      </div>
+
+      <main className="flex-1 p-4 md:p-6 space-y-6 printable-area">
+        <div className="md:hidden mb-4">
+            <CardHeader className="p-0">
+                <CardTitle>{standard.name}</CardTitle>
+                <CardDescription>Category: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+            </CardHeader>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader className="hidden md:block">
+                    <CardTitle>{standard.name}</CardTitle>
+                    <CardDescription>Category: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {standard.image && (
+                        <div className="relative aspect-video w-full mb-4">
+                            <Image src={standard.image} alt={standard.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="certificate document"/>
+                        </div>
+                    )}
+                    <p className="text-muted-foreground">Detailed information about the standard would be displayed here. This can include text content, embedded documents, and more.</p>
+                </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <QRCode />
+            
+            {standard.files && standard.files.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Attached Files</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {standard.files.map(file => (
+                    <div key={file.name} className="flex items-center justify-between p-2 rounded-md border">
+                      <div className="flex items-center gap-3">
+                        {file.type === 'pdf' ? <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" /> : <File className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={file.url} download={file.name}>
+                          <Download className="h-4 w-4"/>
+                          <span className="sr-only">Download</span>
+                        </Link>
+                      </Button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
