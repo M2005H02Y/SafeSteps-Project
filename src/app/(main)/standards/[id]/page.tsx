@@ -94,13 +94,13 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
                             <Image src={standard.image} alt={standard.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="certificate document"/>
                         </div>
                     )}
-                    <p className="text-muted-foreground">Des informations détaillées sur la norme seraient affichées ici. Cela peut inclure du contenu textuel, des documents intégrés, et plus encore.</p>
+                    {standard.description && <p className="text-muted-foreground">{standard.description}</p>}
                 </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
-            <QRCode />
+            <QRCode type="standard" id={params.id} />
             
             {standard.files && standard.files.length > 0 && (
               <Card>

@@ -5,28 +5,34 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function QRCode() {
+type QRCodeProps = {
+  type: 'workstation' | 'standard' | 'form';
+  id: string;
+};
+
+export default function QRCode({ type, id }: QRCodeProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const pageUrl = window.location.href;
-      const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(pageUrl)}`;
+      const { protocol, hostname, port } = window.location;
+      const publicUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}/public/${type}/${id}`;
+      const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
       setQrCodeUrl(apiUrl);
     }
-  }, []);
+  }, [type, id]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Accès rapide</CardTitle>
-        <CardDescription>Scannez pour afficher cette page sur n'importe quel appareil.</CardDescription>
+        <CardDescription>Scannez pour afficher la page publique sur un autre appareil.</CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center items-center">
         {qrCodeUrl ? (
           <Image
             src={qrCodeUrl}
-            alt="Code QR pour cette page"
+            alt="Code QR pour la page publique"
             width={150}
             height={150}
             unoptimized

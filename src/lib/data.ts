@@ -12,6 +12,7 @@ export type Standard = {
   name: string;
   category: string;
   version: string;
+  description?: string;
   image?: string;
   files?: { name: string; url: string; type: 'pdf' | 'excel' }[];
 };
@@ -53,8 +54,8 @@ const initialWorkstations: Workstation[] = [
 ];
 
 const initialStandards: Standard[] = [
-  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', image: 'https://placehold.co/600x400.png', files: [{ name: 'resume-iso-9001.pdf', url: '/resume-iso-9001.pdf', type: 'pdf' }] },
-  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', image: 'https://placehold.co/600x400.png' },
+  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://placehold.co/600x400.png', files: [{ name: 'resume-iso-9001.pdf', url: '/resume-iso-9001.pdf', type: 'pdf' }] },
+  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://placehold.co/600x400.png' },
 ];
 
 const initialForms: Form[] = [
