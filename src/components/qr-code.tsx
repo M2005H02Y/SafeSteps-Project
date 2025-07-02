@@ -15,8 +15,19 @@ export default function QRCode({ type, id }: QRCodeProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const { protocol, hostname, port } = window.location;
-      const publicUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}/public/${type}/${id}`;
+      // Use NEXT_PUBLIC_DEV_HOSTNAME in development to override localhost with a tunnel URL like ngrok
+      const devHostnameOverride = process.env.NEXT_PUBLIC_DEV_HOSTNAME;
+      const isDevWithOverride = process.env.NODE_ENV === 'development' && devHostnameOverride;
+
+      let baseUrl = '';
+      if (isDevWithOverride) {
+        baseUrl = devHostnameOverride;
+      } else {
+        const { protocol, hostname, port } = window.location;
+        baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+      }
+
+      const publicUrl = `${baseUrl}/public/${type}/${id}`;
       const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
       setQrCodeUrl(apiUrl);
     }
