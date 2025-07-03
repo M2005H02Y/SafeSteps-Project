@@ -73,7 +73,7 @@ export default function NewWorkstationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tableau des procédures</CardTitle>
-            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau. (Non enregistré dans cette démo)</CardDescription>
+            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
           </CardHeader>
           <CardContent>
             <DynamicTable />
@@ -83,7 +83,7 @@ export default function NewWorkstationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
-            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. (Non enregistré dans cette démo)</CardDescription>
+            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

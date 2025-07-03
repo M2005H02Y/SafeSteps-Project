@@ -75,7 +75,7 @@ export default function NewFormPage() {
         <Card>
           <CardHeader>
             <CardTitle>Télécharger le fichier du formulaire</CardTitle>
-            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu. (Non enregistré dans cette démo)</CardDescription>
+            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />

@@ -87,7 +87,7 @@ export default function NewStandardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
-            <CardDescription>Téléchargez la documentation pertinente ou les fichiers de résumé. (Non enregistré dans cette démo)</CardDescription>
+            <CardDescription>Téléchargez la documentation pertinente ou les fichiers de résumé.</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload />
