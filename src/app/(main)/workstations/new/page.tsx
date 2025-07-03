@@ -35,7 +35,7 @@ export default function NewWorkstationPage() {
     const mainImage = files.find(f => f.type === 'image');
     const otherFiles = files.filter(f => f !== mainImage);
 
-    addWorkstation({ 
+    const success = addWorkstation({ 
       name, 
       description, 
       tableData,
@@ -43,11 +43,20 @@ export default function NewWorkstationPage() {
       files: otherFiles
     });
 
-    toast({
-      title: "Poste de travail créé",
-      description: "Le nouveau poste de travail a été enregistré avec succès.",
-    });
-    router.push('/workstations');
+    if (success) {
+      toast({
+        title: "Poste de travail créé",
+        description: "Le nouveau poste de travail a été enregistré avec succès.",
+      });
+      router.push('/workstations');
+    } else {
+      toast({
+        title: "Erreur d'enregistrement",
+        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
+        variant: "destructive",
+        duration: 10000,
+      });
+    }
   };
 
   return (

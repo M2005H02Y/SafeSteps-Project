@@ -88,14 +88,16 @@ function getFromStorage<T>(key: string, initialValue: T): T {
   }
 }
 
-function saveToStorage<T>(key: string, value: T) {
+function saveToStorage<T>(key: string, value: T): boolean {
     if (typeof window === 'undefined') {
-        return;
+        return false;
     }
     try {
         window.localStorage.setItem(key, JSON.stringify(value));
+        return true;
     } catch (error) {
-        console.warn(`Error setting localStorage key “${key}”:`, error);
+        console.error(`Error setting localStorage key “${key}”:`, error);
+        return false;
     }
 }
 
@@ -103,7 +105,7 @@ export function getWorkstations(): Workstation[] {
   return getFromStorage('workstations', initialWorkstations);
 }
 
-export function addWorkstation(workstation: Omit<Workstation, 'id'>) {
+export function addWorkstation(workstation: Omit<Workstation, 'id'>): boolean {
   const workstations = getWorkstations();
   const newWorkstation: Workstation = { 
       id: `ws-${Date.now()}`,
@@ -114,7 +116,7 @@ export function addWorkstation(workstation: Omit<Workstation, 'id'>) {
       tableData: workstation.tableData || [],
   };
   const updatedWorkstations = [newWorkstation, ...workstations];
-  saveToStorage('workstations', updatedWorkstations);
+  return saveToStorage('workstations', updatedWorkstations);
 }
 
 export function getWorkstationById(id: string): Workstation | undefined {
@@ -126,7 +128,7 @@ export function getStandards(): Standard[] {
   return getFromStorage('standards', initialStandards);
 }
 
-export function addStandard(standard: Omit<Standard, 'id'>) {
+export function addStandard(standard: Omit<Standard, 'id'>): boolean {
   const standards = getStandards();
   const newStandard: Standard = { 
       id: `std-${Date.now()}`,
@@ -138,7 +140,7 @@ export function addStandard(standard: Omit<Standard, 'id'>) {
       files: standard.files || []
   };
   const updatedStandards = [newStandard, ...standards];
-  saveToStorage('standards', updatedStandards);
+  return saveToStorage('standards', updatedStandards);
 }
 
 export function getStandardById(id: string): Standard | undefined {
@@ -150,7 +152,7 @@ export function getForms(): Form[] {
   return getFromStorage('forms', initialForms);
 }
 
-export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>) {
+export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>): boolean {
     const forms = getForms();
     const newForm: Form = { 
         id: `form-${Date.now()}`,
@@ -160,7 +162,7 @@ export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>) {
         lastUpdated: new Date().toISOString().split('T')[0],
     };
     const updatedForms = [newForm, ...forms];
-    saveToStorage('forms', updatedForms);
+    return saveToStorage('forms', updatedForms);
 }
 
 export function getFormById(id: string): Form | undefined {

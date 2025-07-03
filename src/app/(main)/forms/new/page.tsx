@@ -29,13 +29,22 @@ export default function NewFormPage() {
         return;
     }
 
-    addForm({ name, type, files });
+    const success = addForm({ name, type, files });
 
-    toast({
-      title: "Formulaire créé",
-      description: "Le nouveau formulaire a été enregistré avec succès.",
-    });
-    router.push('/forms');
+    if (success) {
+      toast({
+        title: "Formulaire créé",
+        description: "Le nouveau formulaire a été enregistré avec succès.",
+      });
+      router.push('/forms');
+    } else {
+      toast({
+        title: "Erreur d'enregistrement",
+        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
+        variant: "destructive",
+        duration: 10000,
+      });
+    }
   };
 
   return (

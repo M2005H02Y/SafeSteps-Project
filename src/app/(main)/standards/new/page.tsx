@@ -36,7 +36,7 @@ export default function NewStandardPage() {
     const mainImage = files.find(f => f.type === 'image');
     const otherFiles = files.filter(f => f !== mainImage);
 
-    addStandard({ 
+    const success = addStandard({ 
       name, 
       category, 
       version, 
@@ -45,11 +45,20 @@ export default function NewStandardPage() {
       files: otherFiles 
     });
 
-    toast({
-      title: "Norme créée",
-      description: "La nouvelle norme a été enregistrée avec succès.",
-    });
-    router.push('/standards');
+    if (success) {
+      toast({
+        title: "Norme créée",
+        description: "La nouvelle norme a été enregistrée avec succès.",
+      });
+      router.push('/standards');
+    } else {
+      toast({
+        title: "Erreur d'enregistrement",
+        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
+        variant: "destructive",
+        duration: 10000,
+      });
+    }
   };
 
   return (
