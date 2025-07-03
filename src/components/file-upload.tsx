@@ -5,6 +5,7 @@ import { Upload, X, FileText, Paperclip, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 
 interface FilePreview {
   id: string;
@@ -48,9 +49,24 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
 
         const uploadedFiles: UploadedFile[] = await Promise.all(
             previews.map(async (p) => {
-                const url = await readFileAsDataURL(p.file);
                 const type = getFileType(p.file);
-                return { name: p.file.name, url, type };
+                let fileToProcess = p.file;
+
+                if (type === 'image') {
+                    try {
+                        const options = {
+                            maxSizeMB: 0.5,
+                            maxWidthOrHeight: 1920,
+                            useWebWorker: true,
+                        };
+                        fileToProcess = await imageCompression(p.file, options);
+                    } catch (error) {
+                        console.error("La compression de l'image a échoué, en utilisant le fichier original.", error);
+                    }
+                }
+                
+                const url = await readFileAsDataURL(fileToProcess);
+                return { name: fileToProcess.name, url, type };
             })
         );
         onFilesChange(uploadedFiles);
