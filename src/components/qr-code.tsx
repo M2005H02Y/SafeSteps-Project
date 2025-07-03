@@ -30,10 +30,20 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
       let url = `${baseUrl}/public/${type}/${id}`;
 
       try {
-        const encodedData = btoa(JSON.stringify(data));
+        // Create a deep copy to avoid mutating the original data object
+        const dataForQr = JSON.parse(JSON.stringify(data));
+        
+        // Remove potentially large fields that cause the "Data too long" error.
+        // The public page will gracefully handle their absence.
+        delete dataForQr.image;
+        delete dataForQr.files;
+
+        const encodedData = btoa(JSON.stringify(dataForQr));
         url += `?data=${encodeURIComponent(encodedData)}`;
       } catch (error) {
-        console.error("Could not encode data for QR code", error);
+        // If encoding fails, log it, but don't crash.
+        // The QR code will just link to the public page without data.
+        console.error("Could not encode data for QR code. It might still be too large.", error);
       }
       
       setPublicUrl(url);
