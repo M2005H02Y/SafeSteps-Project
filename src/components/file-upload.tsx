@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, ReactNode, ChangeEvent, useEffect } from 'react';
-import { Upload, X, FileText, Paperclip, FileSpreadsheet } from 'lucide-react';
+import { Upload, X, FileText, Paperclip, FileSpreadsheet, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface FilePreview {
   id: string;
@@ -146,6 +147,14 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
           <p className="text-xs text-muted-foreground">Les images, PDF et fichiers Excel sont pris en charge</p>
         </div>
       </div>
+      
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Attention : Limites de stockage</AlertTitle>
+        <AlertDescription>
+          Cette application de démonstration utilise le stockage du navigateur, qui est très limité en taille. La compression d'images est activée, mais les fichiers volumineux comme les PDF et Excel peuvent échouer à la sauvegarde. Pour une application réelle, une solution de stockage cloud (comme Firebase Storage) serait nécessaire.
+        </AlertDescription>
+      </Alert>
 
       {previews.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
