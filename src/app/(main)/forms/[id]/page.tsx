@@ -102,7 +102,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-6">
-            <QRCode type="form" id={params.id} />
+            <QRCode type="form" id={params.id} data={form} />
             
             {form.files && form.files.length > 0 && (
               <Card>

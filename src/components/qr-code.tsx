@@ -8,9 +8,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
   id: string;
+  data?: any;
 };
 
-export default function QRCode({ type, id }: QRCodeProps) {
+export default function QRCode({ type, id, data }: QRCodeProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,11 +28,22 @@ export default function QRCode({ type, id }: QRCodeProps) {
         baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
       }
 
-      const publicUrl = `${baseUrl}/public/${type}/${id}`;
+      let publicUrl = `${baseUrl}/public/${type}/${id}`;
+
+      if (data) {
+        try {
+          // btoa is a simple way to encode for URL, safe for client-side JSON
+          const encodedData = btoa(JSON.stringify(data));
+          publicUrl += `?data=${encodedData}`;
+        } catch (error) {
+          console.error("Could not encode data for QR code", error);
+        }
+      }
+
       const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
       setQrCodeUrl(apiUrl);
     }
-  }, [type, id]);
+  }, [type, id, data]);
 
   return (
     <Card>

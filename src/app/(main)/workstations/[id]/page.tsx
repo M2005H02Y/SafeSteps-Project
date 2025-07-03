@@ -128,7 +128,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
           </div>
 
           <div className="space-y-6">
-            <QRCode type="workstation" id={params.id} />
+            <QRCode type="workstation" id={params.id} data={workstation} />
             
             {workstation.files && workstation.files.length > 0 && (
               <Card>

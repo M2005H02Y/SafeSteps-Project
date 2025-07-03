@@ -100,7 +100,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
           </div>
 
           <div className="space-y-6">
-            <QRCode type="standard" id={params.id} />
+            <QRCode type="standard" id={params.id} data={standard} />
             
             {standard.files && standard.files.length > 0 && (
               <Card>
