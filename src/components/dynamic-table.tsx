@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,23 @@ import { Trash2, PlusCircle } from 'lucide-react';
 
 type Row = Record<string, string>;
 
-export default function DynamicTable() {
+interface DynamicTableProps {
+  onDataChange?: (data: Row[]) => void;
+}
+
+export default function DynamicTable({ onDataChange }: DynamicTableProps) {
   const [headers, setHeaders] = useState<string[]>(['Étape', 'Tâche', 'Durée']);
   const [rows, setRows] = useState<Row[]>([
     { 'Étape': '1', 'Tâche': 'Inspection initiale', 'Durée': '10 min' },
   ]);
+
+  useEffect(() => {
+    // Filter out rows where all cell values are empty strings
+    const nonEmptyRows = rows.filter(row => 
+      Object.values(row).some(cell => cell?.trim() !== '')
+    );
+    onDataChange?.(nonEmptyRows);
+  }, [rows, headers, onDataChange]);
 
   const addRow = () => {
     const newRow: Row = {};
@@ -33,20 +45,16 @@ export default function DynamicTable() {
   };
   
   const handleHeaderChange = (oldHeader: string, newHeader: string) => {
-    if (newHeader && !headers.includes(newHeader)) {
-        const newHeaders = headers.map(h => h === oldHeader ? newHeader : h);
+    if (newHeader && newHeader.trim() && !headers.includes(newHeader)) {
+        const newHeaders = headers.map(h => (h === oldHeader ? newHeader : h));
         setHeaders(newHeaders);
-        
+
         const newRows = rows.map(row => {
-            const newRow: Row = {};
-            newHeaders.forEach(h => {
-                if (h === newHeader) {
-                    newRow[h] = row[oldHeader];
-                } else {
-                    newRow[h] = row[h];
-                }
-            });
-            return newRow;
+            const { [oldHeader]: value, ...rest } = row;
+            return {
+                ...rest,
+                [newHeader]: value !== undefined ? value : ''
+            };
         });
         setRows(newRows);
     }

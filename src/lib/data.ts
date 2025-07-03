@@ -97,14 +97,13 @@ export function getWorkstations(): Workstation[] {
   return getFromStorage('workstations', initialWorkstations);
 }
 
-export function addWorkstation(workstation: Omit<Workstation, 'id' | 'image' | 'files' | 'tableData'>) {
+export function addWorkstation(workstation: Omit<Workstation, 'id' | 'image' | 'files'>) {
   const workstations = getWorkstations();
   const newWorkstation: Workstation = { 
       ...workstation, 
       id: `ws-${Date.now()}`,
       image: 'https://placehold.co/600x400.png',
       files: [],
-      tableData: []
   };
   const updatedWorkstations = [newWorkstation, ...workstations];
   saveToStorage('workstations', updatedWorkstations);

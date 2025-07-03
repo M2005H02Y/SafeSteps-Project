@@ -18,6 +18,7 @@ export default function NewWorkstationPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [tableData, setTableData] = useState<Record<string, string>[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ export default function NewWorkstationPage() {
         });
         return;
     }
-    addWorkstation({ name, description });
+    addWorkstation({ name, description, tableData });
     toast({
       title: "Poste de travail créé",
       description: "Le nouveau poste de travail a été enregistré avec succès.",
@@ -76,7 +77,7 @@ export default function NewWorkstationPage() {
             <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
           </CardHeader>
           <CardContent>
-            <DynamicTable />
+            <DynamicTable onDataChange={setTableData} />
           </CardContent>
         </Card>
 
