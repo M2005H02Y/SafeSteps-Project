@@ -1,128 +1,139 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Workstation } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { Building2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+
+function PublicWorkstationPageContent({ data }: { data: Workstation }) {
+    const tableHeaders = data.tableData && data.tableData.length > 0 ? Object.keys(data.tableData[0]) : [];
+
+    return (
+        <Card className="max-w-2xl mx-auto my-8 shadow-lg">
+             <CardHeader className="p-4 bg-muted/30">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" /><circle cx="12" cy="10" r="3" /></svg>
+                    </div>
+                    <h1 className="text-xl font-semibold">WorkHub Central</h1>
+                </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+                 <div className="space-y-2">
+                    <h2 className="text-2xl font-bold break-words">{data.name}</h2>
+                    {data.description && <p className="text-muted-foreground break-words">{data.description}</p>}
+                </div>
+
+                {data.image && (
+                    <div className="relative aspect-video w-full">
+                        <Image src={data.image} alt={data.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="assembly line" />
+                    </div>
+                )}
+                
+                {data.tableData && data.tableData.length > 0 && (
+                    <div className="space-y-2">
+                        <Separator />
+                        <h3 className="font-semibold pt-2">Procédures</h3>
+                        <div className="overflow-x-auto rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {data.tableData.map((row, index) => (
+                                        <TableRow key={index}>
+                                            {tableHeaders.map((header) => <TableCell key={header} className="break-all">{row[header]}</TableCell>)}
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+
+function PageLoader() {
+    return (
+        <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+            <div className="text-center p-8">
+                <div className="flex items-center gap-3 justify-center mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" /><circle cx="12" cy="10" r="3" /></svg>
+                    </div>
+                    <h1 className="text-xl font-semibold">WorkHub Central</h1>
+                </div>
+                <p className="text-muted-foreground">Chargement des informations...</p>
+                 <div className="mt-4 flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function PageError({ message }: { message: string }) {
+    return (
+         <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+            <Alert variant="destructive" className="max-w-md mx-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erreur de chargement</AlertTitle>
+              <AlertDescription>
+                {message}
+              </AlertDescription>
+            </Alert>
+        </div>
+    )
+}
 
 export default function PublicWorkstationPage() {
     const searchParams = useSearchParams();
-    const [workstation, setWorkstation] = useState<Workstation | null>(null);
+    const [data, setData] = useState<Workstation | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const data = searchParams.get('data');
-        if (data) {
-            try {
-                const decodedData = JSON.parse(atob(data));
-                setWorkstation(decodedData);
-            } catch (e) {
-                console.error("Failed to parse workstation data from URL", e);
-                setError("Les données n'ont pas pu être lues. Le code QR est peut-être invalide ou obsolète.");
+        try {
+            const dataParam = searchParams.get('data');
+            if (!dataParam) {
+                throw new Error("Les données de la page sont manquantes. Veuillez re-scanner le QR code.");
             }
-        } else {
-            setError("Aucune donnée trouvée dans l'URL. Le code QR est peut-être invalide.");
+            const decodedData = atob(decodeURIComponent(dataParam));
+            const parsedData: Workstation = JSON.parse(decodedData);
+            setData(parsedData);
+        } catch (e: any) {
+            if (e instanceof Error) {
+                setError(`Impossible de décoder les données de la page. Essayez de générer un nouveau QR code. (${e.message})`);
+            } else {
+                setError("Une erreur inconnue est survenue.");
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, [searchParams]);
 
-    const pageHeader = (
-        <header className="flex items-center gap-3 mb-8 w-full max-w-4xl">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Building2 />
-            </div>
-            <h1 className="text-2xl font-bold">WorkHub Central</h1>
-        </header>
-    );
-
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 sm:p-6 md:p-8">
-                {pageHeader}
-                <main className="w-full max-w-4xl space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <Skeleton className="h-8 w-3/4" />
-                            <Skeleton className="h-4 w-1/2" />
-                        </CardHeader>
-                        <CardContent>
-                           <Skeleton className="h-48 w-full" />
-                        </CardContent>
-                    </Card>
-                </main>
-            </div>
-        );
-    }
-    
-    if (error || !workstation) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 sm:p-6 md:p-8">
-                {pageHeader}
-                <main className="w-full max-w-4xl">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-destructive">Erreur</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{error || "Impossible d'afficher le poste de travail."}</p>
-                    </CardContent>
-                  </Card>
-                </main>
-            </div>
-        )
+        return <PageLoader />;
     }
 
-    const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
+    if (error) {
+        return <PageError message={error} />;
+    }
 
-    return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 sm:p-6 md:p-8">
-            {pageHeader}
-            <main className="w-full max-w-4xl space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="break-words">{workstation.name}</CardTitle>
-                        {workstation.description && <CardDescription className="break-words">{workstation.description}</CardDescription>}
-                    </CardHeader>
-                    <CardContent>
-                        {workstation.image && (
-                            <div className="relative aspect-video w-full mb-4">
-                                <Image src={workstation.image} alt={workstation.name} layout="fill" objectFit="cover" className="rounded-lg" />
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+    if (!data) {
+        notFound();
+    }
 
-                {workstation.tableData && workstation.tableData.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Procédures</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {workstation.tableData.map((row, index) => (
-                                            <TableRow key={index}>
-                                                {tableHeaders.map((header) => <TableCell key={header} className="break-words">{row[header]}</TableCell>)}
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-            </main>
-        </div>
-    );
+    return <PublicWorkstationPageContent data={data} />;
 }
