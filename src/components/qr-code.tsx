@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -12,10 +12,10 @@ type QRCodeProps = {
 };
 
 export default function QRCode({ type, id, data }: QRCodeProps) {
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && data) {
       const devHostnameOverride = process.env.NEXT_PUBLIC_DEV_HOSTNAME;
       const isDevWithOverride = process.env.NODE_ENV === 'development' && devHostnameOverride;
 
@@ -27,20 +27,16 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
         baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
       }
 
-      let publicUrl = `${baseUrl}/public/${type}/${id}`;
+      let url = `${baseUrl}/public/${type}/${id}`;
 
-      if (data) {
-        try {
-          const encodedData = btoa(JSON.stringify(data));
-          // We need to encode the base64 string to make it URL-safe
-          publicUrl += `?data=${encodeURIComponent(encodedData)}`;
-        } catch (error) {
-          console.error("Could not encode data for QR code", error);
-        }
+      try {
+        const encodedData = btoa(JSON.stringify(data));
+        url += `?data=${encodeURIComponent(encodedData)}`;
+      } catch (error) {
+        console.error("Could not encode data for QR code", error);
       }
-
-      const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
-      setQrCodeUrl(apiUrl);
+      
+      setPublicUrl(url);
     }
   }, [type, id, data]);
 
@@ -51,13 +47,14 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
         <CardDescription>Scannez pour afficher la page publique sur un autre appareil.</CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center items-center">
-        {qrCodeUrl ? (
-          <Image
-            src={qrCodeUrl}
-            alt="Code QR pour la page publique"
-            width={150}
-            height={150}
-            unoptimized
+        {publicUrl ? (
+          <QRCodeCanvas
+            value={publicUrl}
+            size={150}
+            bgColor={"#ffffff"}
+            fgColor={"#000000"}
+            level={"L"}
+            includeMargin={false}
           />
         ) : (
           <Skeleton className="h-[150px] w-[150px]" />
