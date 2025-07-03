@@ -7,18 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import FileUpload, { UploadedFile } from '@/components/file-upload';
-import { ArrowLeft, Save } from 'lucide-react';
+import FileUpload from '@/components/file-upload';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addForm } from '@/lib/data';
+import { addForm, getFileType } from '@/lib/data';
+import { uploadFile } from '@/lib/firebase';
 
 export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if(!name.trim() || !type.trim()) {
         toast({
@@ -28,22 +30,40 @@ export default function NewFormPage() {
         });
         return;
     }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const uploadedFiles = await Promise.all(
+        files.map(async (file) => {
+          const url = await uploadFile(file, `forms/${Date.now()}-${file.name}`);
+          return {
+            name: file.name,
+            url,
+            type: getFileType(file),
+          };
+        })
+      );
+      
+      const success = addForm({ name, type, files: uploadedFiles });
 
-    const success = addForm({ name, type, files });
-
-    if (success) {
-      toast({
-        title: "Formulaire créé",
-        description: "Le nouveau formulaire a été enregistré avec succès.",
-      });
-      router.push('/forms');
-    } else {
-      toast({
+      if (success) {
+        toast({
+          title: "Formulaire créé",
+          description: "Le nouveau formulaire a été enregistré avec succès.",
+        });
+        router.push('/forms');
+      } else {
+         throw new Error("Local storage save failed");
+      }
+    } catch (error) {
+       toast({
         title: "Erreur d'enregistrement",
-        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
+        description: "Impossible de sauvegarder le formulaire. Veuillez réessayer.",
         variant: "destructive",
-        duration: 10000,
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -51,13 +71,17 @@ export default function NewFormPage() {
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <PageHeader title="Créer un nouveau formulaire">
         <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Annuler
             </Button>
-            <Button type="submit">
-            <Save className="mr-2 h-4 w-4" />
-            Enregistrer le formulaire
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Enregistrer le formulaire
             </Button>
         </div>
       </PageHeader>

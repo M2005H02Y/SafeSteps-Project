@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import FileUpload, { UploadedFile } from '@/components/file-upload';
-import { ArrowLeft, Save } from 'lucide-react';
+import FileUpload from '@/components/file-upload';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addStandard } from '@/lib/data';
+import { addStandard, getFileType } from '@/lib/data';
+import { uploadFile } from '@/lib/firebase';
 
 export default function NewStandardPage() {
   const router = useRouter();
@@ -19,10 +20,11 @@ export default function NewStandardPage() {
   const [category, setCategory] = useState('');
   const [version, setVersion] = useState('');
   const [description, setDescription] = useState('');
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !category.trim()) {
         toast({
@@ -33,31 +35,49 @@ export default function NewStandardPage() {
         return;
     }
 
-    const mainImage = files.find(f => f.type === 'image');
-    const otherFiles = files.filter(f => f !== mainImage);
+    setIsSubmitting(true);
 
-    const success = addStandard({ 
-      name, 
-      category, 
-      version, 
-      description,
-      image: mainImage?.url,
-      files: otherFiles 
-    });
+    try {
+      const uploadedFiles = await Promise.all(
+        files.map(async (file) => {
+          const url = await uploadFile(file, `standards/${Date.now()}-${file.name}`);
+          return {
+            name: file.name,
+            url,
+            type: getFileType(file),
+          };
+        })
+      );
 
-    if (success) {
-      toast({
-        title: "Norme créée",
-        description: "La nouvelle norme a été enregistrée avec succès.",
+      const mainImage = uploadedFiles.find(f => f.type === 'image');
+      const otherFiles = uploadedFiles.filter(f => f !== mainImage);
+
+      const success = addStandard({ 
+        name, 
+        category, 
+        version, 
+        description,
+        image: mainImage?.url,
+        files: otherFiles 
       });
-      router.push('/standards');
-    } else {
+
+      if (success) {
+        toast({
+          title: "Norme créée",
+          description: "La nouvelle norme a été enregistrée avec succès.",
+        });
+        router.push('/standards');
+      } else {
+        throw new Error("Local storage save failed");
+      }
+    } catch (error) {
       toast({
         title: "Erreur d'enregistrement",
-        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
+        description: "Impossible de sauvegarder la norme. Veuillez réessayer.",
         variant: "destructive",
-        duration: 10000,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -65,13 +85,17 @@ export default function NewStandardPage() {
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <PageHeader title="Créer une nouvelle norme">
         <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Annuler
             </Button>
-            <Button type="submit">
-            <Save className="mr-2 h-4 w-4" />
-            Enregistrer la norme
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Enregistrer la norme
             </Button>
         </div>
       </PageHeader>

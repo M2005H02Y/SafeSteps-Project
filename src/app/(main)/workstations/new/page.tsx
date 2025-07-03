@@ -8,20 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import DynamicTable from '@/components/dynamic-table';
-import FileUpload, { UploadedFile } from '@/components/file-upload';
-import { ArrowLeft, Save } from 'lucide-react';
+import FileUpload from '@/components/file-upload';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addWorkstation } from '@/lib/data';
+import { addWorkstation, getFileType } from '@/lib/data';
 import { useState } from 'react';
+import { uploadFile } from '@/lib/firebase';
 
 export default function NewWorkstationPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
         toast({
@@ -31,31 +33,49 @@ export default function NewWorkstationPage() {
         });
         return;
     }
-    
-    const mainImage = files.find(f => f.type === 'image');
-    const otherFiles = files.filter(f => f !== mainImage);
 
-    const success = addWorkstation({ 
-      name, 
-      description, 
-      tableData,
-      image: mainImage?.url,
-      files: otherFiles
-    });
+    setIsSubmitting(true);
 
-    if (success) {
-      toast({
-        title: "Poste de travail créé",
-        description: "Le nouveau poste de travail a été enregistré avec succès.",
+    try {
+      const uploadedFiles = await Promise.all(
+        files.map(async (file) => {
+          const url = await uploadFile(file, `workstations/${Date.now()}-${file.name}`);
+          return {
+            name: file.name,
+            url,
+            type: getFileType(file),
+          };
+        })
+      );
+      
+      const mainImage = uploadedFiles.find(f => f.type === 'image');
+      const otherFiles = uploadedFiles.filter(f => f !== mainImage);
+
+      const success = addWorkstation({ 
+        name, 
+        description, 
+        tableData,
+        image: mainImage?.url,
+        files: otherFiles
       });
-      router.push('/workstations');
-    } else {
-      toast({
-        title: "Erreur d'enregistrement",
-        description: "Impossible de sauvegarder. Les fichiers sont peut-être trop volumineux pour le stockage local du navigateur.",
-        variant: "destructive",
-        duration: 10000,
-      });
+
+      if (success) {
+        toast({
+          title: "Poste de travail créé",
+          description: "Le nouveau poste de travail a été enregistré avec succès.",
+        });
+        router.push('/workstations');
+      } else {
+        throw new Error("Local storage save failed");
+      }
+    } catch(error) {
+        toast({
+            title: "Erreur d'enregistrement",
+            description: "Impossible de sauvegarder le poste de travail. Veuillez réessayer.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -63,12 +83,12 @@ export default function NewWorkstationPage() {
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <PageHeader title="Créer un nouveau poste de travail">
         <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Annuler
             </Button>
-            <Button type="submit">
-            <Save className="mr-2 h-4 w-4" />
+            <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
             Enregistrer le poste de travail
             </Button>
         </div>

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useRef, ReactNode, ChangeEvent, useEffect } from 'react';
-import { Upload, X, FileText, Paperclip, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Upload, X, FileText, Paperclip, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import imageCompression from 'browser-image-compression';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getFileType } from '@/lib/data';
 
 interface FilePreview {
   id: string;
@@ -14,30 +13,8 @@ interface FilePreview {
   previewUrl: string;
 }
 
-export type UploadedFile = {
-    name: string;
-    url: string; // data URI
-    type: 'image' | 'pdf' | 'excel' | 'other';
-};
-
 interface FileUploadProps {
-  onFilesChange?: (files: UploadedFile[]) => void;
-}
-
-const readFileAsDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-};
-
-const getFileType = (file: File): UploadedFile['type'] => {
-    if (file.type.startsWith('image/')) return 'image';
-    if (file.type === 'application/pdf') return 'pdf';
-    if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) return 'excel';
-    return 'other';
+  onFilesChange?: (files: File[]) => void;
 }
 
 export default function FileUpload({ onFilesChange }: FileUploadProps) {
@@ -45,41 +22,19 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const processFiles = async () => {
-        if (!onFilesChange) return;
-
-        const uploadedFiles: UploadedFile[] = await Promise.all(
-            previews.map(async (p) => {
-                const type = getFileType(p.file);
-                let fileToProcess = p.file;
-
-                if (type === 'image') {
-                    try {
-                        const options = {
-                            maxSizeMB: 0.5,
-                            maxWidthOrHeight: 1920,
-                            useWebWorker: true,
-                        };
-                        fileToProcess = await imageCompression(p.file, options);
-                    } catch (error) {
-                        console.error("La compression de l'image a échoué, en utilisant le fichier original.", error);
-                    }
-                }
-                
-                const url = await readFileAsDataURL(fileToProcess);
-                return { name: fileToProcess.name, url, type };
-            })
-        );
-        onFilesChange(uploadedFiles);
-    };
-    processFiles();
-  }, [previews, onFilesChange]);
+    if (onFilesChange) {
+      const files = previews.map(p => p.file);
+      onFilesChange(files);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previews]);
 
   useEffect(() => {
     return () => {
       previews.forEach(p => URL.revokeObjectURL(p.previewUrl));
     };
-  }, [previews]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -91,6 +46,7 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
 
       setPreviews(prev => {
         const combined = [...prev, ...newFilePreviews];
+        // Remove duplicates
         return combined.filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
       });
       
@@ -148,14 +104,6 @@ export default function FileUpload({ onFilesChange }: FileUploadProps) {
         </div>
       </div>
       
-      <Alert>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Attention : Limites de stockage</AlertTitle>
-        <AlertDescription>
-          Cette application de démonstration utilise le stockage du navigateur, qui est très limité en taille. La compression d'images est activée, mais les fichiers volumineux comme les PDF et Excel peuvent échouer à la sauvegarde. Pour une application réelle, une solution de stockage cloud (comme Firebase Storage) serait nécessaire.
-        </AlertDescription>
-      </Alert>
-
       {previews.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {previews.map((p) => (

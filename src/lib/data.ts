@@ -1,6 +1,6 @@
 export type FileAttachment = {
   name: string;
-  url: string; // data URI
+  url: string; // Firebase Storage URL
   type: 'image' | 'pdf' | 'excel' | 'other';
 };
 
@@ -37,7 +37,7 @@ const initialWorkstations: Workstation[] = [
     name: "Ligne d'assemblage Alpha",
     description: "Ligne d'assemblage principale pour la fabrication de composants.",
     image: 'https://placehold.co/600x400.png',
-    files: [{ name: 'protocole-securite.pdf', url: '/protocole-securite.pdf', type: 'pdf' }, { name: 'liste-pieces.xlsx', url: '#', type: 'excel' }],
+    files: [],
     tableData: [
       { etape: '1', tache: 'Inspection des composants', duree: '15 min' },
       { etape: '2', tache: 'Sous-assemblage', duree: '45 min' },
@@ -50,7 +50,7 @@ const initialWorkstations: Workstation[] = [
     name: "Poste d'emballage Bravo",
     description: "Poste de préparation finale pour l'emballage et l'expédition.",
     image: 'https://placehold.co/600x400.png',
-    files: [{ name: 'modele-bon-expedition.pdf', url: '/modele-bon-expedition.pdf', type: 'pdf' }],
+    files: [],
     tableData: [
       { etape: '1', tache: 'Mise en boîte du produit', duree: '10 min' },
       { etape: '2', tache: 'Impression des étiquettes', duree: '5 min' },
@@ -60,14 +60,14 @@ const initialWorkstations: Workstation[] = [
 ];
 
 const initialStandards: Standard[] = [
-  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://placehold.co/600x400.png', files: [{ name: 'resume-iso-9001.pdf', url: '/resume-iso-9001.pdf', type: 'pdf' }] },
-  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://placehold.co/600x400.png' },
+  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://placehold.co/600x400.png', files: [] },
+  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://placehold.co/600x400.png', files: [] },
 ];
 
 const initialForms: Form[] = [
-  { id: 'form-01', name: "Check-list quotidienne de l'équipement", type: 'Sécurité', lastUpdated: '2024-05-20' },
-  { id: 'form-02', name: "Formulaire de rapport d'incident", type: 'Sécurité', lastUpdated: '2024-01-15' },
-  { id: 'form-03', name: 'Journal de production', type: 'Opérations', lastUpdated: '2024-06-01', files: [{ name: 'exemple-journal.pdf', url: '/sample-log.pdf', type: 'pdf' }, { name: 'modele-journal.xlsx', url: '#', type: 'excel' }] },
+  { id: 'form-01', name: "Check-list quotidienne de l'équipement", type: 'Sécurité', lastUpdated: '2024-05-20', files: [] },
+  { id: 'form-02', name: "Formulaire de rapport d'incident", type: 'Sécurité', lastUpdated: '2024-01-15', files: [] },
+  { id: 'form-03', name: 'Journal de production', type: 'Opérations', lastUpdated: '2024-06-01', files: [] },
 ];
 
 function getFromStorage<T>(key: string, initialValue: T): T {
@@ -99,6 +99,13 @@ function saveToStorage<T>(key: string, value: T): boolean {
         console.error(`Error setting localStorage key “${key}”:`, error);
         return false;
     }
+}
+
+export const getFileType = (file: File): FileAttachment['type'] => {
+    if (file.type.startsWith('image/')) return 'image';
+    if (file.type === 'application/pdf') return 'pdf';
+    if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) return 'excel';
+    return 'other';
 }
 
 export function getWorkstations(): Workstation[] {
