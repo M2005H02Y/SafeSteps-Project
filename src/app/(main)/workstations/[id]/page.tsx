@@ -80,16 +80,16 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
       <main className="flex-1 p-4 md:p-6 space-y-6 printable-area">
         <div className="md:hidden mb-4">
           <CardHeader className="p-0">
-            <CardTitle>{workstation.name}</CardTitle>
-            <CardDescription>{workstation.description}</CardDescription>
+            <CardTitle className="break-words">{workstation.name}</CardTitle>
+            <CardDescription className="break-words">{workstation.description}</CardDescription>
           </CardHeader>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader className="hidden md:block">
-                  <CardTitle>{workstation.name}</CardTitle>
-                  <CardDescription>{workstation.description}</CardDescription>
+                  <CardTitle className="break-words">{workstation.name}</CardTitle>
+                  <CardDescription className="break-words">{workstation.description}</CardDescription>
               </CardHeader>
               <CardContent>
                   {workstation.image && (

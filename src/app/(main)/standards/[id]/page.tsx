@@ -77,16 +77,16 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
       <main className="flex-1 p-4 md:p-6 space-y-6 printable-area">
         <div className="md:hidden mb-4">
             <CardHeader className="p-0">
-                <CardTitle>{standard.name}</CardTitle>
-                <CardDescription>Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                <CardTitle className="break-words">{standard.name}</CardTitle>
+                <CardDescription className="break-words">Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
             </CardHeader>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader className="hidden md:block">
-                    <CardTitle>{standard.name}</CardTitle>
-                    <CardDescription>Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                    <CardTitle className="break-words">{standard.name}</CardTitle>
+                    <CardDescription className="break-words">Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {standard.image && (
@@ -94,7 +94,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
                             <Image src={standard.image} alt={standard.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="certificate document"/>
                         </div>
                     )}
-                    {standard.description && <p className="text-muted-foreground">{standard.description}</p>}
+                    {standard.description && <p className="text-muted-foreground break-words">{standard.description}</p>}
                 </CardContent>
             </Card>
           </div>

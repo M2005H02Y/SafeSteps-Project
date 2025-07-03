@@ -78,8 +78,8 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
       <main className="flex-1 p-4 md:p-6 space-y-6 printable-area">
         <div className="md:hidden mb-4">
             <CardHeader className="p-0">
-                <CardTitle>{form.name}</CardTitle>
-                <CardDescription>Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}</CardDescription>
+                <CardTitle className="break-words">{form.name}</CardTitle>
+                <CardDescription className="break-words">Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}</CardDescription>
             </CardHeader>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
