@@ -16,7 +16,6 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Use NEXT_PUBLIC_DEV_HOSTNAME in development to override localhost with a tunnel URL like ngrok
       const devHostnameOverride = process.env.NEXT_PUBLIC_DEV_HOSTNAME;
       const isDevWithOverride = process.env.NODE_ENV === 'development' && devHostnameOverride;
 
@@ -32,9 +31,9 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
 
       if (data) {
         try {
-          // btoa is a simple way to encode for URL, safe for client-side JSON
           const encodedData = btoa(JSON.stringify(data));
-          publicUrl += `?data=${encodedData}`;
+          // We need to encode the base64 string to make it URL-safe
+          publicUrl += `?data=${encodeURIComponent(encodedData)}`;
         } catch (error) {
           console.error("Could not encode data for QR code", error);
         }
