@@ -1,6 +1,6 @@
 "use client";
 
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { getWorkstationById, Workstation } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -13,18 +13,23 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function WorkstationDetailPage({ params }: { params: { id: string } }) {
+export default function WorkstationDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+  
   const [workstation, setWorkstation] = useState<Workstation | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const ws = getWorkstationById(params.id);
-    if (ws) {
-      setWorkstation(ws);
+    if (id) {
+      const ws = getWorkstationById(id);
+      if (ws) {
+        setWorkstation(ws);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -128,7 +133,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
           </div>
 
           <div className="space-y-6">
-            <QRCode type="workstation" id={params.id} data={workstation} />
+            <QRCode type="workstation" id={id} data={workstation} />
             
             {workstation.files && workstation.files.length > 0 && (
               <Card>

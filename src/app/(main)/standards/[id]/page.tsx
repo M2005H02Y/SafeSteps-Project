@@ -1,6 +1,6 @@
 "use client";
 
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { getStandardById, Standard } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -13,18 +13,23 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function StandardDetailPage({ params }: { params: { id: string } }) {
+export default function StandardDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+
   const [standard, setStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const s = getStandardById(params.id);
-    if(s) {
-        setStandard(s);
+    if (id) {
+      const s = getStandardById(id);
+      if(s) {
+          setStandard(s);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -100,7 +105,7 @@ export default function StandardDetailPage({ params }: { params: { id: string } 
           </div>
 
           <div className="space-y-6">
-            <QRCode type="standard" id={params.id} data={standard} />
+            <QRCode type="standard" id={id} data={standard} />
             
             {standard.files && standard.files.length > 0 && (
               <Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { getFormById, Form } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -14,16 +14,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FormDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const params_ = useParams();
+  const id = params_.id as string;
+  
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const f = getFormById(params.id);
-    if(f) {
-        setForm(f);
+    if (id) {
+      const f = getFormById(id);
+      if(f) {
+          setForm(f);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -102,7 +107,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-6">
-            <QRCode type="form" id={params.id} data={form} />
+            <QRCode type="form" id={id} data={form} />
             
             {form.files && form.files.length > 0 && (
               <Card>
