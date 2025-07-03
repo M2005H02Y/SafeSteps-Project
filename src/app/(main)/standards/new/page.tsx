@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import FileUpload from '@/components/file-upload';
+import FileUpload, { UploadedFile } from '@/components/file-upload';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { addStandard } from '@/lib/data';
@@ -19,6 +19,7 @@ export default function NewStandardPage() {
   const [category, setCategory] = useState('');
   const [version, setVersion] = useState('');
   const [description, setDescription] = useState('');
+  const [files, setFiles] = useState<UploadedFile[]>([]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +33,17 @@ export default function NewStandardPage() {
         return;
     }
 
-    addStandard({ name, category, version, description });
+    const mainImage = files.find(f => f.type === 'image');
+    const otherFiles = files.filter(f => f !== mainImage);
+
+    addStandard({ 
+      name, 
+      category, 
+      version, 
+      description,
+      image: mainImage?.url,
+      files: otherFiles 
+    });
 
     toast({
       title: "Norme créée",
@@ -87,10 +98,10 @@ export default function NewStandardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
-            <CardDescription>Téléchargez la documentation pertinente ou les fichiers de résumé.</CardDescription>
+            <CardDescription>Téléchargez la documentation, des images ou des fichiers pertinents. La première image sera utilisée comme image principale.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload />
+            <FileUpload onFilesChange={setFiles} />
           </CardContent>
         </Card>
       </main>

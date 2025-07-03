@@ -1,9 +1,15 @@
+export type FileAttachment = {
+  name: string;
+  url: string; // data URI
+  type: 'image' | 'pdf' | 'excel' | 'other';
+};
+
 export type Workstation = {
   id: string;
   name: string;
   description: string;
   image?: string;
-  files?: { name: string; url: string; type: 'pdf' | 'excel' }[];
+  files?: FileAttachment[];
   tableData?: { [key: string]: string }[];
 };
 
@@ -14,7 +20,7 @@ export type Standard = {
   version: string;
   description?: string;
   image?: string;
-  files?: { name: string; url: string; type: 'pdf' | 'excel' }[];
+  files?: FileAttachment[];
 };
 
 export type Form = {
@@ -22,7 +28,7 @@ export type Form = {
   name: string;
   type: string;
   lastUpdated: string;
-  files?: { name: string; url: string; type: 'pdf' | 'excel' }[];
+  files?: FileAttachment[];
 };
 
 const initialWorkstations: Workstation[] = [
@@ -97,13 +103,15 @@ export function getWorkstations(): Workstation[] {
   return getFromStorage('workstations', initialWorkstations);
 }
 
-export function addWorkstation(workstation: Omit<Workstation, 'id' | 'image' | 'files'>) {
+export function addWorkstation(workstation: Omit<Workstation, 'id'>) {
   const workstations = getWorkstations();
   const newWorkstation: Workstation = { 
-      ...workstation, 
       id: `ws-${Date.now()}`,
-      image: 'https://placehold.co/600x400.png',
-      files: [],
+      name: workstation.name,
+      description: workstation.description,
+      image: workstation.image || 'https://placehold.co/600x400.png',
+      files: workstation.files || [],
+      tableData: workstation.tableData || [],
   };
   const updatedWorkstations = [newWorkstation, ...workstations];
   saveToStorage('workstations', updatedWorkstations);
@@ -118,13 +126,16 @@ export function getStandards(): Standard[] {
   return getFromStorage('standards', initialStandards);
 }
 
-export function addStandard(standard: Omit<Standard, 'id' | 'image' | 'files'>) {
+export function addStandard(standard: Omit<Standard, 'id'>) {
   const standards = getStandards();
   const newStandard: Standard = { 
-      ...standard, 
       id: `std-${Date.now()}`,
-      image: 'https://placehold.co/600x400.png',
-      files: []
+      name: standard.name,
+      category: standard.category,
+      version: standard.version,
+      description: standard.description,
+      image: standard.image || 'https://placehold.co/600x400.png',
+      files: standard.files || []
   };
   const updatedStandards = [newStandard, ...standards];
   saveToStorage('standards', updatedStandards);
@@ -139,13 +150,14 @@ export function getForms(): Form[] {
   return getFromStorage('forms', initialForms);
 }
 
-export function addForm(form: Omit<Form, 'id' | 'lastUpdated' | 'files'>) {
+export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>) {
     const forms = getForms();
     const newForm: Form = { 
-        ...form, 
         id: `form-${Date.now()}`,
+        name: form.name,
+        type: form.type,
+        files: form.files || [],
         lastUpdated: new Date().toISOString().split('T')[0],
-        files: []
     };
     const updatedForms = [newForm, ...forms];
     saveToStorage('forms', updatedForms);

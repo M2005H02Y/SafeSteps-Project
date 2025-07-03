@@ -1,27 +1,81 @@
 "use client";
 
-import { useState, useRef, ReactNode, ChangeEvent } from 'react';
-import { Upload, X, FileText, Paperclip } from 'lucide-react';
+import { useState, useRef, ReactNode, ChangeEvent, useEffect } from 'react';
+import { Upload, X, FileText, Paperclip, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 
 interface FilePreview {
+  id: string;
   file: File;
-  preview: string;
+  previewUrl: string;
 }
 
-export default function FileUpload() {
-  const [files, setFiles] = useState<FilePreview[]>([]);
+export type UploadedFile = {
+    name: string;
+    url: string; // data URI
+    type: 'image' | 'pdf' | 'excel' | 'other';
+};
+
+interface FileUploadProps {
+  onFilesChange?: (files: UploadedFile[]) => void;
+}
+
+const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
+const getFileType = (file: File): UploadedFile['type'] => {
+    if (file.type.startsWith('image/')) return 'image';
+    if (file.type === 'application/pdf') return 'pdf';
+    if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) return 'excel';
+    return 'other';
+}
+
+export default function FileUpload({ onFilesChange }: FileUploadProps) {
+  const [previews, setPreviews] = useState<FilePreview[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const processFiles = async () => {
+        if (!onFilesChange) return;
+
+        const uploadedFiles: UploadedFile[] = await Promise.all(
+            previews.map(async (p) => {
+                const url = await readFileAsDataURL(p.file);
+                const type = getFileType(p.file);
+                return { name: p.file.name, url, type };
+            })
+        );
+        onFilesChange(uploadedFiles);
+    };
+    processFiles();
+  }, [previews, onFilesChange]);
+
+  useEffect(() => {
+    return () => {
+      previews.forEach(p => URL.revokeObjectURL(p.previewUrl));
+    };
+  }, [previews]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newFiles = Array.from(event.target.files).map(file => ({
+      const newFilePreviews = Array.from(event.target.files).map(file => ({
+        id: `${file.name}-${file.lastModified}-${file.size}`,
         file,
-        preview: URL.createObjectURL(file)
+        previewUrl: URL.createObjectURL(file)
       }));
-      setFiles(prev => [...prev, ...newFiles].filter((v,i,a)=>a.findIndex(t=>(t.file.name === v.file.name))===i));
+
+      setPreviews(prev => {
+        const combined = [...prev, ...newFilePreviews];
+        return combined.filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
+      });
       
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -29,18 +83,28 @@ export default function FileUpload() {
     }
   };
 
-  const removeFile = (fileToRemove: File) => {
-    setFiles(prev => prev.filter(f => f.file !== fileToRemove));
+  const removeFile = (idToRemove: string) => {
+    setPreviews(prev => {
+        const fileToRemove = prev.find(f => f.id === idToRemove);
+        if (fileToRemove) {
+            URL.revokeObjectURL(fileToRemove.previewUrl);
+        }
+        return prev.filter(f => f.id !== idToRemove);
+    });
   };
   
-  const renderPreview = (file: File, preview: string): ReactNode => {
-    if (file.type.startsWith('image/')) {
-      return <Image src={preview} alt={file.name} width={64} height={64} className="h-16 w-16 object-cover rounded-md" onLoad={() => URL.revokeObjectURL(preview)} />;
+  const renderPreview = (file: File, previewUrl: string): ReactNode => {
+    const type = getFileType(file);
+    switch (type) {
+      case 'image':
+        return <Image src={previewUrl} alt={file.name} width={64} height={64} className="h-16 w-16 object-cover rounded-md" />;
+      case 'pdf':
+        return <FileText className="h-12 w-12 text-red-500" />;
+      case 'excel':
+        return <FileSpreadsheet className="h-12 w-12 text-green-500" />;
+      default:
+        return <Paperclip className="h-12 w-12 text-muted-foreground" />;
     }
-    if (file.type === 'application/pdf') {
-      return <FileText className="h-12 w-12 text-destructive" />;
-    }
-    return <Paperclip className="h-12 w-12 text-muted-foreground" />;
   };
 
   return (
@@ -52,7 +116,7 @@ export default function FileUpload() {
         ref={inputRef} 
         onChange={handleFileChange} 
         className="hidden" 
-        accept="image/*,application/pdf,.xlsx,.xls"
+        accept="image/*,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
       />
       <div
         className="flex justify-center items-center w-full px-6 py-10 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors border-input"
@@ -67,20 +131,20 @@ export default function FileUpload() {
         </div>
       </div>
 
-      {files.length > 0 && (
+      {previews.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {files.map((f, index) => (
-            <div key={`${f.file.name}-${index}`} className="relative group border rounded-lg p-2 flex flex-col items-center justify-center gap-2 aspect-square">
+          {previews.map((p) => (
+            <div key={p.id} className="relative group border rounded-lg p-2 flex flex-col items-center justify-center gap-2 aspect-square">
               <div className="flex-grow flex items-center justify-center">
-                {renderPreview(f.file, f.preview)}
+                {renderPreview(p.file, p.previewUrl)}
               </div>
-              <span className="text-xs text-center break-all w-full truncate">{f.file.name}</span>
+              <span className="text-xs text-center break-all w-full truncate">{p.file.name}</span>
               <Button 
                 type="button"
                 variant="destructive"
                 size="icon"
                 className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                onClick={(e) => { e.stopPropagation(); removeFile(f.file); }}
+                onClick={(e) => { e.stopPropagation(); removeFile(p.id); }}
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Supprimer le fichier</span>

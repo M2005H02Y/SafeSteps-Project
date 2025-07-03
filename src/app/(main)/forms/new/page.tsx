@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import FileUpload from '@/components/file-upload';
+import FileUpload, { UploadedFile } from '@/components/file-upload';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { addForm } from '@/lib/data';
@@ -16,6 +16,7 @@ export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
+  const [files, setFiles] = useState<UploadedFile[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +29,7 @@ export default function NewFormPage() {
         return;
     }
 
-    addForm({ name, type });
+    addForm({ name, type, files });
 
     toast({
       title: "Formulaire créé",
@@ -78,7 +79,7 @@ export default function NewFormPage() {
             <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload />
+            <FileUpload onFilesChange={setFiles}/>
           </CardContent>
         </Card>
       </main>

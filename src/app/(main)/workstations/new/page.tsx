@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import DynamicTable from '@/components/dynamic-table';
-import FileUpload from '@/components/file-upload';
+import FileUpload, { UploadedFile } from '@/components/file-upload';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { addWorkstation } from '@/lib/data';
@@ -19,6 +19,7 @@ export default function NewWorkstationPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,18 @@ export default function NewWorkstationPage() {
         });
         return;
     }
-    addWorkstation({ name, description, tableData });
+    
+    const mainImage = files.find(f => f.type === 'image');
+    const otherFiles = files.filter(f => f !== mainImage);
+
+    addWorkstation({ 
+      name, 
+      description, 
+      tableData,
+      image: mainImage?.url,
+      files: otherFiles
+    });
+
     toast({
       title: "Poste de travail créé",
       description: "Le nouveau poste de travail a été enregistré avec succès.",
@@ -73,6 +85,16 @@ export default function NewWorkstationPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Pièces jointes</CardTitle>
+            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. La première image sera utilisée comme image principale.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FileUpload onFilesChange={setFiles} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Tableau des procédures</CardTitle>
             <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
           </CardHeader>
@@ -81,15 +103,6 @@ export default function NewWorkstationPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pièces jointes</CardTitle>
-            <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FileUpload />
-          </CardContent>
-        </Card>
       </main>
     </form>
   );

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { ArrowLeft, Printer, File, FileText as FileTextIcon, Download } from 'lucide-react';
+import { ArrowLeft, Printer, File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -94,7 +94,7 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
               <CardContent>
                   {workstation.image && (
                       <div className="relative aspect-video w-full">
-                          <Image src={workstation.image} alt={workstation.name} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="assembly line" />
+                          <Image src={workstation.image} alt={workstation.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="assembly line" />
                       </div>
                   )}
               </CardContent>
@@ -139,7 +139,10 @@ export default function WorkstationDetailPage({ params }: { params: { id: string
                   {workstation.files.map(file => (
                     <div key={file.name} className="flex items-center justify-between p-2 rounded-md border">
                       <div className="flex items-center gap-3">
-                        {file.type === 'pdf' ? <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" /> : <File className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
