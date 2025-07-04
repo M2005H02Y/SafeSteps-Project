@@ -24,7 +24,13 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
         baseUrl = devHostnameOverride;
       } else {
         const { protocol, hostname, port } = window.location;
-        baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+        // In some cloud dev environments (like Cloud Workstations), the hostname is a proxy
+        // and the port should not be included in the public URL.
+        if (hostname.includes('cloudworkstations.dev')) {
+          baseUrl = `${protocol}//${hostname}`;
+        } else {
+          baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+        }
       }
 
       let url = `${baseUrl}/public/${type}/${id}`;
@@ -37,9 +43,12 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
         // The public page will gracefully handle their absence.
         delete dataForQr.image;
         delete dataForQr.files;
+        delete dataForQr.tableData;
 
-        const encodedData = btoa(JSON.stringify(dataForQr));
-        url += `?data=${encodeURIComponent(encodedData)}`;
+        if(Object.keys(dataForQr).length > 0) {
+            const encodedData = btoa(JSON.stringify(dataForQr));
+            url += `?data=${encodeURIComponent(encodedData)}`;
+        }
       } catch (error) {
         // If encoding fails, log it, but don't crash.
         // The QR code will just link to the public page without data.
