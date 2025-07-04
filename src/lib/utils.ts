@@ -22,3 +22,22 @@ export function getCloudinaryImagePreview(url: string): string {
   }
   return `${url}.jpg`; // Fallback if no extension is found
 }
+
+// Helper function to safely decode a Base64 string to a UTF-8 string
+export function b64_to_utf8(str: string): string {
+  try {
+    // atob decodes base64 to a binary string.
+    const binaryString = atob(str);
+    // Create a Uint8Array from the binary string.
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    // Use TextDecoder to convert the bytes to a UTF-8 string.
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+  } catch (e) {
+    console.error("Failed to decode base64 string", e);
+    return "";
+  }
+}
