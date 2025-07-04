@@ -15,23 +15,14 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    // This component runs only on the client, so `window` is safe to use.
     if (typeof window !== 'undefined' && data) {
-      const devHostnameOverride = process.env.NEXT_PUBLIC_DEV_HOSTNAME;
-      const isDevWithOverride = process.env.NODE_ENV === 'development' && devHostnameOverride;
-
-      let baseUrl = '';
-      if (isDevWithOverride) {
-        baseUrl = devHostnameOverride;
-      } else {
-        const { protocol, hostname, port } = window.location;
-        // In some cloud dev environments (like Cloud Workstations), the hostname is a proxy
-        // and the port should not be included in the public URL.
-        if (hostname.includes('cloudworkstations.dev')) {
-          baseUrl = `${protocol}//${hostname}`;
-        } else {
-          baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-        }
-      }
+      const { protocol, hostname } = window.location;
+      
+      // For cloud development environments, the public URL is just the protocol and hostname.
+      // For local development, it would include the port.
+      const isCloudDevEnv = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
+      const baseUrl = isCloudDevEnv ? `${protocol}//${hostname}` : window.location.origin;
 
       let url = `${baseUrl}/public/${type}/${id}`;
 
@@ -52,7 +43,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
       } catch (error) {
         // If encoding fails, log it, but don't crash.
         // The QR code will just link to the public page without data.
-        console.error("Could not encode data for QR code. It might still be too large.", error);
+        console.error("Could not encode data for QR code.", error);
       }
       
       setPublicUrl(url);
