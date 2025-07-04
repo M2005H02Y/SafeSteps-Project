@@ -152,10 +152,10 @@ export default function WorkstationDetailPage() {
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
-                        <Link href={file.url} target="_blank" rel="noopener noreferrer">
+                        <a href={file.url} target="_blank" rel="noopener noreferrer" download={file.name}>
                           <Download className="h-4 w-4"/>
                           <span className="sr-only">Télécharger</span>
-                        </Link>
+                        </a>
                       </Button>
                     </div>
                   ))}

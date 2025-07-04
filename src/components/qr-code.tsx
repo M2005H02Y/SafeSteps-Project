@@ -32,9 +32,6 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
       try {
         const dataForQr = JSON.parse(JSON.stringify(data));
         
-        delete dataForQr.image;
-        delete dataForQr.files;
-
         if(Object.keys(dataForQr).length > 0) {
             const jsonString = JSON.stringify(dataForQr);
             const encodedData = utf8_to_b64(jsonString);
