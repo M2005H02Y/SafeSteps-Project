@@ -2,6 +2,7 @@
 
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { getFormById, Form } from '@/lib/data';
+import { getCloudinaryImagePreview } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 export default function FormDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -62,6 +64,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
   };
 
   const pdfFile = form.files?.find(f => f.type === 'pdf');
+  const mainImagePreview = pdfFile ? getCloudinaryImagePreview(pdfFile.url) : form.files?.find(f => f.type === 'image')?.url;
 
   return (
     <div className="flex flex-col h-full">
@@ -91,16 +94,23 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
           <div className="lg:col-span-2 space-y-6">
             {pdfFile ? (
               <Card>
-                  <CardHeader><CardTitle>Aperçu du formulaire</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>Aperçu du formulaire (via IFrame)</CardTitle></CardHeader>
                   <CardContent>
                       <iframe src={pdfFile.url} className="w-full h-[800px] border rounded-md" title={pdfFile.name}></iframe>
+                  </CardContent>
+              </Card>
+            ) : mainImagePreview ? (
+              <Card>
+                  <CardHeader><CardTitle>Aperçu du formulaire</CardTitle></CardHeader>
+                  <CardContent>
+                    <Image src={mainImagePreview} alt={form.name} width={800} height={1100} className="w-full h-auto rounded-md border" />
                   </CardContent>
               </Card>
             ) : (
               <Card className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center text-muted-foreground p-8 border-dashed border-2 rounded-lg">
                     <p>Aucun aperçu disponible pour ce formulaire.</p>
-                    <p className="text-sm">Téléchargez un PDF pour le voir ici.</p>
+                    <p className="text-sm">Téléchargez un PDF ou une image pour le voir ici.</p>
                 </div>
               </Card>
             )}
@@ -125,7 +135,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
-                        <Link href={file.url} download={file.name}>
+                        <Link href={file.url} download={file.name} target="_blank">
                           <Download className="h-4 w-4"/>
                           <span className="sr-only">Télécharger</span>
                         </Link>

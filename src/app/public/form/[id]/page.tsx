@@ -1,89 +1,94 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { Form } from '@/lib/data';
+import { getCloudinaryImagePreview } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Form } from '@/lib/data';
-import { FileText } from 'lucide-react';
+import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
-// Helper function to safely decode a Base64 string to UTF-8
-function b64_to_utf8(str: string): string {
-    return decodeURIComponent(escape(atob(str)));
+function PageContent() {
+    const searchParams = useSearchParams();
+    const data = searchParams.get('data');
+
+    if (!data) {
+        return notFound();
+    }
+    
+    let form: Form | null = null;
+    try {
+        const decodedData = atob(decodeURIComponent(data));
+        form = JSON.parse(decodedData);
+    } catch (e) {
+        console.error("Failed to parse form data from URL", e);
+        return notFound();
+    }
+
+    if (!form) {
+        return notFound();
+    }
+
+    const pdfFile = form.files?.find(f => f.type === 'pdf');
+    const mainImagePreview = pdfFile ? getCloudinaryImagePreview(pdfFile.url) : form.files?.find(f => f.type === 'image')?.url;
+
+    return (
+        <div className="min-h-screen bg-muted/40 p-4 sm:p-6 md:p-8">
+            <div className="max-w-4xl mx-auto space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-3xl break-words">{form.name}</CardTitle>
+                        <CardDescription className="pt-2 text-base">
+                            Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}
+                        </CardDescription>
+                    </CardHeader>
+                    {mainImagePreview && (
+                        <CardContent>
+                             <div className="relative w-full" style={{paddingTop: '129.4%'}}> {/* A4 Aspect Ratio */}
+                                <Image src={mainImagePreview} alt={form.name} fill className="rounded-lg object-contain border bg-white" />
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
+
+                {form.files && form.files.length > 0 && (
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Fichiers joints</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                        {form.files.map(file => (
+                            <div key={file.url} className="flex items-center justify-between p-2 rounded-md border bg-background">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                                    {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                                    {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                                    {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                                    <span className="text-sm font-medium truncate">{file.name}</span>
+                                </div>
+                                <Button variant="ghost" size="icon" asChild>
+                                    <Link href={file.url} download={file.name} target="_blank">
+                                        <Download className="h-4 w-4"/>
+                                        <span className="sr-only">Télécharger</span>
+                                    </Link>
+                                </Button>
+                            </div>
+                        ))}
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        </div>
+    );
 }
 
 export default function PublicFormPage() {
-  const searchParams = useSearchParams();
-  const dataParam = searchParams.get('data');
-  const [form, setForm] = useState<Form | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (dataParam) {
-      try {
-        const decodedJson = b64_to_utf8(decodeURIComponent(dataParam));
-        const decodedData = JSON.parse(decodedJson);
-        setForm(decodedData);
-      } catch (e) {
-        console.error("Failed to parse form data from URL", e);
-        setError("Les données du code QR sont corrompues ou invalides.");
-      }
-    } else {
-      setError("Aucune donnée fournie pour afficher cette page. Veuillez scanner à nouveau un code QR valide.");
-    }
-  }, [dataParam]);
-
-  if (error) {
     return (
-      <div className="flex h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle>Erreur de données</CardTitle>
-            <CardDescription>{error}</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!form) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p>Chargement des données du formulaire...</p>
-      </div>
-    );
-  }
-  
-  return (
-    <main className="container mx-auto p-4 md:p-6 space-y-6">
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="break-words text-3xl">{form.name}</CardTitle>
-                    <CardDescription className="break-words text-base">
-                        Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-dashed border-2 rounded-lg min-h-[400px]">
-                        <FileText className="h-16 w-16 mb-4" />
-                        <p className="font-semibold">Aperçu non disponible</p>
-                        <p className="text-sm">Les aperçus de fichiers et les pièces jointes ne sont pas disponibles sur cette page publique.</p>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="space-y-6 lg:col-span-1">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Information</CardTitle>
-                    <CardDescription>Cet aperçu est généré à partir d'un code QR et peut ne pas contenir toutes les données.</CardDescription>
-                </CardHeader>
-            </Card>
-        </div>
-      </div>
-    </main>
-  );
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
+            <PageContent />
+        </Suspense>
+    )
 }

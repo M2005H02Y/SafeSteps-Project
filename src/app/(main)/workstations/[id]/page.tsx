@@ -2,6 +2,7 @@
 
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { getWorkstationById, Workstation } from '@/lib/data';
+import { getCloudinaryImagePreview } from '@/lib/utils';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -151,7 +152,7 @@ export default function WorkstationDetailPage() {
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
-                        <Link href={file.url} download={file.name}>
+                        <Link href={file.url} download={file.name} target="_blank">
                           <Download className="h-4 w-4"/>
                           <span className="sr-only">Télécharger</span>
                         </Link>

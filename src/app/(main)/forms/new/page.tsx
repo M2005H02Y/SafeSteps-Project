@@ -10,14 +10,13 @@ import { Label } from '@/components/ui/label';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addForm, getFileType } from '@/lib/data';
-import { uploadFile } from '@/lib/firebase';
+import { addForm, FileAttachment } from '@/lib/data';
 
 export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,18 +33,7 @@ export default function NewFormPage() {
     setIsSubmitting(true);
     
     try {
-      const uploadedFiles = await Promise.all(
-        files.map(async (file) => {
-          const url = await uploadFile(file, `forms/${Date.now()}-${file.name}`);
-          return {
-            name: file.name,
-            url,
-            type: getFileType(file),
-          };
-        })
-      );
-      
-      const success = addForm({ name, type, files: uploadedFiles });
+      const success = addForm({ name, type, files: files });
 
       if (success) {
         toast({
@@ -112,7 +100,7 @@ export default function NewFormPage() {
             <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload onFilesChange={setFiles}/>
+            <FileUpload onUploadComplete={setFiles}/>
           </CardContent>
         </Card>
       </main>

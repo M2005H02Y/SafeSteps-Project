@@ -11,8 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addStandard, getFileType } from '@/lib/data';
-import { uploadFile } from '@/lib/firebase';
+import { addStandard, FileAttachment } from '@/lib/data';
 
 export default function NewStandardPage() {
   const router = useRouter();
@@ -20,7 +19,7 @@ export default function NewStandardPage() {
   const [category, setCategory] = useState('');
   const [version, setVersion] = useState('');
   const [description, setDescription] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
@@ -38,19 +37,8 @@ export default function NewStandardPage() {
     setIsSubmitting(true);
 
     try {
-      const uploadedFiles = await Promise.all(
-        files.map(async (file) => {
-          const url = await uploadFile(file, `standards/${Date.now()}-${file.name}`);
-          return {
-            name: file.name,
-            url,
-            type: getFileType(file),
-          };
-        })
-      );
-
-      const mainImage = uploadedFiles.find(f => f.type === 'image');
-      const otherFiles = uploadedFiles.filter(f => f !== mainImage);
+      const mainImage = files.find(f => f.type === 'image');
+      const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
       const success = addStandard({ 
         name, 
@@ -134,7 +122,7 @@ export default function NewStandardPage() {
             <CardDescription>Téléchargez la documentation, des images ou des fichiers pertinents. La première image sera utilisée comme image principale.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload onFilesChange={setFiles} />
+            <FileUpload onUploadComplete={setFiles} />
           </CardContent>
         </Card>
       </main>

@@ -11,16 +11,15 @@ import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addWorkstation, getFileType } from '@/lib/data';
+import { addWorkstation, FileAttachment } from '@/lib/data';
 import { useState } from 'react';
-import { uploadFile } from '@/lib/firebase';
 
 export default function NewWorkstationPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,19 +36,8 @@ export default function NewWorkstationPage() {
     setIsSubmitting(true);
 
     try {
-      const uploadedFiles = await Promise.all(
-        files.map(async (file) => {
-          const url = await uploadFile(file, `workstations/${Date.now()}-${file.name}`);
-          return {
-            name: file.name,
-            url,
-            type: getFileType(file),
-          };
-        })
-      );
-      
-      const mainImage = uploadedFiles.find(f => f.type === 'image');
-      const otherFiles = uploadedFiles.filter(f => f !== mainImage);
+      const mainImage = files.find(f => f.type === 'image');
+      const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
       const success = addWorkstation({ 
         name, 
@@ -118,7 +106,7 @@ export default function NewWorkstationPage() {
             <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. La première image sera utilisée comme image principale.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload onFilesChange={setFiles} />
+            <FileUpload onUploadComplete={setFiles} />
           </CardContent>
         </Card>
 
