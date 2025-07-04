@@ -1,129 +1,89 @@
-
 "use client";
 
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FileAttachment } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
-import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Form } from '@/lib/data';
+import { FileText } from 'lucide-react';
+
+// Helper function to safely decode a Base64 string to UTF-8
+function b64_to_utf8(str: string): string {
+    return decodeURIComponent(escape(atob(str)));
+}
 
 export default function PublicFormPage() {
   const searchParams = useSearchParams();
   const dataParam = searchParams.get('data');
+  const [form, setForm] = useState<Form | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!dataParam) {
-    return (
-      <div className="flex items-center justify-center h-screen p-4">
-        <Card className="w-full max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle>Erreur</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">Aucune donnée fournie pour afficher cette page.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (dataParam) {
+      try {
+        const decodedJson = b64_to_utf8(decodeURIComponent(dataParam));
+        const decodedData = JSON.parse(decodedJson);
+        setForm(decodedData);
+      } catch (e) {
+        console.error("Failed to parse form data from URL", e);
+        setError("Les données du code QR sont corrompues ou invalides.");
+      }
+    } else {
+      setError("Aucune donnée fournie pour afficher cette page. Veuillez scanner à nouveau un code QR valide.");
+    }
+  }, [dataParam]);
 
-  let form: Form | null = null;
-  try {
-    form = JSON.parse(atob(decodeURIComponent(dataParam)));
-  } catch (error) {
-    console.error("Failed to parse form data from URL", error);
+  if (error) {
     return (
-       <div className="flex items-center justify-center h-screen p-4">
-        <Card className="w-full max-w-md mx-auto">
+      <div className="flex h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle>Erreur</CardTitle>
+            <CardTitle>Erreur de données</CardTitle>
+            <CardDescription>{error}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">Les données de la page sont corrompues.</p>
-          </CardContent>
         </Card>
       </div>
     );
   }
 
   if (!form) {
-      return (
-         <div className="flex items-center justify-center h-screen p-4">
-            <Card className="w-full max-w-md mx-auto">
-                <CardHeader><CardTitle>Données introuvables</CardTitle></CardHeader>
-                <CardContent><p>Le formulaire que vous recherchez n'a pas pu être trouvé.</p></CardContent>
-            </Card>
-        </div>
-      );
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p>Chargement des données du formulaire...</p>
+      </div>
+    );
   }
-
-  const pdfFile = form.files?.find(f => f.type === 'pdf');
-
+  
   return (
-    <main className="p-4 md:p-6 space-y-6">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+    <main className="container mx-auto p-4 md:p-6 space-y-6">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="break-words">{form.name}</CardTitle>
-                    <CardDescription className="break-words">Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}</CardDescription>
+                    <CardTitle className="break-words text-3xl">{form.name}</CardTitle>
+                    <CardDescription className="break-words text-base">
+                        Type: <Badge variant="secondary">{form.type}</Badge> | Dernière mise à jour: {form.lastUpdated}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {pdfFile ? (
-                        <iframe src={pdfFile.url} className="w-full h-[800px] border rounded-md" title={pdfFile.name}></iframe>
-                    ) : (
-                        <Card className="flex items-center justify-center min-h-[400px]">
-                            <div className="text-center text-muted-foreground p-8 border-dashed border-2 rounded-lg">
-                                <p>Aucun aperçu disponible pour ce formulaire.</p>
-                                <p className="text-sm">Téléchargez un PDF pour le voir ici.</p>
-                                <div className="mt-4">
-                                    <Alert>
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Information</AlertTitle>
-                                        <AlertDescription>
-                                            Les fichiers ne sont pas chargés via le code QR. Pour voir tous les détails, veuillez consulter cet élément dans l'application principale.
-                                        </AlertDescription>
-                                    </Alert>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
+                    <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8 border-dashed border-2 rounded-lg min-h-[400px]">
+                        <FileText className="h-16 w-16 mb-4" />
+                        <p className="font-semibold">Aperçu non disponible</p>
+                        <p className="text-sm">Les aperçus de fichiers et les pièces jointes ne sont pas disponibles sur cette page publique.</p>
+                    </div>
                 </CardContent>
             </Card>
-          </div>
-
-          <div className="space-y-6">
-            {form.files && form.files.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Fichiers joints</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {form.files.map((file: FileAttachment) => (
-                    <div key={file.name} className="flex items-center justify-between p-2 rounded-md border">
-                      <div className="flex items-center gap-3">
-                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                        <span className="text-sm font-medium truncate">{file.name}</span>
-                      </div>
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={file.url} download={file.name}>
-                          <Download className="h-4 w-4"/>
-                          <span className="sr-only">Télécharger</span>
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-          </div>
         </div>
-      </main>
+
+        <div className="space-y-6 lg:col-span-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Information</CardTitle>
+                    <CardDescription>Cet aperçu est généré à partir d'un code QR et peut ne pas contenir toutes les données.</CardDescription>
+                </CardHeader>
+            </Card>
+        </div>
+      </div>
+    </main>
   );
 }

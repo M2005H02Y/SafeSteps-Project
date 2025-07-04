@@ -11,6 +11,11 @@ type QRCodeProps = {
   data?: any;
 };
 
+// Helper function to safely encode a UTF-8 string to Base64
+function utf8_to_b64(str: string): string {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+
 export default function QRCode({ type, id, data }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
 
@@ -19,30 +24,23 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
     if (typeof window !== 'undefined' && data) {
       const { protocol, hostname } = window.location;
       
-      // For cloud development environments, the public URL is just the protocol and hostname.
-      // For local development, it would include the port.
       const isCloudDevEnv = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
       const baseUrl = isCloudDevEnv ? `${protocol}//${hostname}` : window.location.origin;
 
       let url = `${baseUrl}/public/${type}/${id}`;
 
       try {
-        // Create a deep copy to avoid mutating the original data object
         const dataForQr = JSON.parse(JSON.stringify(data));
         
-        // Remove potentially large fields that cause the "Data too long" error.
-        // The public page will gracefully handle their absence.
         delete dataForQr.image;
         delete dataForQr.files;
-        delete dataForQr.tableData;
 
         if(Object.keys(dataForQr).length > 0) {
-            const encodedData = btoa(JSON.stringify(dataForQr));
+            const jsonString = JSON.stringify(dataForQr);
+            const encodedData = utf8_to_b64(jsonString);
             url += `?data=${encodeURIComponent(encodedData)}`;
         }
       } catch (error) {
-        // If encoding fails, log it, but don't crash.
-        // The QR code will just link to the public page without data.
         console.error("Could not encode data for QR code.", error);
       }
       
