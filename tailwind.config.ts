@@ -1,5 +1,7 @@
 import type {Config} from 'tailwindcss';
 
+const colors = require('tailwindcss/colors');
+
 export default {
   darkMode: ['class'],
   content: [
@@ -10,11 +12,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
+        ...colors,
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -65,6 +69,9 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+      },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(to right, hsl(var(--primary)), hsl(221, 83%, 63%))',
       },
       borderRadius: {
         lg: 'var(--radius)',

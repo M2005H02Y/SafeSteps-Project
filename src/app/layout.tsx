@@ -1,10 +1,17 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { Inter } from 'next/font/google';
+import { cn } from '@/lib/utils';
+
+const fontSans = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
 
 export const metadata: Metadata = {
-  title: 'WorkHub Central',
-  description: 'Gérez vos ressources opérationnelles en toute simplicité.',
+  title: 'SGI - Système de Gestion Industrielle',
+  description: 'Gestion des postes, standards et formulaires',
 };
 
 export default function RootLayout({
@@ -14,12 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
+      <body className={cn(
+        "min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 font-sans antialiased",
+        fontSans.variable
+      )}>
         {children}
         <Toaster />
       </body>

@@ -2,22 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, BookCheck, FileText, Settings, Building2 } from "lucide-react";
+import { LayoutGrid, Cog, FileText, File } from "lucide-react";
 import {
   SidebarHeader,
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
   useSidebar,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { href: "/dashboard", label: "Tableau de bord", icon: LayoutGrid, tooltip: "Tableau de bord" },
-  { href: "/workstations", label: "Postes de travail", icon: Building2, tooltip: "Postes de travail" },
-  { href: "/standards", label: "Normes", icon: BookCheck, tooltip: "Normes" },
-  { href: "/forms", label: "Formulaires", icon: FileText, tooltip: "Formulaires" },
+  { href: "/dashboard", label: "Dashboard", subLabel: "Vue d'ensemble", icon: LayoutGrid },
+  { href: "/workstations", label: "Postes de Travail", subLabel: "Gestion des engines", icon: Cog },
+  { href: "/standards", label: "Standards", subLabel: "Documents standards", icon: FileText },
+  { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
 export default function AppSidebar() {
@@ -27,41 +28,42 @@ export default function AppSidebar() {
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" /><circle cx="12" cy="10" r="3" /></svg>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Cog className="h-5 w-5"/>
           </div>
-          {state === 'expanded' && <h1 className="text-lg font-semibold">WorkHub Central</h1>}
+          {state === 'expanded' && (
+            <div className="flex flex-col">
+              <h1 className="text-base font-semibold text-white">SGI</h1>
+              <p className="text-xs text-sidebar-foreground">Système Industriel</p>
+            </div>
+          )}
         </div>
       </SidebarHeader>
+      
       <SidebarContent className="p-2">
         <SidebarMenu>
+          <SidebarGroupLabel className="px-2 mb-1">Navigation</SidebarGroupLabel>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith(item.href)}
-                tooltip={{ children: item.tooltip, side: "right" }}
+                tooltip={{ children: item.label, side: "right" }}
+                className="h-auto p-2"
               >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
+                <Link href={item.href} className="flex items-center gap-3">
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <div className={cn("flex flex-col overflow-hidden transition-all duration-200", state === "collapsed" ? "w-0" : "w-full")}>
+                    <span className="font-medium text-sm text-white">{item.label}</span>
+                    <span className="text-xs text-sidebar-foreground">{item.subLabel}</span>
+                  </div>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip={{ children: "Paramètres", side: "right" }}>
-              <Settings />
-              <span>Paramètres</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </>
   );
 }
