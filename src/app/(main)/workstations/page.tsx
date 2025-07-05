@@ -152,8 +152,10 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)]">
-      <div className="space-y-6 pr-4">
-        <Card className="glass-effect">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
+        {/* Left column (main content) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="glass-effect">
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle className="break-words text-2xl">{workstation.name}</CardTitle>
@@ -179,56 +181,58 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
             )}
           </Card>
         
-        {workstation.tableData && workstation.tableData.length > 0 && (
-            <Card className="glass-effect">
-                <CardHeader>
-                    <CardTitle>Procédures</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                    {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {workstation.tableData.map((row, index) => (
-                                    <TableRow key={index}>
-                                        {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {workstation.files && workstation.files.length > 0 && (
+          {workstation.tableData && workstation.tableData.length > 0 && (
               <Card className="glass-effect">
-                <CardHeader>
-                  <CardTitle>Fichiers joints</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {workstation.files.map(file => (
-                     <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                            {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                            {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                            {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                            <span className="text-sm font-medium truncate">{file.name}</span>
-                        </div>
-                        <Download className="h-4 w-4 text-muted-foreground ml-2"/>
-                     </a>
-                  ))}
-                </CardContent>
+                  <CardHeader>
+                      <CardTitle>Procédures</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <div className="overflow-x-auto rounded-md border">
+                          <Table>
+                              <TableHeader>
+                                  <TableRow className="hover:bg-transparent">
+                                      {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {workstation.tableData.map((row, index) => (
+                                      <TableRow key={index} className="hover:bg-accent/50">
+                                          {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
+                                      </TableRow>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                      </div>
+                  </CardContent>
               </Card>
-            )}
+          )}
+        </div>
 
-            <QRCode type="workstation" id={workstation.id} data={workstation} />
+        {/* Right column (sidebar-like content) */}
+        <div className="space-y-6">
+          <QRCode type="workstation" id={workstation.id} data={workstation} />
+          
+          {workstation.files && workstation.files.length > 0 && (
+            <Card className="glass-effect">
+              <CardHeader>
+                <CardTitle>Fichiers joints</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {workstation.files.map(file => (
+                   <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                          {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                          {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                          {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                          {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                          <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <Download className="h-4 w-4 text-muted-foreground ml-2"/>
+                   </a>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </ScrollArea>
