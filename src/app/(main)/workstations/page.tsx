@@ -40,6 +40,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 
 // Component for displaying workstation details
@@ -269,77 +270,81 @@ function WorkstationsPageContent() {
               </Button>
           </PageHeader>
         </div>
-        <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
-          {/* Left Column */}
-          <div className="lg:col-span-1 flex flex-col gap-6 print-hidden">
-            <Card className="glass-effect">
-              <CardContent className="p-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Rechercher un poste..." 
-                    className="pl-9 bg-slate-50"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex-1 overflow-hidden">
-                 <ScrollArea className="h-full">
-                    <div className="space-y-2 pr-4">
-                        <h3 className="text-sm font-medium text-muted-foreground px-2">Postes ({filteredWorkstations.length})</h3>
-                        {filteredWorkstations.map((ws) => (
-                            <Card 
-                                key={ws.id} 
-                                className={cn(
-                                    "cursor-pointer transition-all duration-200 border-2",
-                                    selectedWorkstation?.id === ws.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
-                                )}
-                                onClick={() => setSelectedWorkstation(ws)}
-                            >
-                                <CardContent className="p-4 flex items-start justify-between">
-                                    <div className="flex-1 space-y-1">
-                                      <div className="font-bold text-slate-800">{ws.name}</div>
-                                      <Badge variant="secondary" className="font-normal">{ws.type}</Badge>
-                                      <div className="text-xs text-muted-foreground pt-1">
-                                          Créé le {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
-                                      </div>
-                                    </div>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            openDeleteDialog(ws.id);
-                                        }}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ))}
+        <main className="flex-1 p-4 md:p-6 overflow-hidden">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={35} minSize={20}>
+              <div className="flex flex-col h-full gap-6 print-hidden">
+                <Card className="glass-effect">
+                  <CardContent className="p-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Rechercher un poste..." 
+                        className="pl-9 bg-slate-50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </div>
-                </ScrollArea>
-            </div>
-          </div>
+                  </CardContent>
+                </Card>
 
-          {/* Right Column */}
-          <div className="lg:col-span-2 overflow-hidden workstation-details-print-full">
-            {selectedWorkstation ? (
-              <WorkstationDetails workstation={selectedWorkstation} />
-            ) : (
-              <Card className="glass-effect flex items-center justify-center h-full print-hidden">
-                <div className="text-center text-muted-foreground p-8">
-                  <Cog className="mx-auto h-16 w-16 mb-4" />
-                  <h3 className="text-xl font-semibold">{engineFilter ? `Postes de type ${engineFilter}` : 'Sélectionner un poste'}</h3>
-                  <p>{filteredWorkstations.length > 0 ? `Choisissez un poste de travail dans la liste pour voir ses détails.` : `Aucun poste de travail trouvé pour "${engineFilter}".`}</p>
+                <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
+                        <div className="space-y-2 pr-4">
+                            <h3 className="text-sm font-medium text-muted-foreground px-2">Postes ({filteredWorkstations.length})</h3>
+                            {filteredWorkstations.map((ws) => (
+                                <Card 
+                                    key={ws.id} 
+                                    className={cn(
+                                        "cursor-pointer transition-all duration-200 border-2",
+                                        selectedWorkstation?.id === ws.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
+                                    )}
+                                    onClick={() => setSelectedWorkstation(ws)}
+                                >
+                                    <CardContent className="p-4 flex items-start justify-between">
+                                        <div className="flex-1 space-y-1">
+                                          <div className="font-bold text-slate-800">{ws.name}</div>
+                                          <Badge variant="secondary" className="font-normal">{ws.type}</Badge>
+                                          <div className="text-xs text-muted-foreground pt-1">
+                                              Créé le {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
+                                          </div>
+                                        </div>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openDeleteDialog(ws.id);
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </ScrollArea>
                 </div>
-              </Card>
-            )}
-          </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={65} minSize={30}>
+               <div className="h-full overflow-hidden workstation-details-print-full pl-6">
+                {selectedWorkstation ? (
+                  <WorkstationDetails workstation={selectedWorkstation} />
+                ) : (
+                  <Card className="glass-effect flex items-center justify-center h-full print-hidden">
+                    <div className="text-center text-muted-foreground p-8">
+                      <Cog className="mx-auto h-16 w-16 mb-4" />
+                      <h3 className="text-xl font-semibold">{engineFilter ? `Postes de type ${engineFilter}` : 'Sélectionner un poste'}</h3>
+                      <p>{filteredWorkstations.length > 0 ? `Choisissez un poste de travail dans la liste pour voir ses détails.` : `Aucun poste de travail trouvé pour "${engineFilter}".`}</p>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </main>
       </div>
 

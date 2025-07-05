@@ -38,6 +38,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import QRCode from '@/components/qr-code';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 // Component for displaying standard details
 function StandardDetails({ standard }: { standard: Standard | null }) {
@@ -229,93 +230,97 @@ function StandardsPageContent() {
                 </Button>
             </PageHeader>
         </div>
-        <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
-          {/* Left Column */}
-          <div className="lg:col-span-1 flex flex-col gap-6 print-hidden">
-            <Card className="glass-effect">
-              <CardContent className="p-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Rechercher un standard..." 
-                    className="pl-9 bg-slate-50"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex-1 overflow-hidden">
-                 <ScrollArea className="h-full">
-                    <div className="space-y-2 pr-4">
-                        <h3 className="text-sm font-medium text-muted-foreground px-2">Standards ({filteredStandards.length})</h3>
-                        {filteredStandards.map((standard) => (
-                            <Card 
-                                key={standard.id} 
-                                className={cn(
-                                    "cursor-pointer transition-all duration-200 border-2",
-                                    selectedStandard?.id === standard.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
-                                )}
-                                onClick={() => setSelectedStandard(standard)}
-                            >
-                                <CardContent className="p-4 flex items-start justify-between">
-                                    <div className="flex-1 space-y-1 overflow-hidden min-w-0">
-                                      <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
-                                      <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
-                                      <div className="flex items-center gap-2 pt-1">
-                                          <Badge variant="outline" className="truncate" title={standard.category}>
-                                            {standard.category}
-                                          </Badge>
-                                          <Badge variant="secondary" className="flex-shrink-0">{standard.version}</Badge>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2 ml-2">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-7 w-7 text-slate-600 hover:bg-slate-200 shrink-0"
-                                            asChild
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <Link href={`/standards/${standard.id}/edit`}>
-                                                <Edit className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openDeleteDialog(standard.id);
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+        <main className="flex-1 p-4 md:p-6 overflow-hidden">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={35} minSize={20}>
+              <div className="flex flex-col h-full gap-6 print-hidden">
+                <Card className="glass-effect">
+                  <CardContent className="p-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Rechercher un standard..." 
+                        className="pl-9 bg-slate-50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </div>
-                </ScrollArea>
-            </div>
-          </div>
+                  </CardContent>
+                </Card>
 
-          {/* Right Column */}
-          <div className="lg:col-span-2 overflow-hidden workstation-details-print-full">
-            {selectedStandard ? (
-              <StandardDetails standard={selectedStandard} />
-            ) : (
-              <Card className="glass-effect flex items-center justify-center h-full print-hidden">
-                <div className="text-center text-muted-foreground p-8">
-                  <FileText className="mx-auto h-16 w-16 mb-4" />
-                  <h3 className="text-xl font-semibold">Sélectionner un standard</h3>
-                  <p>Choisissez un standard dans la liste pour voir ses détails.</p>
+                <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
+                        <div className="space-y-2 pr-4">
+                            <h3 className="text-sm font-medium text-muted-foreground px-2">Standards ({filteredStandards.length})</h3>
+                            {filteredStandards.map((standard) => (
+                                <Card 
+                                    key={standard.id} 
+                                    className={cn(
+                                        "cursor-pointer transition-all duration-200 border-2",
+                                        selectedStandard?.id === standard.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
+                                    )}
+                                    onClick={() => setSelectedStandard(standard)}
+                                >
+                                    <CardContent className="p-4 flex items-start justify-between">
+                                        <div className="flex-1 space-y-1 overflow-hidden min-w-0">
+                                          <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
+                                          <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
+                                          <div className="flex items-center gap-2 pt-1">
+                                              <Badge variant="outline" className="truncate" title={standard.category}>
+                                                {standard.category}
+                                              </Badge>
+                                              <Badge variant="secondary" className="flex-shrink-0">{standard.version}</Badge>
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-col gap-2 ml-2">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-7 w-7 text-slate-600 hover:bg-slate-200 shrink-0"
+                                                asChild
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Link href={`/standards/${standard.id}/edit`}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDeleteDialog(standard.id);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </ScrollArea>
                 </div>
-              </Card>
-            )}
-          </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={65} minSize={30}>
+              <div className="h-full overflow-hidden workstation-details-print-full pl-6">
+                {selectedStandard ? (
+                  <StandardDetails standard={selectedStandard} />
+                ) : (
+                  <Card className="glass-effect flex items-center justify-center h-full print-hidden">
+                    <div className="text-center text-muted-foreground p-8">
+                      <FileText className="mx-auto h-16 w-16 mb-4" />
+                      <h3 className="text-xl font-semibold">Sélectionner un standard</h3>
+                      <p>Choisissez un standard dans la liste pour voir ses détails.</p>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </main>
       </div>
 
