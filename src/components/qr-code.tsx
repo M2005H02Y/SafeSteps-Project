@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
@@ -45,24 +47,49 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
     }
   }, [type, id, data]);
 
+  const handleDownload = () => {
+    const canvas = document.getElementById(`qr-canvas-${id}`) as HTMLCanvasElement;
+    if (canvas) {
+      const pngUrl = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream"); // This forces the download
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = `${type}-${id}-qrcode.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Accès rapide</CardTitle>
-        <CardDescription>Scannez pour afficher la page publique sur un autre appareil.</CardDescription>
+        <CardDescription>Scannez ou téléchargez le code QR pour un accès rapide.</CardDescription>
       </CardHeader>
-      <CardContent className="flex justify-center items-center">
+      <CardContent className="flex flex-col items-center justify-center gap-4">
         {publicUrl ? (
-          <QRCodeCanvas
-            value={publicUrl}
-            size={150}
-            bgColor={"#ffffff"}
-            fgColor={"#000000"}
-            level={"L"}
-            includeMargin={false}
-          />
+          <>
+            <QRCodeCanvas
+              id={`qr-canvas-${id}`}
+              value={publicUrl}
+              size={150}
+              bgColor={"#ffffff"}
+              fgColor={"#000000"}
+              level={"L"}
+              includeMargin={false}
+            />
+            <Button variant="outline" onClick={handleDownload} className="w-full">
+              <Download className="mr-2 h-4 w-4" />
+              Télécharger
+            </Button>
+          </>
         ) : (
-          <Skeleton className="h-[150px] w-[150px]" />
+          <div className="flex flex-col items-center gap-4 w-full">
+            <Skeleton className="h-[150px] w-[150px]" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         )}
       </CardContent>
     </Card>
