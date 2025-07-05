@@ -57,13 +57,13 @@ function StandardDetails({ standard }: { standard: Standard | null }) {
         <div className="lg:col-span-2 space-y-6">
           <Card className="glass-effect">
              <CardHeader className="flex flex-row items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-hidden">
                     <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
                     <CardDescription className="pt-2 flex items-center gap-2">
                         <Badge variant="secondary" className="truncate" title={standard.category}>
                             {standard.category}
                         </Badge>
-                        <span className="text-muted-foreground">Version: {standard.version}</span>
+                        <span className="text-muted-foreground whitespace-nowrap">Version: {standard.version}</span>
                     </CardDescription>
                 </div>
                 <div className="print-hidden flex flex-col gap-2">
@@ -262,10 +262,10 @@ function StandardsPageContent() {
                                     onClick={() => setSelectedStandard(standard)}
                                 >
                                     <CardContent className="p-4 flex items-start justify-between">
-                                        <div className="flex-1 min-w-0 space-y-1">
+                                        <div className="flex-1 min-w-0 space-y-1 overflow-hidden">
                                           <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
                                           <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
-                                          <div className="flex items-center gap-2 pt-1 min-w-0">
+                                          <div className="flex items-center gap-2 pt-1">
                                               <Badge variant="outline" className="truncate" title={standard.category}>
                                                 {standard.category}
                                               </Badge>
