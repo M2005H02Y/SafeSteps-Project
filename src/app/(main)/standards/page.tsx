@@ -53,7 +53,7 @@ function StandardDetails({ standard }: { standard: Standard | null }) {
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
-       <div className="space-y-6 pr-4">
+       <div className="space-y-6">
         {/* Main card and details */}
         <Card className="glass-effect">
            <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -129,32 +129,46 @@ function PageSkeleton() {
         <PageHeader title="Standards" description="Gestion des documents standards et procédures">
           <Skeleton className="h-10 w-36" />
         </PageHeader>
-        <main className="flex-1 p-4 md:p-6 flex gap-6 overflow-hidden">
-          <div className="w-[35%] flex-col gap-6 print-hidden hidden lg:flex">
-            <Card className="glass-effect">
-              <CardContent className="p-4">
-                  <Skeleton className="h-9 w-full" />
-              </CardContent>
-            </Card>
-            <div className="flex-1 overflow-hidden">
-                 <ScrollArea className="h-full">
-                    <div className="space-y-2 pr-4">
-                        <Skeleton className="h-5 w-24 mb-2" />
-                        <Skeleton className="h-[76px] w-full" />
-                        <Skeleton className="h-[76px] w-full" />
-                        <Skeleton className="h-[76px] w-full" />
+        <main className="flex-1 p-4 md:p-6 overflow-hidden">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={35} minSize={20}>
+              <div className="flex flex-col h-full gap-6 print-hidden">
+                <Card className="glass-effect">
+                  <CardContent className="p-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Rechercher un standard..." 
+                        className="pl-9 bg-slate-50"
+                      />
                     </div>
-                </ScrollArea>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden workstation-details-print-full">
-              <Card className="glass-effect flex items-center justify-center h-full print-hidden">
-                <div className="text-center text-muted-foreground p-8">
-                  <FileText className="mx-auto h-16 w-16 mb-4" />
-                  <h3 className="text-xl font-semibold">Chargement...</h3>
+                  </CardContent>
+                </Card>
+
+                <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
+                        <div className="space-y-2 pr-4">
+                            <h3 className="text-sm font-medium text-muted-foreground px-2">Chargement...</h3>
+                            <Skeleton className="h-[76px] w-full" />
+                            <Skeleton className="h-[76px] w-full" />
+                            <Skeleton className="h-[76px] w-full" />
+                        </div>
+                    </ScrollArea>
                 </div>
-              </Card>
-          </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={65} minSize={30}>
+               <div className="h-full overflow-hidden workstation-details-print-full pl-6">
+                  <Card className="glass-effect flex items-center justify-center h-full print-hidden">
+                    <div className="text-center text-muted-foreground p-8">
+                      <FileText className="mx-auto h-16 w-16 mb-4" />
+                      <h3 className="text-xl font-semibold">Chargement...</h3>
+                    </div>
+                  </Card>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </main>
       </div>
     );
