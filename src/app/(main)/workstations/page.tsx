@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +39,7 @@ import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 // Component for displaying workstation details
@@ -147,13 +149,52 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   )
 }
 
-export default function WorkstationsPage() {
+function PageSkeleton() {
+    return (
+      <div className="flex flex-col h-full overflow-hidden">
+        <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
+          <Skeleton className="h-10 w-36" />
+        </PageHeader>
+        <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
+          <div className="lg:col-span-1 flex flex-col gap-6 print-hidden">
+            <Card className="glass-effect">
+              <CardContent className="p-4">
+                  <Skeleton className="h-9 w-full" />
+              </CardContent>
+            </Card>
+            <div className="flex-1 overflow-hidden">
+                 <ScrollArea className="h-full">
+                    <div className="space-y-2 pr-4">
+                        <Skeleton className="h-5 w-24 mb-2" />
+                        <Skeleton className="h-[76px] w-full" />
+                        <Skeleton className="h-[76px] w-full" />
+                        <Skeleton className="h-[76px] w-full" />
+                    </div>
+                </ScrollArea>
+            </div>
+          </div>
+          <div className="lg:col-span-2 overflow-hidden workstation-details-print-full">
+              <Card className="glass-effect flex items-center justify-center h-full print-hidden">
+                <div className="text-center text-muted-foreground p-8">
+                  <Cog className="mx-auto h-16 w-16 mb-4 animate-spin" />
+                  <h3 className="text-xl font-semibold">Chargement...</h3>
+                </div>
+              </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+function WorkstationsPageContent() {
   const [workstations, setWorkstations] = useState<Workstation[]>([]);
   const [selectedWorkstation, setSelectedWorkstation] = useState<Workstation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const engineFilter = searchParams.get('engine');
 
   const refreshWorkstations = () => {
     const freshData = getWorkstations();
@@ -170,8 +211,12 @@ export default function WorkstationsPage() {
   }, []);
 
   const filteredWorkstations = useMemo(() => {
-    return workstations.filter(ws => ws.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [workstations, searchTerm]);
+    let results = workstations;
+    if (engineFilter) {
+      results = results.filter(ws => ws.type === engineFilter);
+    }
+    return results.filter(ws => ws.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [workstations, searchTerm, engineFilter]);
 
   useEffect(() => {
     // If a workstation is deleted, and it was the selected one, clear selection.
@@ -179,6 +224,13 @@ export default function WorkstationsPage() {
         setSelectedWorkstation(null);
     }
   }, [workstations, selectedWorkstation]);
+
+  useEffect(() => {
+    // If the selected workstation is not in the filtered list (due to search/filter), deselect it.
+    if (selectedWorkstation && !filteredWorkstations.find(ws => ws.id === selectedWorkstation.id)) {
+      setSelectedWorkstation(null);
+    }
+  }, [filteredWorkstations, selectedWorkstation]);
 
   const openDeleteDialog = (id: string) => {
     setWorkstationToDelete(id);
@@ -208,7 +260,7 @@ export default function WorkstationsPage() {
     <>
       <div className="flex flex-col h-full overflow-hidden">
         <div className="print-hidden">
-          <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
+          <PageHeader title="Postes de Travail" description={engineFilter ? `Filtré par: ${engineFilter}` : "Gestion des 11 types d'engines industriels"}>
             <Button asChild className="gradient-primary">
                 <Link href="/workstations/new">
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -282,8 +334,8 @@ export default function WorkstationsPage() {
               <Card className="glass-effect flex items-center justify-center h-full print-hidden">
                 <div className="text-center text-muted-foreground p-8">
                   <Cog className="mx-auto h-16 w-16 mb-4" />
-                  <h3 className="text-xl font-semibold">Sélectionner un poste</h3>
-                  <p>Choisissez un poste de travail pour voir ses détails.</p>
+                  <h3 className="text-xl font-semibold">{engineFilter ? `Postes de type ${engineFilter}` : 'Sélectionner un poste'}</h3>
+                  <p>{filteredWorkstations.length > 0 ? `Choisissez un poste de travail dans la liste pour voir ses détails.` : `Aucun poste de travail trouvé pour "${engineFilter}".`}</p>
                 </div>
               </Card>
             )}
@@ -308,4 +360,12 @@ export default function WorkstationsPage() {
       </AlertDialog>
     </>
   );
+}
+
+export default function WorkstationsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton/>}>
+      <WorkstationsPageContent />
+    </Suspense>
+  )
 }

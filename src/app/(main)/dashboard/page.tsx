@@ -70,15 +70,15 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
                   {engines.map(engine => (
-                  <div key={engine} className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
+                    <Link key={engine} href={`/workstations?engine=${encodeURIComponent(engine)}`} className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors">
                       <div className="h-2 w-2 rounded-full bg-green-500"></div>
                       <span>{engine}</span>
-                  </div>
+                    </Link>
                   ))}
-                  <div className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
+                  <Link href="/workstations/new" className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
                       <div className="h-2 w-2 rounded-full bg-slate-300"></div>
                       <span>Ajouter un engine...</span>
-                    </div>
+                  </Link>
               </div>
             </Card>
         </div>
