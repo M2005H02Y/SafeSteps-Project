@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -128,8 +129,8 @@ function PageSkeleton() {
         <PageHeader title="Standards" description="Gestion des documents standards et procédures">
           <Skeleton className="h-10 w-36" />
         </PageHeader>
-        <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
-          <div className="lg:col-span-1 flex flex-col gap-6 print-hidden">
+        <main className="flex-1 p-4 md:p-6 flex gap-6 overflow-hidden">
+          <div className="w-[35%] flex-col gap-6 print-hidden hidden lg:flex">
             <Card className="glass-effect">
               <CardContent className="p-4">
                   <Skeleton className="h-9 w-full" />
@@ -146,7 +147,7 @@ function PageSkeleton() {
                 </ScrollArea>
             </div>
           </div>
-          <div className="lg:col-span-2 overflow-hidden workstation-details-print-full">
+          <div className="flex-1 overflow-hidden workstation-details-print-full">
               <Card className="glass-effect flex items-center justify-center h-full print-hidden">
                 <div className="text-center text-muted-foreground p-8">
                   <FileText className="mx-auto h-16 w-16 mb-4" />
