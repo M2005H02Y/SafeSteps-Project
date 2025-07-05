@@ -19,7 +19,7 @@ import {
   FileSpreadsheet,
   Edit,
 } from 'lucide-react';
-import { getWorkstations, deleteWorkstation, addWorkstation, Workstation, engineTypes } from '@/lib/data';
+import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -31,139 +31,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
-
-// Component for the new workstation modal form
-function NewWorkstationForm({ setOpen, refreshWorkstations }: { setOpen: (open: boolean) => void, refreshWorkstations: () => void }) {
-  const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [customType, setCustomType] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const OTHER_ENGINE_VALUE = 'AUTRE';
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const finalType = type === OTHER_ENGINE_VALUE ? customType.trim() : type;
-
-    if (!name.trim() || !finalType) {
-      toast({
-        title: "Erreur de validation",
-        description: "Le nom du poste et le type d'engine sont obligatoires.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    const success = addWorkstation({ name, type: finalType, description: '', files: [], tableData: [] });
-
-    if (success) {
-      toast({
-        title: "Poste de travail créé",
-        description: "Le nouveau poste de travail a été enregistré avec succès.",
-      });
-      refreshWorkstations();
-      setOpen(false);
-    } else {
-      toast({
-        title: "Erreur d'enregistrement",
-        description: "Impossible de sauvegarder le poste de travail.",
-        variant: "destructive",
-      });
-    }
-    setIsSubmitting(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <DialogHeader>
-        <DialogTitle>Créer un nouveau poste</DialogTitle>
-        <DialogDescription>
-          Remplissez les informations ci-dessous. Vous pourrez ajouter plus de détails plus tard.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="grid gap-4 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right">
-            Nom
-          </Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="col-span-3"
-            placeholder="Ex: Bulls D11 #001"
-            required
-          />
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="type" className="text-right">
-            Type
-          </Label>
-          <Select onValueChange={setType} value={type} required>
-            <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Sélectionnez un type d'engine" />
-            </SelectTrigger>
-            <SelectContent>
-                {engineTypes.map(engine => (
-                    <SelectItem key={engine} value={engine}>{engine}</SelectItem>
-                ))}
-                <SelectItem value={OTHER_ENGINE_VALUE}>Autre (spécifier)</SelectItem>
-            </SelectContent>
-           </Select>
-        </div>
-        {type === OTHER_ENGINE_VALUE && (
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="custom-type" className="text-right">
-              Nom Engine
-            </Label>
-            <Input
-              id="custom-type"
-              value={customType}
-              onChange={(e) => setCustomType(e.target.value)}
-              className="col-span-3"
-              placeholder="Entrez le nom du nouvel engine"
-              required
-            />
-          </div>
-        )}
-      </div>
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="outline" type="button">Annuler</Button>
-        </DialogClose>
-        <Button type="submit" disabled={isSubmitting} className="gradient-primary">
-          {isSubmitting ? "Création..." : "Créer le poste"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-}
 
 
 // Component for displaying workstation details
@@ -267,7 +140,6 @@ export default function WorkstationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
-  const [isNewWorkstationModalOpen, setIsNewWorkstationModalOpen] = useState(false);
   const { toast } = useToast();
 
   const refreshWorkstations = () => {
@@ -276,13 +148,12 @@ export default function WorkstationsPage() {
     if (selectedWorkstation) {
         const updatedSelected = freshData.find(ws => ws.id === selectedWorkstation.id) || null;
         setSelectedWorkstation(updatedSelected);
-    } else if (freshData.length > 0) {
-      // setSelectedWorkstation(freshData[0]);
     }
   };
 
   useEffect(() => {
-    refreshWorkstations();
+    const freshData = getWorkstations();
+    setWorkstations(freshData);
   }, []);
 
   const filteredWorkstations = useMemo(() => {
@@ -290,15 +161,11 @@ export default function WorkstationsPage() {
   }, [workstations, searchTerm]);
 
   useEffect(() => {
-    if (workstations.length > 0 && !selectedWorkstation) {
-        // Automatically select the first workstation if none is selected, but only from the filtered list
-        if(filteredWorkstations.length > 0) {
-            // setSelectedWorkstation(filteredWorkstations[0]);
-        } else {
-            setSelectedWorkstation(null);
-        }
+    // If a workstation is deleted, and it was the selected one, clear selection.
+    if (selectedWorkstation && !workstations.find(ws => ws.id === selectedWorkstation.id)) {
+        setSelectedWorkstation(null);
     }
-  }, [filteredWorkstations, workstations, selectedWorkstation]);
+  }, [workstations, selectedWorkstation]);
 
   const openDeleteDialog = (id: string) => {
     setWorkstationToDelete(id);
@@ -312,11 +179,7 @@ export default function WorkstationsPage() {
         toast({
           title: "Poste de travail supprimé",
         });
-        const newWorkstations = workstations.filter(ws => ws.id !== workstationToDelete);
-        setWorkstations(newWorkstations);
-        if (selectedWorkstation?.id === workstationToDelete) {
-          setSelectedWorkstation(null);
-        }
+        refreshWorkstations();
       } else {
         toast({
           title: "Erreur",
@@ -332,17 +195,12 @@ export default function WorkstationsPage() {
     <>
       <div className="flex flex-col h-full overflow-hidden">
         <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
-          <Dialog open={isNewWorkstationModalOpen} onOpenChange={setIsNewWorkstationModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
+           <Button asChild className="gradient-primary">
+              <Link href="/workstations/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nouveau Poste
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
-              <NewWorkstationForm setOpen={setIsNewWorkstationModalOpen} refreshWorkstations={refreshWorkstations} />
-            </DialogContent>
-          </Dialog>
+              </Link>
+            </Button>
         </PageHeader>
         <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
           {/* Left Column */}

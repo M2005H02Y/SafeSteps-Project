@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -25,14 +26,19 @@ export default function NewWorkstationPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
+  const [customType, setCustomType] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const OTHER_ENGINE_VALUE = 'AUTRE';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !type.trim()) {
+    const finalType = type === OTHER_ENGINE_VALUE ? customType.trim() : type;
+
+    if (!name.trim() || !finalType) {
         toast({
             title: "Erreur de validation",
             description: "Le nom et le type du poste de travail sont obligatoires.",
@@ -49,7 +55,7 @@ export default function NewWorkstationPage() {
 
       const success = addWorkstation({ 
         name,
-        type, 
+        type: finalType, 
         description, 
         tableData,
         image: mainImage?.url,
@@ -62,6 +68,7 @@ export default function NewWorkstationPage() {
           description: "Le nouveau poste de travail a été enregistré avec succès.",
         });
         router.push('/workstations');
+        router.refresh();
       } else {
         throw new Error("Local storage save failed");
       }
@@ -113,8 +120,19 @@ export default function NewWorkstationPage() {
                         {engineTypes.map(engine => (
                             <SelectItem key={engine} value={engine}>{engine}</SelectItem>
                         ))}
+                        <SelectItem value={OTHER_ENGINE_VALUE}>Autre (spécifier)</SelectItem>
                     </SelectContent>
                   </Select>
+                  {type === OTHER_ENGINE_VALUE && (
+                    <Input
+                        id="ws-custom-type"
+                        placeholder="Entrez le nom de l'engine"
+                        required
+                        value={customType}
+                        onChange={e => setCustomType(e.target.value)}
+                        className="mt-2"
+                    />
+                )}
               </div>
             </div>
             <div className="space-y-2">

@@ -134,7 +134,7 @@ export function addWorkstation(workstation: Omit<Workstation, 'id' | 'createdAt'
       name: workstation.name,
       type: workstation.type,
       description: workstation.description,
-      image: workstation.image || 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
+      image: workstation.image,
       files: workstation.files || [],
       tableData: workstation.tableData || [],
   };
@@ -176,7 +176,7 @@ export function addStandard(standard: Omit<Standard, 'id'>): boolean {
       category: standard.category,
       version: standard.version,
       description: standard.description,
-      image: standard.image || 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
+      image: standard.image,
       files: standard.files || []
   };
   const updatedStandards = [newStandard, ...standards];
