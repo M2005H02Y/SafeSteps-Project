@@ -10,13 +10,26 @@ type Row = Record<string, string>;
 
 interface DynamicTableProps {
   onDataChange?: (data: Row[]) => void;
+  initialData?: Row[];
 }
 
-export default function DynamicTable({ onDataChange }: DynamicTableProps) {
-  const [headers, setHeaders] = useState<string[]>(['Étape', 'Tâche', 'Durée']);
-  const [rows, setRows] = useState<Row[]>([
-    { 'Étape': '1', 'Tâche': 'Inspection initiale', 'Durée': '10 min' },
-  ]);
+export default function DynamicTable({ onDataChange, initialData }: DynamicTableProps) {
+  const getInitialHeaders = () => {
+      if (initialData && initialData.length > 0 && Object.keys(initialData[0]).length > 0) {
+          return Object.keys(initialData[0]);
+      }
+      return ['Étape', 'Tâche', 'Durée'];
+  };
+
+  const getInitialRows = () => {
+    if (initialData && initialData.length > 0) {
+        return initialData;
+    }
+    return [{ 'Étape': '1', 'Tâche': 'Inspection initiale', 'Durée': '10 min' }];
+  };
+  
+  const [headers, setHeaders] = useState<string[]>(getInitialHeaders());
+  const [rows, setRows] = useState<Row[]>(getInitialRows());
 
   useEffect(() => {
     // Filter out rows where all cell values are empty strings

@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useRef, ReactNode, ChangeEvent } from 'react';
+import { useState, useRef, ReactNode, ChangeEvent, useEffect } from 'react';
 import { Upload, X, FileText, Paperclip, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { FileAttachment, getFileType } from '@/lib/data';
-
-interface FilePreview {
-  id: string;
-  file: File;
-  previewUrl: string;
-}
 
 interface UploadingFile {
   id: string;
@@ -21,15 +15,20 @@ interface UploadingFile {
 
 interface FileUploadProps {
   onUploadComplete?: (files: FileAttachment[]) => void;
+  initialFiles?: FileAttachment[];
 }
 
-export default function FileUpload({ onUploadComplete }: FileUploadProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<FileAttachment[]>([]);
+export default function FileUpload({ onUploadComplete, initialFiles = [] }: FileUploadProps) {
+  const [uploadedFiles, setUploadedFiles] = useState<FileAttachment[]>(initialFiles);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  useEffect(() => {
+      onUploadComplete?.(uploadedFiles);
+  }, [uploadedFiles, onUploadComplete]);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {

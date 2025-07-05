@@ -36,7 +36,7 @@ const initialWorkstations: Workstation[] = [
     id: 'ws-001',
     name: "Ligne d'assemblage Alpha",
     description: "Ligne d'assemblage principale pour la fabrication de composants.",
-    image: 'https://placehold.co/600x400.png',
+    image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
     tableData: [
       { etape: '1', tache: 'Inspection des composants', duree: '15 min' },
@@ -49,7 +49,7 @@ const initialWorkstations: Workstation[] = [
     id: 'ws-002',
     name: "Poste d'emballage Bravo",
     description: "Poste de préparation finale pour l'emballage et l'expédition.",
-    image: 'https://placehold.co/600x400.png',
+    image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
     tableData: [
       { etape: '1', tache: 'Mise en boîte du produit', duree: '10 min' },
@@ -60,8 +60,8 @@ const initialWorkstations: Workstation[] = [
 ];
 
 const initialStandards: Standard[] = [
-  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://placehold.co/600x400.png', files: [] },
-  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://placehold.co/600x400.png', files: [] },
+  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg', files: [] },
+  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg', files: [] },
 ];
 
 const initialForms: Form[] = [
@@ -108,6 +108,7 @@ export const getFileType = (file: File): FileAttachment['type'] => {
     return 'other';
 }
 
+// Workstation Functions
 export function getWorkstations(): Workstation[] {
   return getFromStorage('workstations', initialWorkstations);
 }
@@ -118,7 +119,7 @@ export function addWorkstation(workstation: Omit<Workstation, 'id'>): boolean {
       id: `ws-${Date.now()}`,
       name: workstation.name,
       description: workstation.description,
-      image: workstation.image || 'https://placehold.co/600x400.png',
+      image: workstation.image || 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
       files: workstation.files || [],
       tableData: workstation.tableData || [],
   };
@@ -131,6 +132,23 @@ export function getWorkstationById(id: string): Workstation | undefined {
   return workstations.find(ws => ws.id === id);
 }
 
+export function updateWorkstation(id: string, data: Partial<Omit<Workstation, 'id'>>): boolean {
+    const workstations = getWorkstations();
+    const index = workstations.findIndex(ws => ws.id === id);
+    if (index === -1) return false;
+    
+    workstations[index] = { ...workstations[index], ...data };
+    
+    return saveToStorage('workstations', workstations);
+}
+
+export function deleteWorkstation(id: string): boolean {
+    let workstations = getWorkstations();
+    workstations = workstations.filter(ws => ws.id !== id);
+    return saveToStorage('workstations', workstations);
+}
+
+// Standard Functions
 export function getStandards(): Standard[] {
   return getFromStorage('standards', initialStandards);
 }
@@ -143,7 +161,7 @@ export function addStandard(standard: Omit<Standard, 'id'>): boolean {
       category: standard.category,
       version: standard.version,
       description: standard.description,
-      image: standard.image || 'https://placehold.co/600x400.png',
+      image: standard.image || 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
       files: standard.files || []
   };
   const updatedStandards = [newStandard, ...standards];
@@ -155,6 +173,23 @@ export function getStandardById(id: string): Standard | undefined {
     return standards.find(s => s.id === id);
 }
 
+export function updateStandard(id: string, data: Partial<Omit<Standard, 'id'>>): boolean {
+    const standards = getStandards();
+    const index = standards.findIndex(s => s.id === id);
+    if (index === -1) return false;
+
+    standards[index] = { ...standards[index], ...data };
+    
+    return saveToStorage('standards', standards);
+}
+
+export function deleteStandard(id: string): boolean {
+    let standards = getStandards();
+    standards = standards.filter(s => s.id !== id);
+    return saveToStorage('standards', standards);
+}
+
+// Form Functions
 export function getForms(): Form[] {
   return getFromStorage('forms', initialForms);
 }
@@ -175,4 +210,20 @@ export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>): boolean {
 export function getFormById(id: string): Form | undefined {
     const forms = getForms();
     return forms.find(f => f.id === id);
+}
+
+export function updateForm(id: string, data: Partial<Omit<Form, 'id' | 'lastUpdated'>>): boolean {
+    const forms = getForms();
+    const index = forms.findIndex(f => f.id === id);
+    if (index === -1) return false;
+
+    forms[index] = { ...forms[index], ...data, lastUpdated: new Date().toISOString().split('T')[0] };
+
+    return saveToStorage('forms', forms);
+}
+
+export function deleteForm(id: string): boolean {
+    let forms = getForms();
+    forms = forms.filter(f => f.id !== id);
+    return saveToStorage('forms', forms);
 }
