@@ -6,7 +6,6 @@ import {
   BookCheck, 
   FileText, 
   Cog,
-  Activity,
   PlusCircle,
   FileUp,
   LineChart
@@ -41,12 +40,6 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-slate-600">Vue d'ensemble de l'activité du système de gestion industrielle.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button className="bg-gradient-primary text-white">
-              <Activity className="mr-2 h-4 w-4" />
-              Export Global
-            </Button>
           </div>
         </div>
 
