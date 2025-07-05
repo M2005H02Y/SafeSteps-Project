@@ -262,10 +262,10 @@ function StandardsPageContent() {
                                     onClick={() => setSelectedStandard(standard)}
                                 >
                                     <CardContent className="p-4 flex items-start justify-between">
-                                        <div className="flex-1 space-y-1 overflow-hidden min-w-0">
+                                        <div className="flex-1 min-w-0 space-y-1">
                                           <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
                                           <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
-                                          <div className="flex items-center gap-2 pt-1">
+                                          <div className="flex items-center gap-2 pt-1 overflow-hidden">
                                               <Badge variant="outline" className="truncate" title={standard.category}>
                                                 {standard.category}
                                               </Badge>

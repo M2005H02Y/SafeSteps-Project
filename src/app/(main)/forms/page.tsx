@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -274,8 +275,8 @@ function FormsPageContent() {
                                     onClick={() => setSelectedForm(form)}
                                 >
                                     <CardContent className="p-4 flex items-start justify-between">
-                                        <div className="flex-1 space-y-1 overflow-hidden">
-                                          <div className="font-bold text-slate-800 truncate">{form.name}</div>
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                          <div className="font-bold text-slate-800 truncate" title={form.name}>{form.name}</div>
                                           <Badge variant="secondary" className="font-normal">{form.type}</Badge>
                                           <div className="text-xs text-muted-foreground pt-1">
                                               Mis à jour le {new Date(form.lastUpdated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}

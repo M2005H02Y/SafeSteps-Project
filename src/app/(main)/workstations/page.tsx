@@ -302,24 +302,31 @@ function WorkstationsPageContent() {
                                     onClick={() => setSelectedWorkstation(ws)}
                                 >
                                     <CardContent className="p-4 flex items-start justify-between">
-                                        <div className="flex-1 space-y-1">
-                                          <div className="font-bold text-slate-800">{ws.name}</div>
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                          <div className="font-bold text-slate-800 truncate" title={ws.name}>{ws.name}</div>
                                           <Badge variant="secondary" className="font-normal">{ws.type}</Badge>
                                           <div className="text-xs text-muted-foreground pt-1">
                                               Créé le {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
                                           </div>
                                         </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openDeleteDialog(ws.id);
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex flex-col gap-2 ml-2">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:bg-slate-200 shrink-0" asChild onClick={(e) => e.stopPropagation()}>
+                                                <Link href={`/workstations/${ws.id}/edit`}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDeleteDialog(ws.id);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))}
