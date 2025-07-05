@@ -53,72 +53,73 @@ function StandardDetails({ standard }: { standard: Standard | null }) {
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
-       <div className="space-y-6">
-        {/* Main content and sidebar content are now stacked vertically inside the scroll area */}
-        <div className="space-y-6">
-            <Card className="glass-effect">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
+        {/* Main content */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="glass-effect">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
-                <div className="flex-1 min-w-0 overflow-hidden">
-                    <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
-                    <CardDescription className="pt-2 flex items-center gap-2 overflow-hidden">
-                        <Badge variant="secondary" className="truncate" title={standard.category}>
-                            {standard.category}
-                        </Badge>
-                        <span className="text-muted-foreground whitespace-nowrap">Version: {standard.version}</span>
-                    </CardDescription>
-                </div>
-                <div className="print-hidden flex flex-col gap-2">
-                    <Button asChild variant="outline">
-                        <Link href={`/standards/${standard.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                        </Link>
-                    </Button>
-                    <Button onClick={handlePrint} variant="outline">
-                        <Printer className="mr-2 h-4 w-4" />
-                        Imprimer
-                    </Button>
-                </div>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
+                <CardDescription className="pt-2 flex items-center gap-2 overflow-hidden">
+                  <Badge variant="secondary" className="truncate" title={standard.category}>
+                    {standard.category}
+                  </Badge>
+                  <span className="text-muted-foreground whitespace-nowrap">Version: {standard.version}</span>
+                </CardDescription>
+              </div>
+              <div className="print-hidden flex flex-col gap-2">
+                <Button asChild variant="outline">
+                  <Link href={`/standards/${standard.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Modifier
+                  </Link>
+                </Button>
+                <Button onClick={handlePrint} variant="outline">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimer
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-                {standard.image && (
-                    <div className="relative aspect-video w-full mb-4">
-                        <Image src={standard.image} alt={standard.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="certificate document"/>
-                    </div>
-                )}
-                {standard.description && (
-                  <div className="max-h-60 overflow-y-auto pr-2">
-                    <p className="text-muted-foreground break-words">{standard.description}</p>
-                  </div>
-                )}
+              {standard.image && (
+                <div className="relative aspect-video w-full mb-4">
+                  <Image src={standard.image} alt={standard.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="certificate document" />
+                </div>
+              )}
+              {standard.description && (
+                <div className="max-h-60 overflow-y-auto pr-2">
+                  <p className="text-muted-foreground break-words">{standard.description}</p>
+                </div>
+              )}
             </CardContent>
-            </Card>
+          </Card>
         </div>
-        
+
+        {/* Sidebar-like content */}
         <div className="space-y-6">
-            <QRCode type="standard" id={standard.id} data={standard} />
-            
-            {standard.files && standard.files.length > 0 && (
+          <QRCode type="standard" id={standard.id} data={standard} />
+
+          {standard.files && standard.files.length > 0 && (
             <Card className="glass-effect">
-                <CardHeader>
+              <CardHeader>
                 <CardTitle>Fichiers joints</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
+              </CardHeader>
+              <CardContent className="space-y-2">
                 {standard.files.map(file => (
-                    <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
+                  <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
                     <div className="flex items-center gap-3 overflow-hidden">
-                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                      {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                      {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                      {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                      <span className="text-sm font-medium truncate">{file.name}</span>
                     </div>
-                    <Download className="h-4 w-4 text-muted-foreground ml-2"/>
-                    </a>
+                    <Download className="h-4 w-4 text-muted-foreground ml-2" />
+                  </a>
                 ))}
-                </CardContent>
+              </CardContent>
             </Card>
-            )}
+          )}
         </div>
       </div>
     </ScrollArea>
