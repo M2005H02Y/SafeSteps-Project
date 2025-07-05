@@ -48,11 +48,9 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
   }, [type, id, data]);
 
   const handleDownload = () => {
-    const canvas = document.getElementById(`qr-canvas-${id}`) as HTMLCanvasElement;
+    const canvas = document.getElementById(`qr-canvas-download-${id}`) as HTMLCanvasElement;
     if (canvas) {
-      const pngUrl = canvas
-        .toDataURL("image/png")
-        .replace("image/png", "image/octet-stream"); // This forces the download
+      const pngUrl = canvas.toDataURL("image/png");
       const downloadLink = document.createElement("a");
       downloadLink.href = pngUrl;
       downloadLink.download = `${type}-${id}-qrcode.png`;
@@ -71,14 +69,25 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
       <CardContent className="flex flex-col items-center justify-center gap-4">
         {publicUrl ? (
           <>
+            {/* Visible QR Code for display */}
             <QRCodeCanvas
-              id={`qr-canvas-${id}`}
               value={publicUrl}
               size={150}
               bgColor={"#ffffff"}
               fgColor={"#000000"}
               level={"L"}
               includeMargin={false}
+            />
+            {/* Hidden QR Code for high-resolution download */}
+            <QRCodeCanvas
+              id={`qr-canvas-download-${id}`}
+              value={publicUrl}
+              size={512}
+              bgColor={"#ffffff"}
+              fgColor={"#000000"}
+              level={"H"}
+              includeMargin={true}
+              className="hidden"
             />
             <Button variant="outline" onClick={handleDownload} className="w-full">
               <Download className="mr-2 h-4 w-4" />
