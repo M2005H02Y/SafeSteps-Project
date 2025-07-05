@@ -11,9 +11,16 @@ import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { getWorkstationById, updateWorkstation, FileAttachment, Workstation } from '@/lib/data';
+import { getWorkstationById, updateWorkstation, FileAttachment, Workstation, engineTypes } from '@/lib/data';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function EditWorkstationPage() {
   const router = useRouter();
@@ -22,6 +29,7 @@ export default function EditWorkstationPage() {
 
   const [workstation, setWorkstation] = useState<Workstation | null>(null);
   const [name, setName] = useState('');
+  const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -34,6 +42,7 @@ export default function EditWorkstationPage() {
       if (wsData) {
         setWorkstation(wsData);
         setName(wsData.name);
+        setType(wsData.type);
         setDescription(wsData.description);
         setTableData(wsData.tableData || []);
         const allFiles = [];
@@ -68,7 +77,8 @@ export default function EditWorkstationPage() {
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
       const success = updateWorkstation(id, { 
-        name, 
+        name,
+        type,
         description, 
         tableData,
         image: mainImage?.url,
@@ -126,9 +136,24 @@ export default function EditWorkstationPage() {
             <CardDescription>Modifiez le nom et la description du poste de travail.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="ws-name">Nom du poste de travail</Label>
-              <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
+            <div className="grid md:grid-cols-2 gap-4">
+               <div className="space-y-2">
+                <Label htmlFor="ws-name">Nom du poste de travail</Label>
+                <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="ws-type">Type d'engine</Label>
+                 <Select onValueChange={setType} value={type}>
+                    <SelectTrigger id="ws-type">
+                        <SelectValue placeholder="Sélectionnez un type d'engine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {engineTypes.map(engine => (
+                            <SelectItem key={engine} value={engine}>{engine}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="ws-desc">Description</Label>

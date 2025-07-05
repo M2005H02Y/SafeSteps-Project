@@ -4,9 +4,16 @@ export type FileAttachment = {
   type: 'image' | 'pdf' | 'excel' | 'other';
 };
 
+export const engineTypes = [
+  "NIV KOM", "ARR CAT", "Bulls D9", "Bulls D11", "Camion ravitaillement GO CAT", 
+  "Chargeuse 992K", "Chargeuse 994F", "NIV CAT", "Paydozer KOM", 
+  "Sondeuse DKS", "Sondeuse SKF"
+];
+
 export type Workstation = {
   id: string;
   name: string;
+  type: string;
   description: string;
   image?: string;
   files?: FileAttachment[];
@@ -35,6 +42,7 @@ const initialWorkstations: Workstation[] = [
   {
     id: 'ws-001',
     name: "Ligne d'assemblage Alpha",
+    type: "Chargeuse 992K",
     description: "Ligne d'assemblage principale pour la fabrication de composants.",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
@@ -48,6 +56,7 @@ const initialWorkstations: Workstation[] = [
   {
     id: 'ws-002',
     name: "Poste d'emballage Bravo",
+    type: "Bulls D9",
     description: "Poste de préparation finale pour l'emballage et l'expédition.",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
@@ -118,6 +127,7 @@ export function addWorkstation(workstation: Omit<Workstation, 'id'>): boolean {
   const newWorkstation: Workstation = { 
       id: `ws-${Date.now()}`,
       name: workstation.name,
+      type: workstation.type,
       description: workstation.description,
       image: workstation.image || 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
       files: workstation.files || [],

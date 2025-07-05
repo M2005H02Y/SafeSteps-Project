@@ -11,12 +11,20 @@ import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addWorkstation, FileAttachment } from '@/lib/data';
+import { addWorkstation, FileAttachment, engineTypes } from '@/lib/data';
 import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function NewWorkstationPage() {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -24,10 +32,10 @@ export default function NewWorkstationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    if (!name.trim() || !type.trim()) {
         toast({
             title: "Erreur de validation",
-            description: "Le nom du poste de travail est obligatoire.",
+            description: "Le nom et le type du poste de travail sont obligatoires.",
             variant: "destructive",
         });
         return;
@@ -40,7 +48,8 @@ export default function NewWorkstationPage() {
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
       const success = addWorkstation({ 
-        name, 
+        name,
+        type, 
         description, 
         tableData,
         image: mainImage?.url,
@@ -89,9 +98,24 @@ export default function NewWorkstationPage() {
             <CardDescription>Fournissez un nom et une description pour le nouveau poste de travail.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="ws-name">Nom du poste de travail</Label>
-              <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
+             <div className="grid md:grid-cols-2 gap-4">
+               <div className="space-y-2">
+                <Label htmlFor="ws-name">Nom du poste de travail</Label>
+                <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="ws-type">Type d'engine</Label>
+                 <Select onValueChange={setType} value={type} required>
+                    <SelectTrigger id="ws-type">
+                        <SelectValue placeholder="Sélectionnez un type d'engine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {engineTypes.map(engine => (
+                            <SelectItem key={engine} value={engine}>{engine}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="ws-desc">Description</Label>
@@ -104,7 +128,7 @@ export default function NewWorkstationPage() {
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
             <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. La première image sera utilisée comme image principale.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             <FileUpload onUploadComplete={setFiles} />
           </CardContent>
@@ -114,7 +138,7 @@ export default function NewWorkstationPage() {
           <CardHeader>
             <CardTitle>Tableau des procédures</CardTitle>
             <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             <DynamicTable onDataChange={setTableData} />
           </CardContent>

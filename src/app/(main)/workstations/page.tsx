@@ -1,14 +1,24 @@
 "use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, PlusCircle } from 'lucide-react';
-import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
+import {
+  PlusCircle,
+  Search,
+  Trash2,
+  Cog,
+  File as FileIcon,
+  FileText as FileTextIcon,
+  Download,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  Edit,
+} from 'lucide-react';
+import { getWorkstations, deleteWorkstation, addWorkstation, Workstation, engineTypes } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -19,38 +29,268 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import QRCode from '@/components/qr-code';
+import Link from 'next/link';
+
+// Component for the new workstation modal form
+function NewWorkstationForm({ setOpen, refreshWorkstations }: { setOpen: (open: boolean) => void, refreshWorkstations: () => void }) {
+  const { toast } = useToast();
+  const [name, setName] = useState('');
+  const [type, setType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !type.trim()) {
+      toast({
+        title: "Erreur de validation",
+        description: "Le nom et le type du poste sont obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const success = addWorkstation({ name, type, description: '', files: [], tableData: [] });
+
+    if (success) {
+      toast({
+        title: "Poste de travail créé",
+        description: "Le nouveau poste de travail a été enregistré avec succès.",
+      });
+      refreshWorkstations();
+      setOpen(false);
+    } else {
+      toast({
+        title: "Erreur d'enregistrement",
+        description: "Impossible de sauvegarder le poste de travail.",
+        variant: "destructive",
+      });
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <DialogHeader>
+        <DialogTitle>Créer un nouveau poste</DialogTitle>
+        <DialogDescription>
+          Remplissez les informations ci-dessous. Vous pourrez ajouter plus de détails plus tard.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="name" className="text-right">
+            Nom
+          </Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="col-span-3"
+            placeholder="Ex: Bulls D11 #001"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="type" className="text-right">
+            Type
+          </Label>
+          <Select onValueChange={setType} value={type}>
+            <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Sélectionnez un type d'engine" />
+            </SelectTrigger>
+            <SelectContent>
+                {engineTypes.map(engine => (
+                    <SelectItem key={engine} value={engine}>{engine}</SelectItem>
+                ))}
+            </SelectContent>
+           </Select>
+        </div>
+      </div>
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline" type="button">Annuler</Button>
+        </DialogClose>
+        <Button type="submit" disabled={isSubmitting} className="gradient-primary">
+          {isSubmitting ? "Création..." : "Créer le poste"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+
+// Component for displaying workstation details
+function WorkstationDetails({ workstation }: { workstation: Workstation | null }) {
+  if (!workstation) return null;
+
+  const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
+
+  return (
+    <ScrollArea className="h-[calc(100vh-160px)]">
+      <div className="space-y-6 pr-4">
+        <Card className="glass-effect">
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle className="break-words text-2xl">{workstation.name}</CardTitle>
+                <CardDescription className="break-words pt-2 flex items-center gap-2">
+                  <Badge variant="secondary">{workstation.type}</Badge>
+                   - 
+                  <span>{workstation.description}</span>
+                </CardDescription>
+              </div>
+              <Button asChild variant="outline">
+                  <Link href={`/workstations/${workstation.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Modifier
+                  </Link>
+              </Button>
+            </CardHeader>
+            {workstation.image && (
+              <CardContent>
+                    <div className="relative aspect-video w-full">
+                        <Image src={workstation.image} alt={workstation.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="assembly line" />
+                    </div>
+              </CardContent>
+            )}
+          </Card>
+        
+        {workstation.tableData && workstation.tableData.length > 0 && (
+            <Card className="glass-effect">
+                <CardHeader>
+                    <CardTitle>Procédures</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {workstation.tableData.map((row, index) => (
+                                    <TableRow key={index}>
+                                        {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {workstation.files && workstation.files.length > 0 && (
+              <Card className="glass-effect">
+                <CardHeader>
+                  <CardTitle>Fichiers joints</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {workstation.files.map(file => (
+                     <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                            {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                            {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                            {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                            <span className="text-sm font-medium truncate">{file.name}</span>
+                        </div>
+                        <Download className="h-4 w-4 text-muted-foreground ml-2"/>
+                     </a>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            <QRCode type="workstation" id={workstation.id} data={workstation} />
+        </div>
+      </div>
+    </ScrollArea>
+  )
+}
 
 export default function WorkstationsPage() {
   const [workstations, setWorkstations] = useState<Workstation[]>([]);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedWorkstationId, setSelectedWorkstationId] = useState<string | null>(null)
-  const { toast } = useToast()
+  const [selectedWorkstation, setSelectedWorkstation] = useState<Workstation | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
+  const [isNewWorkstationModalOpen, setIsNewWorkstationModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const refreshWorkstations = () => {
+    const freshData = getWorkstations();
+    setWorkstations(freshData);
+    if (selectedWorkstation) {
+        const updatedSelected = freshData.find(ws => ws.id === selectedWorkstation.id) || null;
+        setSelectedWorkstation(updatedSelected);
+    } else if (freshData.length > 0) {
+      // setSelectedWorkstation(freshData[0]);
+    }
+  };
 
   useEffect(() => {
-    setWorkstations(getWorkstations());
+    refreshWorkstations();
   }, []);
 
+  const filteredWorkstations = useMemo(() => {
+    return workstations.filter(ws => ws.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [workstations, searchTerm]);
+
+  useEffect(() => {
+    if (workstations.length > 0 && !selectedWorkstation) {
+        // Automatically select the first workstation if none is selected, but only from the filtered list
+        if(filteredWorkstations.length > 0) {
+            // setSelectedWorkstation(filteredWorkstations[0]);
+        } else {
+            setSelectedWorkstation(null);
+        }
+    }
+  }, [filteredWorkstations, workstations, selectedWorkstation]);
+
   const openDeleteDialog = (id: string) => {
-    setSelectedWorkstationId(id);
+    setWorkstationToDelete(id);
     setIsDeleteDialogOpen(true);
-  }
+  };
 
   const handleDeleteConfirm = () => {
-    if (selectedWorkstationId) {
-      const success = deleteWorkstation(selectedWorkstationId);
+    if (workstationToDelete) {
+      const success = deleteWorkstation(workstationToDelete);
       if (success) {
         toast({
           title: "Poste de travail supprimé",
-          description: "Le poste de travail a été supprimé avec succès.",
         });
-        setWorkstations(getWorkstations());
+        const newWorkstations = workstations.filter(ws => ws.id !== workstationToDelete);
+        setWorkstations(newWorkstations);
+        if (selectedWorkstation?.id === workstationToDelete) {
+          setSelectedWorkstation(null);
+        }
       } else {
         toast({
           title: "Erreur",
@@ -58,73 +298,101 @@ export default function WorkstationsPage() {
           variant: "destructive",
         });
       }
-      setSelectedWorkstationId(null);
+      setWorkstationToDelete(null);
     }
-  }
-
-
+  };
+  
   return (
     <>
-      <div className="flex flex-col h-full">
-        <PageHeader title="Postes de travail">
-          <Button asChild>
-            <Link href="/workstations/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Créer un poste de travail
-            </Link>
-          </Button>
+      <div className="flex flex-col h-full overflow-hidden">
+        <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
+          <Dialog open={isNewWorkstationModalOpen} onOpenChange={setIsNewWorkstationModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nouveau Poste
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[480px]">
+              <NewWorkstationForm setOpen={setIsNewWorkstationModalOpen} refreshWorkstations={refreshWorkstations} />
+            </DialogContent>
+          </Dialog>
         </PageHeader>
-        <main className="flex-1 p-4 md:p-6">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead className="hidden md:table-cell">Description</TableHead>
-                    <TableHead className="hidden sm:table-cell">Ressources</TableHead>
-                    <TableHead><span className="sr-only">Actions</span></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {workstations.map((ws) => (
-                    <TableRow key={ws.id}>
-                      <TableCell className="font-medium">
-                        <Link href={`/workstations/${ws.id}`} className="hover:underline">
-                          {ws.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-sm truncate hidden md:table-cell">{ws.description}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="flex gap-1">
-                          {ws.files && ws.files.length > 0 && <Badge variant="secondary">{ws.files.length} Fichiers</Badge>}
-                          {ws.tableData && ws.tableData.length > 0 && <Badge variant="secondary">{ws.tableData.length} Étapes</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild><Link href={`/workstations/${ws.id}`}>Voir</Link></DropdownMenuItem>
-                            <DropdownMenuItem asChild><Link href={`/workstations/${ws.id}/edit`}>Modifier</Link></DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => openDeleteDialog(ws.id)} className="text-red-600">Supprimer</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
+          {/* Left Column */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <Card className="glass-effect">
+              <CardContent className="p-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Rechercher un poste..." 
+                    className="pl-9 bg-slate-50"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex-1 overflow-hidden">
+                 <ScrollArea className="h-full">
+                    <div className="space-y-2 pr-4">
+                        <h3 className="text-sm font-medium text-muted-foreground px-2">Postes ({filteredWorkstations.length})</h3>
+                        {filteredWorkstations.map((ws) => (
+                            <Card 
+                                key={ws.id} 
+                                className={cn(
+                                    "cursor-pointer transition-all duration-200 border-2",
+                                    selectedWorkstation?.id === ws.id ? "border-primary bg-accent/50" : "border-transparent bg-white/60 hover:border-primary/50"
+                                )}
+                                onClick={() => setSelectedWorkstation(ws)}
+                            >
+                                <CardContent className="p-3 flex items-center justify-between">
+                                    <div>
+                                      <div className="font-semibold">{ws.name}</div>
+                                      <div className="text-sm text-muted-foreground">
+                                        <Badge variant="outline" className="mr-2">{ws.type}</Badge>
+                                        Créé le {new Date().toLocaleDateString('fr-FR')}
+                                      </div>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openDeleteDialog(ws.id);
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="lg:col-span-2 overflow-hidden">
+            {selectedWorkstation ? (
+              <WorkstationDetails workstation={selectedWorkstation} />
+            ) : (
+              <Card className="glass-effect flex items-center justify-center h-full">
+                <div className="text-center text-muted-foreground p-8">
+                  <Cog className="mx-auto h-16 w-16 mb-4" />
+                  <h3 className="text-xl font-semibold">Sélectionner un poste</h3>
+                  <p>Choisissez un poste de travail pour voir ses détails.</p>
+                </div>
+              </Card>
+            )}
+          </div>
         </main>
       </div>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
