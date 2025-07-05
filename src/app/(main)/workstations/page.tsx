@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -369,16 +370,16 @@ export default function WorkstationsPage() {
                                 key={ws.id} 
                                 className={cn(
                                     "cursor-pointer transition-all duration-200 border-2",
-                                    selectedWorkstation?.id === ws.id ? "border-primary bg-accent/50" : "border-transparent bg-white/60 hover:border-primary/50"
+                                    selectedWorkstation?.id === ws.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
                                 )}
                                 onClick={() => setSelectedWorkstation(ws)}
                             >
-                                <CardContent className="p-3 flex items-center justify-between">
-                                    <div>
-                                      <div className="font-semibold">{ws.name}</div>
-                                      <div className="text-sm text-muted-foreground">
-                                        <Badge variant="outline" className="mr-2">{ws.type}</Badge>
-                                        Créé le {new Date().toLocaleDateString('fr-FR')}
+                                <CardContent className="p-4 flex items-start justify-between">
+                                    <div className="flex-1 space-y-1">
+                                      <div className="font-bold text-slate-800">{ws.name}</div>
+                                      <Badge variant="secondary" className="font-normal">{ws.type}</Badge>
+                                      <div className="text-xs text-muted-foreground pt-1">
+                                          Créé le {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
                                       </div>
                                     </div>
                                     <Button 

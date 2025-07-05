@@ -1,3 +1,4 @@
+
 export type FileAttachment = {
   name: string;
   url: string; // Firebase Storage URL
@@ -15,6 +16,7 @@ export type Workstation = {
   name: string;
   type: string;
   description: string;
+  createdAt: string;
   image?: string;
   files?: FileAttachment[];
   tableData?: { [key: string]: string }[];
@@ -44,6 +46,7 @@ const initialWorkstations: Workstation[] = [
     name: "Ligne d'assemblage Alpha",
     type: "Chargeuse 992K",
     description: "Ligne d'assemblage principale pour la fabrication de composants.",
+    createdAt: "2024-05-21",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
     tableData: [
@@ -58,6 +61,7 @@ const initialWorkstations: Workstation[] = [
     name: "Poste d'emballage Bravo",
     type: "Bulls D9",
     description: "Poste de préparation finale pour l'emballage et l'expédition.",
+    createdAt: "2024-05-18",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
     tableData: [
@@ -122,10 +126,11 @@ export function getWorkstations(): Workstation[] {
   return getFromStorage('workstations', initialWorkstations);
 }
 
-export function addWorkstation(workstation: Omit<Workstation, 'id'>): boolean {
+export function addWorkstation(workstation: Omit<Workstation, 'id' | 'createdAt'>): boolean {
   const workstations = getWorkstations();
   const newWorkstation: Workstation = { 
       id: `ws-${Date.now()}`,
+      createdAt: new Date().toISOString().split('T')[0],
       name: workstation.name,
       type: workstation.type,
       description: workstation.description,
@@ -142,7 +147,7 @@ export function getWorkstationById(id: string): Workstation | undefined {
   return workstations.find(ws => ws.id === id);
 }
 
-export function updateWorkstation(id: string, data: Partial<Omit<Workstation, 'id'>>): boolean {
+export function updateWorkstation(id: string, data: Partial<Omit<Workstation, 'id' | 'createdAt'>>): boolean {
     const workstations = getWorkstations();
     const index = workstations.findIndex(ws => ws.id === id);
     if (index === -1) return false;
