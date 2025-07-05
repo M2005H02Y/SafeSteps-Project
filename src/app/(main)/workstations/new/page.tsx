@@ -146,7 +146,7 @@ export default function NewWorkstationPage() {
           <CardHeader>
             <CardTitle>Pièces jointes</CardTitle>
             <CardDescription>Téléchargez des images, des PDF ou des feuilles de calcul pertinents. La première image sera utilisée comme image principale.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             <FileUpload onUploadComplete={setFiles} />
           </CardContent>
@@ -156,7 +156,7 @@ export default function NewWorkstationPage() {
           <CardHeader>
             <CardTitle>Tableau des procédures</CardTitle>
             <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             <DynamicTable onDataChange={setTableData} />
           </CardContent>
