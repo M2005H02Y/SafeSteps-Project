@@ -5,7 +5,8 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
@@ -20,14 +21,20 @@ function utf8_to_b64(str: string): string {
 
 export default function QRCode({ type, id, data }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const [isDevEnv, setIsDevEnv] = useState(false);
 
   useEffect(() => {
     // This component runs only on the client, so `window` is safe to use.
     if (typeof window !== 'undefined' && data) {
       const { protocol, hostname } = window.location;
       
-      const isCloudDevEnv = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
-      const baseUrl = isCloudDevEnv ? `${protocol}//${hostname}` : window.location.origin;
+      const isCloudWorkstation = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
+      setIsDevEnv(isCloudWorkstation);
+
+      // In dev, use a placeholder. In prod, use the real origin.
+      const baseUrl = isCloudWorkstation
+        ? `${protocol}//votre-app-finale.web.app` // Placeholder URL
+        : window.location.origin;
 
       let url = `${baseUrl}/public/${type}/${id}`;
 
@@ -64,7 +71,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
     <Card>
       <CardHeader>
         <CardTitle>Accès rapide</CardTitle>
-        <CardDescription>Scannez ou téléchargez le code QR pour un accès rapide.</CardDescription>
+        <CardDescription>Scannez ou téléchargez le code QR pour un accès public.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center gap-4">
         {publicUrl ? (
@@ -89,6 +96,17 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
               includeMargin={true}
               className="hidden"
             />
+            
+            {isDevEnv && (
+                <Alert variant="default" className="text-xs">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle className="text-sm font-semibold">Mode Développement</AlertTitle>
+                    <AlertDescription>
+                        Ce QR code utilise une URL de démonstration. Il sera fonctionnel avec l'URL de votre site une fois déployé.
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <Button variant="outline" onClick={handleDownload} className="w-full">
               <Download className="mr-2 h-4 w-4" />
               Télécharger
