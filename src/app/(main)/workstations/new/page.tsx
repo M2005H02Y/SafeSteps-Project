@@ -112,7 +112,7 @@ export default function NewWorkstationPage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="ws-type">Type d'engine</Label>
-                 <Select onValueChange={setType} value={type} required>
+                 <Select onValuechange={setType} value={type} required>
                     <SelectTrigger id="ws-type">
                         <SelectValue placeholder="Sélectionnez un type d'engine" />
                     </SelectTrigger>
