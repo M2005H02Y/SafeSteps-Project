@@ -12,12 +12,13 @@ import {
   Search,
   Trash2,
   Cog,
-  File as FileIcon,
+  Printer,
   FileText as FileTextIcon,
   Download,
   Image as ImageIcon,
   FileSpreadsheet,
   Edit,
+  File as FileIcon,
 } from 'lucide-react';
 import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -41,13 +42,19 @@ import Link from 'next/link';
 
 // Component for displaying workstation details
 function WorkstationDetails({ workstation }: { workstation: Workstation | null }) {
-  if (!workstation) return null;
+  if (!workstation) {
+    return null;
+  }
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)]">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
+      <div className="printable-area grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
         {/* Left column (main content) */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="glass-effect">
@@ -60,12 +67,18 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                   <span>{workstation.description}</span>
                 </CardDescription>
               </div>
-              <Button asChild variant="outline">
-                  <Link href={`/workstations/${workstation.id}/edit`}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Modifier
-                  </Link>
-              </Button>
+              <div className="print-hidden flex flex-col gap-2">
+                <Button onClick={handlePrint} variant="outline">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimer
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href={`/workstations/${workstation.id}/edit`}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Modifier
+                    </Link>
+                </Button>
+              </div>
             </CardHeader>
             {workstation.image && (
               <CardContent>
