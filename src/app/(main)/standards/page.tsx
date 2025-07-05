@@ -55,13 +55,12 @@ function StandardDetails({ standard }: { standard: Standard | null }) {
         {/* Left column (main content) */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="glass-effect">
-             <CardHeader className="flex flex-row items-start justify-between">
-                <div>
-                    <CardTitle className="break-words text-2xl">{standard.name}</CardTitle>
-                    <CardDescription className="break-words pt-2 flex items-center gap-2">
-                        <Badge variant="secondary">{standard.category}</Badge>
-                        -
-                        <span>Version: {standard.version}</span>
+             <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                    <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
+                    <CardDescription className="pt-2 flex items-center gap-2 truncate">
+                        <Badge variant="secondary" className="flex-shrink-0">{standard.category}</Badge>
+                        <span className="text-muted-foreground truncate">Version: {standard.version}</span>
                     </CardDescription>
                 </div>
                 <div className="print-hidden flex flex-col gap-2">
@@ -256,11 +255,11 @@ function StandardsPageContent() {
                             >
                                 <CardContent className="p-4 flex items-start justify-between">
                                     <div className="flex-1 space-y-1 overflow-hidden min-w-0">
-                                      <div className="font-bold text-slate-800 truncate">{standard.name}</div>
-                                      <div className="text-xs text-muted-foreground truncate">{standard.description}</div>
-                                      <div className="flex items-center gap-2 pt-1">
-                                          <Badge variant="outline">{standard.category}</Badge>
-                                          <Badge variant="secondary">{standard.version}</Badge>
+                                      <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
+                                      <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
+                                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                                          <Badge variant="outline" className="truncate">{standard.category}</Badge>
+                                          <Badge variant="secondary" className="truncate">{standard.version}</Badge>
                                       </div>
                                     </div>
                                     <div className="flex flex-col gap-2 ml-2">
