@@ -26,15 +26,12 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
   useEffect(() => {
     // This component runs only on the client, so `window` is safe to use.
     if (typeof window !== 'undefined' && data) {
-      const { protocol, hostname } = window.location;
+      const { hostname } = window.location;
       
       const isCloudWorkstation = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
       setIsDevEnv(isCloudWorkstation);
 
-      // In dev, use a placeholder. In prod, use the real origin.
-      const baseUrl = isCloudWorkstation
-        ? `${protocol}//votre-app-finale.web.app` // Placeholder URL
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       let url = `${baseUrl}/public/${type}/${id}`;
 
@@ -100,9 +97,9 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
             {isDevEnv && (
                 <Alert variant="default" className="text-xs">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle className="text-sm font-semibold">Mode Développement</AlertTitle>
+                    <AlertTitle className="text-sm font-semibold">Note de Développement</AlertTitle>
                     <AlertDescription>
-                        Ce QR code utilise une URL de démonstration. Il sera fonctionnel avec l'URL de votre site une fois déployé.
+                        Ce QR code utilise votre URL de développement privée. L'accès peut être limité à votre réseau ou aux appareils connectés à votre compte. Il utilisera l'URL publique après le déploiement.
                     </AlertDescription>
                 </Alert>
             )}
