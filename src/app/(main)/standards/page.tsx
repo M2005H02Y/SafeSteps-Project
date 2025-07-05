@@ -59,7 +59,7 @@ function StandardDetails({ standard }: { standard: Standard | null }) {
                 <div className="flex-1 min-w-0">
                     <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
                     <CardDescription className="pt-2 flex items-center gap-2">
-                        <Badge variant="secondary" className="max-w-[200px] truncate" title={standard.category}>
+                        <Badge variant="secondary" className="truncate" title={standard.category}>
                             {standard.category}
                         </Badge>
                         <span className="text-muted-foreground">Version: {standard.version}</span>
@@ -264,8 +264,8 @@ function StandardsPageContent() {
                                       <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
                                       <div className="text-xs text-muted-foreground truncate" title={standard.description}>{standard.description}</div>
                                       <div className="flex items-center gap-2 pt-1">
-                                          <Badge variant="outline" className="max-w-full" title={standard.category}>
-                                            <span className="truncate">{standard.category}</span>
+                                          <Badge variant="outline" className="truncate" title={standard.category}>
+                                            {standard.category}
                                           </Badge>
                                           <Badge variant="secondary" className="flex-shrink-0">{standard.version}</Badge>
                                       </div>
