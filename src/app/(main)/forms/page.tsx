@@ -144,32 +144,40 @@ function PageSkeleton() {
         <PageHeader title="Formulaires" description="Gestion des formulaires configurables">
           <Skeleton className="h-10 w-36" />
         </PageHeader>
-        <main className="flex-1 p-4 md:p-6 flex gap-6 overflow-hidden">
-          <div className="w-[35%] flex-col gap-6 print-hidden hidden lg:flex">
-            <Card>
-              <CardContent className="p-4">
-                  <Skeleton className="h-9 w-full" />
-              </CardContent>
-            </Card>
-            <div className="flex-1 overflow-hidden">
-                 <ScrollArea className="h-full">
-                    <div className="space-y-2 pr-4">
-                        <Skeleton className="h-5 w-24 mb-2" />
-                        <Skeleton className="h-[76px] w-full" />
-                        <Skeleton className="h-[76px] w-full" />
-                        <Skeleton className="h-[76px] w-full" />
-                    </div>
-                </ScrollArea>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden workstation-details-print-full">
-              <Card className="flex items-center justify-center h-full print-hidden">
-                <div className="text-center text-muted-foreground p-8">
-                  <FileIconLucide className="mx-auto h-16 w-16 mb-4" />
-                  <h3 className="text-xl font-semibold">Chargement...</h3>
+        <main className="flex-1 p-4 md:p-6 overflow-hidden">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={35} minSize={20}>
+              <div className="flex flex-col h-full gap-6 print-hidden">
+                <Card>
+                  <CardContent className="p-4">
+                      <Skeleton className="h-9 w-full" />
+                  </CardContent>
+                </Card>
+                <div className="flex-1 overflow-hidden">
+                     <ScrollArea className="h-full">
+                        <div className="space-y-2 pr-4">
+                            <Skeleton className="h-5 w-24 mb-2" />
+                            <Skeleton className="h-[76px] w-full" />
+                            <Skeleton className="h-[76px] w-full" />
+                            <Skeleton className="h-[76px] w-full" />
+                        </div>
+                    </ScrollArea>
                 </div>
-              </Card>
-          </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={65} minSize={30}>
+              <div className="h-full overflow-hidden workstation-details-print-full pl-6">
+                <Card className="flex items-center justify-center h-full print-hidden">
+                  <div className="text-center text-muted-foreground p-8">
+                    <FileIconLucide className="mx-auto h-16 w-16 mb-4" />
+                    <h3 className="text-xl font-semibold">Chargement...</h3>
+                    <p>Chargement des formulaires.</p>
+                  </div>
+                </Card>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </main>
       </div>
     );
