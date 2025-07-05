@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -10,13 +13,7 @@ import {
   FileUp,
   LineChart
 } from 'lucide-react';
-
-const stats = [
-  { title: 'Postes de travail', value: '12', icon: <Building2 className="h-8 w-8 text-blue-500" />, change: "+2%", changeType: 'positive' as const, href: '/workstations' },
-  { title: 'Standards Actifs', value: '8', icon: <BookCheck className="h-8 w-8 text-green-500" />, change: "Stable", changeType: 'neutral' as const, href: '/standards' },
-  { title: 'Formulaires Remplis', value: '1,250', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
-  { title: 'Anomalies Signalées', value: '3', icon: <LineChart className="h-8 w-8 text-red-500" />, change: "-5%", changeType: 'negative' as const, href: '/anomalies' },
-];
+import { getWorkstations, getStandards, getForms } from '@/lib/data';
 
 const engines = [
   "NIV KOM", "ARR CAT", "Bulls D9", "Bulls D11", "Camion ravitaillement GO CAT", 
@@ -28,10 +25,29 @@ const quickActions = [
     { title: "Nouveau Poste", icon: <PlusCircle className="h-10 w-10" />, href: "/workstations/new", description: "Configurer un nouveau poste de travail." },
     { title: "Nouveau Standard", icon: <FileUp className="h-10 w-10" />, href: "/standards/new", description: "Rédiger et publier une nouvelle norme." },
     { title: "Nouveau Formulaire", icon: <FileText className="h-10 w-10" />, href: "/forms/new", description: "Créer un nouveau formulaire configurable." },
-]
-
+];
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState([
+    { title: 'Postes de travail', value: '0', icon: <Building2 className="h-8 w-8 text-blue-500" />, change: "+2%", changeType: 'positive' as const, href: '/workstations' },
+    { title: 'Standards Actifs', value: '0', icon: <BookCheck className="h-8 w-8 text-green-500" />, change: "Stable", changeType: 'neutral' as const, href: '/standards' },
+    { title: 'Formulaires Remplis', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
+    { title: 'Anomalies Signalées', value: '3', icon: <LineChart className="h-8 w-8 text-red-500" />, change: "-5%", changeType: 'negative' as const, href: '/anomalies' },
+  ]);
+
+  useEffect(() => {
+    const workstationCount = getWorkstations().length;
+    const standardCount = getStandards().length;
+    const formCount = getForms().length;
+
+    setStats(prevStats => [
+        { ...prevStats[0], value: workstationCount.toString() },
+        { ...prevStats[1], value: standardCount.toString() },
+        { ...prevStats[2], value: formCount.toString() },
+        prevStats[3]
+    ]);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
