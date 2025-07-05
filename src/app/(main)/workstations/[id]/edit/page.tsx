@@ -30,11 +30,14 @@ export default function EditWorkstationPage() {
   const [workstation, setWorkstation] = useState<Workstation | null>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState('');
+  const [customType, setCustomType] = useState('');
   const [description, setDescription] = useState('');
   const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const OTHER_ENGINE_VALUE = 'AUTRE';
 
   useEffect(() => {
     if (id) {
@@ -42,7 +45,16 @@ export default function EditWorkstationPage() {
       if (wsData) {
         setWorkstation(wsData);
         setName(wsData.name);
-        setType(wsData.type);
+        
+        const isCustomType = !engineTypes.includes(wsData.type);
+        if (isCustomType) {
+            setType(OTHER_ENGINE_VALUE);
+            setCustomType(wsData.type);
+        } else {
+            setType(wsData.type);
+            setCustomType('');
+        }
+
         setDescription(wsData.description);
         setTableData(wsData.tableData || []);
         const allFiles = [];
@@ -61,10 +73,12 @@ export default function EditWorkstationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const finalType = type === OTHER_ENGINE_VALUE ? customType.trim() : type;
+
+    if (!name.trim() || !finalType) {
         toast({
             title: "Erreur de validation",
-            description: "Le nom du poste de travail est obligatoire.",
+            description: "Le nom et le type du poste de travail sont obligatoires.",
             variant: "destructive",
         });
         return;
@@ -78,7 +92,7 @@ export default function EditWorkstationPage() {
 
       const success = updateWorkstation(id, { 
         name,
-        type,
+        type: finalType,
         description, 
         tableData,
         image: mainImage?.url,
@@ -143,7 +157,7 @@ export default function EditWorkstationPage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="ws-type">Type d'engine</Label>
-                 <Select onValueChange={setType} value={type}>
+                 <Select onValueChange={setType} value={type} required>
                     <SelectTrigger id="ws-type">
                         <SelectValue placeholder="Sélectionnez un type d'engine" />
                     </SelectTrigger>
@@ -151,8 +165,19 @@ export default function EditWorkstationPage() {
                         {engineTypes.map(engine => (
                             <SelectItem key={engine} value={engine}>{engine}</SelectItem>
                         ))}
+                        <SelectItem value={OTHER_ENGINE_VALUE}>Autre (spécifier)</SelectItem>
                     </SelectContent>
                   </Select>
+                   {type === OTHER_ENGINE_VALUE && (
+                    <Input
+                        id="ws-custom-type"
+                        placeholder="Entrez le nom de l'engine"
+                        required
+                        value={customType}
+                        onChange={e => setCustomType(e.target.value)}
+                        className="mt-2"
+                    />
+                )}
               </div>
             </div>
             <div className="space-y-2">

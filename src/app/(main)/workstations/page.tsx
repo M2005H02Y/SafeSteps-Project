@@ -60,21 +60,26 @@ function NewWorkstationForm({ setOpen, refreshWorkstations }: { setOpen: (open: 
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
+  const [customType, setCustomType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const OTHER_ENGINE_VALUE = 'AUTRE';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !type.trim()) {
+    const finalType = type === OTHER_ENGINE_VALUE ? customType.trim() : type;
+
+    if (!name.trim() || !finalType) {
       toast({
         title: "Erreur de validation",
-        description: "Le nom et le type du poste sont obligatoires.",
+        description: "Le nom du poste et le type d'engine sont obligatoires.",
         variant: "destructive",
       });
       return;
     }
 
     setIsSubmitting(true);
-    const success = addWorkstation({ name, type, description: '', files: [], tableData: [] });
+    const success = addWorkstation({ name, type: finalType, description: '', files: [], tableData: [] });
 
     if (success) {
       toast({
@@ -119,7 +124,7 @@ function NewWorkstationForm({ setOpen, refreshWorkstations }: { setOpen: (open: 
           <Label htmlFor="type" className="text-right">
             Type
           </Label>
-          <Select onValueChange={setType} value={type}>
+          <Select onValueChange={setType} value={type} required>
             <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Sélectionnez un type d'engine" />
             </SelectTrigger>
@@ -127,9 +132,25 @@ function NewWorkstationForm({ setOpen, refreshWorkstations }: { setOpen: (open: 
                 {engineTypes.map(engine => (
                     <SelectItem key={engine} value={engine}>{engine}</SelectItem>
                 ))}
+                <SelectItem value={OTHER_ENGINE_VALUE}>Autre (spécifier)</SelectItem>
             </SelectContent>
            </Select>
         </div>
+        {type === OTHER_ENGINE_VALUE && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="custom-type" className="text-right">
+              Nom Engine
+            </Label>
+            <Input
+              id="custom-type"
+              value={customType}
+              onChange={(e) => setCustomType(e.target.value)}
+              className="col-span-3"
+              placeholder="Entrez le nom du nouvel engine"
+              required
+            />
+          </div>
+        )}
       </div>
       <DialogFooter>
         <DialogClose asChild>
@@ -190,7 +211,7 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                       <div className="overflow-x-auto rounded-md border">
                           <Table>
                               <TableHeader>
-                                  <TableRow className="hover:bg-transparent">
+                                  <TableRow className="hover:bg-accent/50">
                                       {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
                                   </TableRow>
                               </TableHeader>
