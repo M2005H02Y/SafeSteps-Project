@@ -97,22 +97,28 @@
   .print-hidden {
     display: none !important;
   }
-  body * {
-    visibility: hidden;
-  }
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 1rem;
+  body {
+    background: white !important;
   }
   .card, .card-content, .card-header, .card-footer {
     border: none !important;
     box-shadow: none !important;
     background-color: transparent !important;
+  }
+  
+  /* Specific fix for workstations page layout in print */
+  .workstation-details-print-full {
+    grid-column: 1 / -1 !important;
+    overflow: visible !important;
+  }
+  
+  /* General fix for scroll areas in print */
+  .no-scroll-for-print {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .no-scroll-for-print > div[data-radix-scroll-area-viewport] {
+    height: auto !important;
+    overflow: visible !important;
   }
 }

@@ -53,8 +53,8 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
 
   return (
-    <ScrollArea className="h-[calc(100vh-160px)]">
-      <div className="printable-area grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
+    <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
         {/* Left column (main content) */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="glass-effect">
@@ -207,17 +207,19 @@ export default function WorkstationsPage() {
   return (
     <>
       <div className="flex flex-col h-full overflow-hidden">
-        <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
-           <Button asChild className="gradient-primary">
-              <Link href="/workstations/new">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nouveau Poste
-              </Link>
-            </Button>
-        </PageHeader>
+        <div className="print-hidden">
+          <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
+            <Button asChild className="gradient-primary">
+                <Link href="/workstations/new">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Nouveau Poste
+                </Link>
+              </Button>
+          </PageHeader>
+        </div>
         <main className="flex-1 p-4 md:p-6 grid gap-6 lg:grid-cols-3 overflow-hidden">
           {/* Left Column */}
-          <div className="lg:col-span-1 flex flex-col gap-6">
+          <div className="lg:col-span-1 flex flex-col gap-6 print-hidden">
             <Card className="glass-effect">
               <CardContent className="p-4">
                 <div className="relative">
@@ -273,11 +275,11 @@ export default function WorkstationsPage() {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-2 overflow-hidden">
+          <div className="lg:col-span-2 overflow-hidden workstation-details-print-full">
             {selectedWorkstation ? (
               <WorkstationDetails workstation={selectedWorkstation} />
             ) : (
-              <Card className="glass-effect flex items-center justify-center h-full">
+              <Card className="glass-effect flex items-center justify-center h-full print-hidden">
                 <div className="text-center text-muted-foreground p-8">
                   <Cog className="mx-auto h-16 w-16 mb-4" />
                   <h3 className="text-xl font-semibold">Sélectionner un poste</h3>

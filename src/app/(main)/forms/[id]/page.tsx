@@ -89,7 +89,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
         </PageHeader>
       </div>
 
-      <main className="flex-1 p-4 md:p-6 space-y-6 printable-area">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
         <div className="md:hidden mb-4">
             <CardHeader className="p-0">
                 <CardTitle className="break-words">{form.name}</CardTitle>

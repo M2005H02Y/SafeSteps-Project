@@ -13,7 +13,7 @@ export default function MainLayout({
 }) {
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" className="print-hidden">
         <AppSidebar />
         <SidebarRail />
       </Sidebar>
