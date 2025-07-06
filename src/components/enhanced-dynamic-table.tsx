@@ -5,10 +5,9 @@ import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, Upload, RotateCcw, Trash2, Merge, Split } from 'lucide-react';
+import { Plus, Minus, RotateCcw, Merge, Split } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableData, CellData } from '@/lib/data';
-import Image from 'next/image';
 
 interface EnhancedDynamicTableProps {
   initialData?: TableData;
@@ -18,13 +17,11 @@ const getCellKey = (row: number, col: number) => `${row}-${col}`;
 
 const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTableProps, ref) => {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [tableState, setTableState] = useState<TableData>(
     initialData || { rows: 3, cols: 3, data: {}, headers: [] }
   );
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
-  const [activeCellForUpload, setActiveCellForUpload] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
     getTableData: () => {
@@ -113,7 +110,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     const rowspan = maxRow - minRow + 1;
 
     let mergedContent = '';
-    let mergedImage: string | undefined;
 
     const newData = { ...tableState.data };
 
@@ -128,13 +124,12 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         const cell = newData[key];
         if (cell) {
           if (cell.content) mergedContent += cell.content + ' ';
-          if (cell.image && !mergedImage) mergedImage = cell.image;
         }
 
         if (r === minRow && c === minCol) {
-          newData[key] = { ...cell, content: mergedContent.trim(), image: mergedImage, colspan, rowspan };
+          newData[key] = { ...cell, content: mergedContent.trim(), colspan, rowspan };
         } else {
-          newData[key] = { ...cell, merged: true, content: '', image: undefined };
+          newData[key] = { ...cell, merged: true, content: '' };
         }
       }
     }
@@ -176,21 +171,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     toast({ title: "Cellules défusionnées", description: "La cellule a été divisée avec succès." });
   };
 
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeCellForUpload) return;
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const [row, col] = activeCellForUpload.split('-').map(Number);
-        updateCell(row, col, { image: e.target?.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-    setActiveCellForUpload(null);
-  };
-
   const renderCell = (r: number, c: number) => {
     const key = getCellKey(r, c);
     const cell = tableState.data[key] || { content: '' };
@@ -217,16 +197,9 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
                 onChange={(e) => updateCell(r, c, { content: e.target.value })}
                 rows={2}
             />
-            {cell.image && (
-                <div className="relative mt-1">
-                    <Image src={cell.image} alt="preview" width={80} height={80} className="w-full h-16 object-cover rounded border"/>
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={(e) => {e.stopPropagation(); updateCell(r, c, { image: undefined });}}><Trash2 className="h-3 w-3"/></Button>
-                </div>
-            )}
         </div>
         <div className="absolute bottom-1 right-1 flex gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
-            {showSplitButton ? <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); splitCell(r,c); }}><Split className="h-4 w-4"/></Button> : null}
+            {showSplitButton && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); splitCell(r,c); }}><Split className="h-4 w-4"/></Button>}
         </div>
       </td>
     );
@@ -288,7 +261,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
           </tbody>
         </table>
       </div>
-      <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
     </div>
   );
 });

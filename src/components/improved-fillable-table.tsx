@@ -12,7 +12,7 @@ import { TableData, CellData } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
+import { Label } from '@/components/ui/label';
 
 interface ImprovedFillableTableProps {
   formName: string;
@@ -161,9 +161,8 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
                     className="flex flex-col gap-2 p-2 border rounded-md"
                     style={{ gridColumn: `span ${cellData?.colspan || 1}`, gridRow: `span ${cellData?.rowspan || 1}` }}
                   >
-                    <label className="text-sm font-medium text-slate-700">{tableData.headers?.[c] || `Colonne ${c+1}`}</label>
+                    <Label className="text-sm font-medium text-slate-700">{tableData.headers?.[c] || `Colonne ${c+1}`}</Label>
                     {cellData?.content && <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md">{cellData.content}</p>}
-                    {cellData?.image && <Image src={cellData.image} alt="Image de la cellule" width={100} height={100} className="rounded-md object-cover"/>}
                     <Textarea
                       placeholder="Votre réponse..."
                       value={filledData[key] || ''}
@@ -218,7 +217,6 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
                                             className="border border-black p-2 align-top text-xs"
                                         >
                                             <div className="font-semibold">{originalContent}</div>
-                                            {cell?.image && <img src={cell.image} alt="" className="max-w-[100px] my-1"/>}
                                             <div className="mt-1 text-blue-800 whitespace-pre-wrap">{filledContent}</div>
                                         </td>
                                     );

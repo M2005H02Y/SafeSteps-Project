@@ -34,7 +34,6 @@ export type Standard = {
 // New types for dynamic forms
 export interface CellData {
   content: string;
-  image?: string;
   colspan?: number;
   rowspan?: number;
   merged?: boolean;

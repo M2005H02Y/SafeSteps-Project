@@ -39,16 +39,6 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
                 className="border border-slate-200 p-2 text-sm"
             >
                 <div>{cell.content}</div>
-                {cell.image && (
-                     <div className="relative mt-2 w-full aspect-video">
-                        <Image 
-                            src={cell.image} 
-                            alt="Image de cellule" 
-                            fill
-                            className="object-contain rounded"
-                        />
-                     </div>
-                )}
             </td>
         );
     }
