@@ -36,7 +36,7 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
                 key={key}
                 colSpan={cell.colspan}
                 rowSpan={cell.rowspan}
-                className="border border-slate-200 p-2 align-top text-sm"
+                className="border border-slate-200 p-2 text-sm"
             >
                 <div>{cell.content}</div>
                 {cell.image && (
@@ -55,10 +55,10 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
 
     return (
         <div 
-            className="overflow-auto rounded-md border p-2 resize bg-background shadow-sm"
+            className="overflow-auto rounded-md border p-2 resize bg-background shadow-sm grid"
             style={{ height: '250px' }}
         >
-            <table className="w-full border-collapse min-w-[40rem]">
+            <table className="w-full h-full border-collapse min-w-[40rem]">
                 <thead>
                     <tr>
                         {[...Array(tableData.cols)].map((_, c) => (
@@ -68,7 +68,7 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
                         ))}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="h-full">
                     {[...Array(tableData.rows)].map((_, r) => (
                         <tr key={r}>
                             {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
