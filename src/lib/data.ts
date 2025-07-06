@@ -32,13 +32,30 @@ export type Standard = {
   files?: FileAttachment[];
 };
 
+// New types for dynamic forms
+export interface CellData {
+  content: string;
+  image?: string;
+  colspan?: number;
+  rowspan?: number;
+  merged?: boolean;
+  header?: string;
+}
+
+export interface TableData {
+  rows: number;
+  cols: number;
+  data: Record<string, CellData>;
+  headers?: string[];
+}
+
 export type Form = {
   id: string;
   name: string;
-  type: string;
   lastUpdated: string;
-  files?: FileAttachment[];
+  tableData?: TableData;
 };
+
 
 const initialWorkstations: Workstation[] = [
   {
@@ -78,9 +95,22 @@ const initialStandards: Standard[] = [
 ];
 
 const initialForms: Form[] = [
-  { id: 'form-01', name: "Check-list quotidienne de l'équipement", type: 'Sécurité', lastUpdated: '2024-05-20', files: [] },
-  { id: 'form-02', name: "Formulaire de rapport d'incident", type: 'Sécurité', lastUpdated: '2024-01-15', files: [] },
-  { id: 'form-03', name: 'Journal de production', type: 'Opérations', lastUpdated: '2024-06-01', files: [] },
+  { 
+    id: 'form-01', 
+    name: "Check-list quotidienne de l'équipement", 
+    lastUpdated: '2024-05-20', 
+    tableData: {
+      rows: 2,
+      cols: 2,
+      headers: ["Point de Contrôle", "Statut"],
+      data: {
+        "0-0": { content: "Niveau d'huile" },
+        "0-1": { content: "" },
+        "1-0": { content: "Pression des pneus" },
+        "1-1": { content: "" },
+      }
+    }
+  },
 ];
 
 function getFromStorage<T>(key: string, initialValue: T): T {
@@ -214,8 +244,7 @@ export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>): boolean {
     const newForm: Form = { 
         id: `form-${Date.now()}`,
         name: form.name,
-        type: form.type,
-        files: form.files || [],
+        tableData: form.tableData,
         lastUpdated: new Date().toISOString().split('T')[0],
     };
     const updatedForms = [newForm, ...forms];

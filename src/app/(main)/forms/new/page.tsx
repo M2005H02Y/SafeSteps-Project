@@ -1,30 +1,30 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addForm, FileAttachment } from '@/lib/data';
+import { addForm, TableData } from '@/lib/data';
+import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
 
 export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [tableData, setTableData] = useState<TableData>({ rows: 3, cols: 3, data: {} });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!name.trim() || !type.trim()) {
+    if(!name.trim()) {
         toast({
             title: "Erreur de validation",
-            description: "Le nom et le type du formulaire sont obligatoires.",
+            description: "Le nom du formulaire est obligatoire.",
             variant: "destructive",
         });
         return;
@@ -33,7 +33,7 @@ export default function NewFormPage() {
     setIsSubmitting(true);
     
     try {
-      const success = addForm({ name, type, files: files });
+      const success = addForm({ name, tableData });
 
       if (success) {
         toast({
@@ -78,31 +78,17 @@ export default function NewFormPage() {
         <Card>
           <CardHeader>
             <CardTitle>Détails du formulaire</CardTitle>
-            <CardDescription>Fournissez les détails du nouveau formulaire.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="form-name">Nom du formulaire</Label>
-                <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="form-type">Type de formulaire</Label>
-                <Input id="form-type" placeholder="ex: Sécurité" required value={type} onChange={e => setType(e.target.value)} />
-              </div>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="form-name">Nom du formulaire</Label>
+              <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
             </div>
           </CardContent>
         </Card>
+        
+        <EnhancedDynamicTable onDataChange={setTableData} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Télécharger le fichier du formulaire</CardTitle>
-            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FileUpload onUploadComplete={setFiles}/>
-          </CardContent>
-        </Card>
       </main>
     </form>
   );

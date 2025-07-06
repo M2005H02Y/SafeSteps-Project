@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter, useParams, notFound } from 'next/navigation';
@@ -7,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { getFormById, updateForm, FileAttachment, Form } from '@/lib/data';
+import { getFormById, updateForm, Form, TableData } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
 
 export default function EditFormPage() {
   const router = useRouter();
@@ -20,8 +21,7 @@ export default function EditFormPage() {
   
   const [form, setForm] = useState<Form | null>(null);
   const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [tableData, setTableData] = useState<TableData | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,8 +31,7 @@ export default function EditFormPage() {
       if (formData) {
         setForm(formData);
         setName(formData.name);
-        setType(formData.type);
-        setFiles(formData.files || []);
+        setTableData(formData.tableData);
       }
       setIsLoading(false);
     }
@@ -40,10 +39,10 @@ export default function EditFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!name.trim() || !type.trim()) {
+    if(!name.trim()) {
         toast({
             title: "Erreur de validation",
-            description: "Le nom et le type du formulaire sont obligatoires.",
+            description: "Le nom du formulaire est obligatoire.",
             variant: "destructive",
         });
         return;
@@ -52,7 +51,7 @@ export default function EditFormPage() {
     setIsSubmitting(true);
     
     try {
-      const success = updateForm(id, { name, type, files });
+      const success = updateForm(id, { name, tableData });
 
       if (success) {
         toast({
@@ -106,31 +105,16 @@ export default function EditFormPage() {
         <Card>
           <CardHeader>
             <CardTitle>Détails du formulaire</CardTitle>
-            <CardDescription>Modifiez les détails du formulaire.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="form-name">Nom du formulaire</Label>
                 <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="form-type">Type de formulaire</Label>
-                <Input id="form-type" placeholder="ex: Sécurité" required value={type} onChange={e => setType(e.target.value)} />
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Télécharger le fichier du formulaire</CardTitle>
-            <CardDescription>Téléchargez le fichier principal pour ce formulaire (par ex., PDF, Excel). Le premier PDF téléchargé sera utilisé pour l'aperçu.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FileUpload initialFiles={files} onUploadComplete={setFiles}/>
-          </CardContent>
-        </Card>
+        <EnhancedDynamicTable initialData={tableData} onDataChange={setTableData} />
       </main>
     </form>
   );
