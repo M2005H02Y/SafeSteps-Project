@@ -145,7 +145,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                     <CardHeader>
                         <CardTitle>Images jointes</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CardContent className="grid grid-cols-1 gap-4">
                         {imageFiles.map((file) => (
                            <a key={file.url} href={file.url} target="_blank" rel="noopener noreferrer">
                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border hover:opacity-90 transition-opacity">
