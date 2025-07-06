@@ -54,8 +54,8 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
     }
 
     return (
-        <div className="overflow-auto rounded-md border p-2 resize w-full min-h-[200px]">
-            <table className="w-full border-collapse">
+        <div className="overflow-auto rounded-md border p-2 resize min-h-[200px]">
+            <table className="w-full border-collapse min-w-[40rem]">
                 <thead>
                     <tr>
                         {[...Array(tableData.cols)].map((_, c) => (
