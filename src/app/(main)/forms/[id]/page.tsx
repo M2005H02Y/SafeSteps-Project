@@ -155,21 +155,16 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {form.files.map(file => (
-                    <div key={file.name} className="flex items-center justify-between p-2 rounded-md border">
-                      <div className="flex items-center gap-3">
+                    <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
                         {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
                         {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
                         {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
                         {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
-                      <Button variant="ghost" size="icon" asChild>
-                        <a href={file.url} target="_blank" rel="noopener noreferrer">
-                          <Download className="h-4 w-4"/>
-                          <span className="sr-only">Télécharger</span>
-                        </a>
-                      </Button>
-                    </div>
+                      <Download className="h-4 w-4 text-muted-foreground ml-2"/>
+                    </a>
                   ))}
                 </CardContent>
               </Card>
