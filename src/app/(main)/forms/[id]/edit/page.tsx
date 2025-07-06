@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useParams, notFound } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,9 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { getFormById, updateForm, Form, TableData } from '@/lib/data';
+import { getFormById, updateForm, Form, TableData, FileAttachment } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
+import FileUpload from '@/components/file-upload';
+import { Switch } from '@/components/ui/switch';
 
 export default function EditFormPage() {
   const router = useRouter();
@@ -21,9 +23,13 @@ export default function EditFormPage() {
   
   const [form, setForm] = useState<Form | null>(null);
   const [name, setName] = useState('');
+  const [files, setFiles] = useState<FileAttachment[]>([]);
   const [tableData, setTableData] = useState<TableData | undefined>(undefined);
+  const [isTableEnabled, setIsTableEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const tableRef = useRef<{ getTableData: () => TableData }>(null);
 
   useEffect(() => {
     if (id) {
@@ -31,7 +37,15 @@ export default function EditFormPage() {
       if (formData) {
         setForm(formData);
         setName(formData.name);
-        setTableData(formData.tableData);
+        setFiles(formData.files || []);
+
+        if (formData.tableData) {
+          setTableData(formData.tableData);
+          setIsTableEnabled(true);
+        } else {
+          setIsTableEnabled(false);
+        }
+
       }
       setIsLoading(false);
     }
@@ -51,7 +65,8 @@ export default function EditFormPage() {
     setIsSubmitting(true);
     
     try {
-      const success = updateForm(id, { name, tableData });
+      const finalTableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
+      const success = updateForm(id, { name, tableData: finalTableData, files });
 
       if (success) {
         toast({
@@ -59,7 +74,6 @@ export default function EditFormPage() {
           description: "Le formulaire a été enregistré avec succès.",
         });
         router.push('/forms');
-        router.refresh();
       } else {
          throw new Error("Local storage save failed");
       }
@@ -114,7 +128,41 @@ export default function EditFormPage() {
           </CardContent>
         </Card>
 
-        <EnhancedDynamicTable initialData={tableData} onDataChange={setTableData} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Pièces jointes</CardTitle>
+            <CardDescription>Ajoutez des fichiers pertinents au formulaire.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FileUpload initialFiles={files} onUploadComplete={setFiles} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+             <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Structure du tableau (Optionnel)</CardTitle>
+                <CardDescription>Activez pour ajouter ou modifier le tableau de ce formulaire.</CardDescription>
+              </div>
+              <Switch
+                id="table-toggle"
+                checked={isTableEnabled}
+                onCheckedChange={setIsTableEnabled}
+                aria-label="Activer le tableau"
+              />
+            </div>
+          </CardHeader>
+          {isTableEnabled && (
+            <CardContent>
+              <EnhancedDynamicTable
+                ref={tableRef}
+                initialData={tableData}
+              />
+            </CardContent>
+          )}
+        </Card>
+
       </main>
     </form>
   );

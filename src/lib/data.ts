@@ -54,6 +54,7 @@ export type Form = {
   name: string;
   lastUpdated: string;
   tableData?: TableData;
+  files?: FileAttachment[];
 };
 
 
@@ -98,7 +99,8 @@ const initialForms: Form[] = [
   { 
     id: 'form-01', 
     name: "Check-list quotidienne de l'équipement", 
-    lastUpdated: '2024-05-20', 
+    lastUpdated: '2024-05-20',
+    files: [],
     tableData: {
       rows: 2,
       cols: 2,
@@ -245,6 +247,7 @@ export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>): boolean {
         id: `form-${Date.now()}`,
         name: form.name,
         tableData: form.tableData,
+        files: form.files || [],
         lastUpdated: new Date().toISOString().split('T')[0],
     };
     const updatedForms = [newForm, ...forms];

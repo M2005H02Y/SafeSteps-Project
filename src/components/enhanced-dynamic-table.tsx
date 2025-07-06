@@ -1,23 +1,23 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, Upload, Save, RotateCcw, Image as ImageIcon, Trash2, Merge, Split, GripVertical, GripHorizontal } from 'lucide-react';
+import { Plus, Minus, Upload, RotateCcw, Image as ImageIcon, Trash2, Merge, Split } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableData, CellData } from '@/lib/data';
+import Image from 'next/image';
 
 interface EnhancedDynamicTableProps {
   initialData?: TableData;
-  onDataChange: (data: TableData) => void;
 }
 
 const getCellKey = (row: number, col: number) => `${row}-${col}`;
 
-export default function EnhancedDynamicTable({ initialData, onDataChange }: EnhancedDynamicTableProps) {
+const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTableProps, ref) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -25,11 +25,14 @@ export default function EnhancedDynamicTable({ initialData, onDataChange }: Enha
     initialData || { rows: 3, cols: 3, data: {}, headers: [] }
   );
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
-  const [draggedCellKey, setDraggedCellKey] = useState<string | null>(null);
+  const [activeCellForUpload, setActiveCellForUpload] = useState<string | null>(null);
 
-  useEffect(() => {
-    onDataChange(tableState);
-  }, [tableState, onDataChange]);
+  useImperativeHandle(ref, () => ({
+    getTableData: () => {
+      return tableState;
+    }
+  }));
+
 
   const updateCell = (row: number, col: number, newCellData: Partial<CellData>) => {
     const key = getCellKey(row, col);
@@ -163,17 +166,17 @@ export default function EnhancedDynamicTable({ initialData, onDataChange }: Enha
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!draggedCellKey) return;
+    if (!activeCellForUpload) return;
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const [row, col] = draggedCellKey.split('-').map(Number);
+        const [row, col] = activeCellForUpload.split('-').map(Number);
         updateCell(row, col, { image: e.target?.result as string });
       };
       reader.readAsDataURL(file);
     }
-    setDraggedCellKey(null);
+    setActiveCellForUpload(null);
   };
 
   const renderCell = (r: number, c: number) => {
@@ -202,13 +205,13 @@ export default function EnhancedDynamicTable({ initialData, onDataChange }: Enha
             />
             {cell.image && (
                 <div className="relative mt-1">
-                    <ImageIcon src={cell.image} alt="preview" width={80} height={80} className="w-full h-16 object-cover rounded border"/>
+                    <Image src={cell.image} alt="preview" width={80} height={80} className="w-full h-16 object-cover rounded border"/>
                     <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => updateCell(r, c, { image: undefined })}><Trash2 className="h-3 w-3"/></Button>
                 </div>
             )}
         </div>
         <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDraggedCellKey(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
             {cell.colspan || cell.rowspan ? <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => splitCell(r,c)}><Split className="h-4 w-4"/></Button> : null}
         </div>
       </td>
@@ -227,58 +230,55 @@ export default function EnhancedDynamicTable({ initialData, onDataChange }: Enha
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-          <CardTitle>Éditeur de tableau de formulaire</CardTitle>
-          <CardDescription>Concevez la structure de votre formulaire ici. Utilisez Ctrl/Cmd + Clic pour sélectionner plusieurs cellules.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="controls p-4 bg-slate-50 rounded-lg border flex flex-wrap items-center gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Lignes:</span>
-            <Button size="icon" variant="outline" onClick={() => handleRowsChange(-1)}><Minus className="h-4 w-4"/></Button>
-            <span className="text-sm font-bold w-6 text-center">{tableState.rows}</span>
-            <Button size="icon" variant="outline" onClick={() => handleRowsChange(1)}><Plus className="h-4 w-4"/></Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Colonnes:</span>
-            <Button size="icon" variant="outline" onClick={() => handleColsChange(-1)}><Minus className="h-4 w-4"/></Button>
-            <span className="text-sm font-bold w-6 text-center">{tableState.cols}</span>
-            <Button size="icon" variant="outline" onClick={() => handleColsChange(1)}><Plus className="h-4 w-4"/></Button>
-          </div>
-           <GripVertical className="text-slate-300 h-6"/>
-          <Button variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
-          <Button variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
+    <div>
+      <div className="controls p-4 bg-slate-50 rounded-lg border flex flex-wrap items-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Lignes:</span>
+          <Button size="icon" variant="outline" onClick={() => handleRowsChange(-1)}><Minus className="h-4 w-4"/></Button>
+          <span className="text-sm font-bold w-6 text-center">{tableState.rows}</span>
+          <Button size="icon" variant="outline" onClick={() => handleRowsChange(1)}><Plus className="h-4 w-4"/></Button>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Colonnes:</span>
+          <Button size="icon" variant="outline" onClick={() => handleColsChange(-1)}><Minus className="h-4 w-4"/></Button>
+          <span className="text-sm font-bold w-6 text-center">{tableState.cols}</span>
+          <Button size="icon" variant="outline" onClick={() => handleColsChange(1)}><Plus className="h-4 w-4"/></Button>
+        </div>
+          <div className="h-6 border-l border-slate-300"></div>
+        <Button variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
+        <Button variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="border-collapse w-full">
-            <thead>
-              <tr>
-                {[...Array(tableState.cols)].map((_, c) => (
-                  <th key={c} className="border border-slate-300 p-1 bg-slate-100">
-                    <Input
-                      placeholder={`Colonne ${c + 1}`}
-                      className="text-sm font-bold border-none bg-transparent focus:ring-0"
-                      value={tableState.headers?.[c] || ''}
-                      onChange={(e) => handleHeaderChange(c, e.target.value)}
-                    />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[...Array(tableState.rows)].map((_, r) => (
-                <tr key={r}>
-                  {[...Array(tableState.cols)].map((_, c) => renderCell(r, c))}
-                </tr>
+      <div className="overflow-x-auto">
+        <table className="border-collapse w-full">
+          <thead>
+            <tr>
+              {[...Array(tableState.cols)].map((_, c) => (
+                <th key={c} className="border border-slate-300 p-1 bg-slate-100">
+                  <Input
+                    placeholder={`Colonne ${c + 1}`}
+                    className="text-sm font-bold border-none bg-transparent focus:ring-0"
+                    value={tableState.headers?.[c] || ''}
+                    onChange={(e) => handleHeaderChange(c, e.target.value)}
+                  />
+                </th>
               ))}
-            </tbody>
-          </table>
-        </div>
-        <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
-      </CardContent>
-    </Card>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(tableState.rows)].map((_, r) => (
+              <tr key={r}>
+                {[...Array(tableState.cols)].map((_, c) => renderCell(r, c))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+    </div>
   );
-}
+});
 
+EnhancedDynamicTable.displayName = "EnhancedDynamicTable";
+
+export default EnhancedDynamicTable;

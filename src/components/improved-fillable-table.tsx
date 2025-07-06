@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +12,7 @@ import { TableData, CellData } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 interface ImprovedFillableTableProps {
   formName: string;
@@ -41,109 +43,101 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     return `${day}-${month}-${year}_${hours}h${minutes}m`;
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const printableElement = document.getElementById('printable-table-container');
+    if (!printableElement) {
+        toast({ title: "Erreur PDF", description: "Élément imprimable non trouvé.", variant: "destructive" });
+        return;
+    }
+
     try {
-        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-        const timestamp = generateTimestamp();
-        const filename = `${formName}_${timestamp}.pdf`;
-        let y = 20;
-        const pageMargin = 15;
-        const pageHeight = doc.internal.pageSize.getHeight();
+        const canvas = await html2canvas(printableElement, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            logging: false,
+        });
 
-        doc.setFontSize(18);
-        doc.text(`Formulaire Rempli: ${formName}`, pageMargin, y);
-        y += 10;
-        doc.setFontSize(10);
-        doc.text(`Date: ${timestamp}`, pageMargin, y);
-        y += 15;
+        const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = canvas.width;
+        const pdfHeight = canvas.height;
+        
+        const pdf = new jsPDF({
+            orientation: pdfWidth > pdfHeight ? 'l' : 'p',
+            unit: 'px',
+            format: [pdfWidth, pdfHeight]
+        });
 
-        for (let r = 0; r < tableData.rows; r++) {
-            for (let c = 0; c < tableData.cols; c++) {
-                const key = getCellKey(r, c);
-                const cellData = tableData.data[key];
-                if (cellData?.merged) continue;
-
-                const filledContent = filledData[key] || '';
-                if (!filledContent) continue; // Skip empty responses
-
-                const cellHeader = tableData.headers?.[c] || `Colonne ${c + 1}`;
-                const originalContent = cellData?.content || '';
-                
-                const contentBlock = `Case: ${cellHeader} (L${r + 1})
-Contexte: ${originalContent || 'N/A'}
-Réponse: ${filledContent}`;
-
-                const textLines = doc.splitTextToSize(contentBlock, doc.internal.pageSize.getWidth() - (pageMargin * 2));
-                
-                const blockHeight = textLines.length * 7 + 5; // Estimate height
-
-                if (y + blockHeight > pageHeight - pageMargin) {
-                    doc.addPage();
-                    y = pageMargin;
-                }
-                
-                doc.setDrawColor(200, 200, 200);
-                doc.rect(pageMargin, y, doc.internal.pageSize.getWidth() - (pageMargin * 2), blockHeight);
-                
-                doc.text(textLines, pageMargin + 5, y + 7);
-                y += blockHeight + 5;
-            }
-        }
-        doc.save(filename);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        const filename = `${formName}_${generateTimestamp()}.pdf`;
+        pdf.save(filename);
     } catch(e) {
         console.error(e);
         toast({ title: "Erreur PDF", description: "La génération du PDF a échoué.", variant: "destructive"});
     }
   };
 
+
   const exportToExcel = () => {
     try {
-        const excelData: any[][] = [];
-        const timestamp = generateTimestamp();
-        const filename = `${formName}_${timestamp}.xlsx`;
+      const headerRow = tableData.headers || Array(tableData.cols).fill('').map((_, i) => `Colonne ${i+1}`);
+      const aoa: (string | null)[][] = [headerRow];
+      const merges = [];
 
-        // Headers
-        const headerRow: string[] = [];
+      for (let r = 0; r < tableData.rows; r++) {
+        const rowData: (string | null)[] = [];
         for (let c = 0; c < tableData.cols; c++) {
-            headerRow.push(tableData.headers?.[c] || `Colonne ${c+1}`);
-        }
-        excelData.push(["Formulaire:", formName]);
-        excelData.push(["Date:", timestamp]);
-        excelData.push([]); // spacer
-        
-        // Data Rows
-        const dataHeader = ['Ligne', 'Colonne', 'Contexte', 'Réponse'];
-        excelData.push(dataHeader);
+          const key = getCellKey(r, c);
+          const cell = tableData.data[key];
 
-        for (let r = 0; r < tableData.rows; r++) {
-            for (let c = 0; c < tableData.cols; c++) {
-                const key = getCellKey(r, c);
-                const cellData = tableData.data[key];
-                 if (cellData?.merged) continue;
+          if (cell?.merged) {
+            rowData.push(null);
+            continue;
+          }
 
-                const filledContent = filledData[key] || '';
-                if (!filledContent) continue;
-                
-                const rowToAdd = [
-                    `Ligne ${r + 1}`,
-                    tableData.headers?.[c] || `Colonne ${c+1}`,
-                    cellData?.content || 'N/A',
-                    filledContent
-                ];
-                excelData.push(rowToAdd);
+          const originalContent = cell?.content || '';
+          const filledContent = filledData[key] || '';
+          const fullContent = [originalContent, filledContent].filter(Boolean).join('\n\n');
+          rowData.push(fullContent);
+
+          if (cell?.colspan || cell?.rowspan) {
+            const rowspan = cell.rowspan || 1;
+            const colspan = cell.colspan || 1;
+            if(rowspan > 1 || colspan > 1) {
+              merges.push({
+                s: { r: r + 1, c: c },
+                e: { r: r + rowspan - 1 + 1, c: c + colspan - 1 }
+              });
             }
+          }
         }
+        aoa.push(rowData);
+      }
 
-        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-        const colWidths = [ {wch: 15}, {wch: 20}, {wch: 40}, {wch: 50} ];
-        worksheet['!cols'] = colWidths;
-        
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Réponses Formulaire');
-        XLSX.writeFile(workbook, filename);
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+      worksheet['!merges'] = merges;
+      
+      const colWidths = headerRow.map((h, i) => {
+        let max_width = h.length;
+        for (let r = 1; r < aoa.length; r++) {
+          if (aoa[r][i]) {
+            const cell_length = aoa[r][i]!.split('\n')[0].length;
+            if (cell_length > max_width) {
+              max_width = cell_length;
+            }
+          }
+        }
+        return { wch: Math.min(max_width + 2, 60) };
+      });
+      worksheet['!cols'] = colWidths;
+      
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Réponses Formulaire');
+
+      const filename = `${formName}_${generateTimestamp()}.xlsx`;
+      XLSX.writeFile(workbook, filename);
     } catch (e) {
-        console.error(e);
-        toast({ title: "Erreur Excel", description: "La génération du fichier Excel a échoué.", variant: "destructive"});
+      console.error(e);
+      toast({ title: "Erreur Excel", description: "La génération du fichier Excel a échoué.", variant: "destructive"});
     }
   };
 
@@ -168,7 +162,8 @@ Réponse: ${filledContent}`;
                     style={{ gridColumn: `span ${cellData?.colspan || 1}`, gridRow: `span ${cellData?.rowspan || 1}` }}
                   >
                     <label className="text-sm font-medium text-slate-700">{tableData.headers?.[c] || `Colonne ${c+1}`}</label>
-                    {cellData?.content && <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md">Contexte: {cellData.content}</p>}
+                    {cellData?.content && <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md">{cellData.content}</p>}
+                    {cellData?.image && <Image src={cellData.image} alt="Image de la cellule" width={100} height={100} className="rounded-md object-cover"/>}
                     <Textarea
                       placeholder="Votre réponse..."
                       value={filledData[key] || ''}
@@ -188,8 +183,54 @@ Réponse: ${filledContent}`;
           <Button variant="destructive" onClick={exportToPDF}><Download className="mr-2 h-4 w-4" /> Télécharger PDF</Button>
           <Button className="bg-green-600 hover:bg-green-700" onClick={exportToExcel}><Download className="mr-2 h-4 w-4" /> Télécharger Excel</Button>
         </DialogFooter>
+
+        {/* Hidden printable element for PDF generation */}
+        <div className="absolute -left-[9999px] top-0 w-[1000px]">
+            <div id="printable-table-container" className="p-4 bg-white">
+                <h2 className="text-2xl font-bold mb-4 text-black">{formName}</h2>
+                <p className="text-sm mb-4 text-black">Rempli le: {generateTimestamp()}</p>
+                <table className="border-collapse w-full text-black">
+                    <thead>
+                        <tr>
+                            {Array.from({ length: tableData.cols }).map((_, c) => (
+                                <th key={`h-${c}`} className="border border-black p-2 bg-slate-200 text-sm font-bold text-left">
+                                    {tableData.headers?.[c] || `Colonne ${c + 1}`}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: tableData.rows }).map((_, r) => (
+                            <tr key={`r-${r}`}>
+                                {Array.from({ length: tableData.cols }).map((_, c) => {
+                                    const key = getCellKey(r, c);
+                                    const cell = tableData.data[key];
+                                    if (cell?.merged) return null;
+
+                                    const originalContent = cell?.content || '';
+                                    const filledContent = filledData[key] || '';
+
+                                    return (
+                                        <td
+                                            key={key}
+                                            colSpan={cell?.colspan || 1}
+                                            rowSpan={cell?.rowspan || 1}
+                                            className="border border-black p-2 align-top text-xs"
+                                        >
+                                            <div className="font-semibold">{originalContent}</div>
+                                            {cell?.image && <img src={cell.image} alt="" className="max-w-[100px] my-1"/>}
+                                            <div className="mt-1 text-blue-800 whitespace-pre-wrap">{filledContent}</div>
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
       </DialogContent>
     </Dialog>
   );
 }
-

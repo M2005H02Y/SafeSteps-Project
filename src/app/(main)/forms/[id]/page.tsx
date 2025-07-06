@@ -6,9 +6,8 @@ import { getFormById, Form } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Edit, FileText as FileTextIcon, Columns } from 'lucide-react';
+import { ArrowLeft, Edit, FileText as FileTextIcon, Download, File as FileIcon, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,8 +17,8 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
         return (
             <div className="text-center text-muted-foreground p-8">
-                <p>Ce formulaire n'a pas encore de structure de tableau.</p>
-                <p className="text-sm">Modifiez le formulaire pour en créer une.</p>
+                <p>Ce formulaire n'a pas de tableau configuré.</p>
+                <p className="text-sm">Modifiez le formulaire pour en créer un.</p>
             </div>
         );
     }
@@ -149,6 +148,32 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
 
           <div className="space-y-6">
             <QRCode type="form" id={id} data={form} />
+             {form.files && form.files.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Fichiers joints</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {form.files.map(file => (
+                    <div key={file.name} className="flex items-center justify-between p-2 rounded-md border">
+                      <div className="flex items-center gap-3">
+                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" asChild>
+                        <a href={file.url} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4"/>
+                          <span className="sr-only">Télécharger</span>
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

@@ -2,22 +2,27 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addForm, TableData } from '@/lib/data';
+import { addForm, TableData, FileAttachment } from '@/lib/data';
 import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
+import FileUpload from '@/components/file-upload';
+import { Switch } from '@/components/ui/switch';
 
 export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [tableData, setTableData] = useState<TableData>({ rows: 3, cols: 3, data: {} });
+  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [isTableEnabled, setIsTableEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const tableRef = useRef<{ getTableData: () => TableData }>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +38,8 @@ export default function NewFormPage() {
     setIsSubmitting(true);
     
     try {
-      const success = addForm({ name, tableData });
+      const tableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
+      const success = addForm({ name, tableData, files });
 
       if (success) {
         toast({
@@ -87,7 +93,37 @@ export default function NewFormPage() {
           </CardContent>
         </Card>
         
-        <EnhancedDynamicTable onDataChange={setTableData} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Pièces jointes</CardTitle>
+            <CardDescription>Ajoutez des fichiers pertinents au formulaire.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FileUpload initialFiles={files} onUploadComplete={setFiles} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Structure du tableau (Optionnel)</CardTitle>
+                <CardDescription>Activez pour ajouter et configurer un tableau pour ce formulaire.</CardDescription>
+              </div>
+              <Switch
+                id="table-toggle"
+                checked={isTableEnabled}
+                onCheckedChange={setIsTableEnabled}
+                aria-label="Activer le tableau"
+              />
+            </div>
+          </CardHeader>
+          {isTableEnabled && (
+            <CardContent>
+              <EnhancedDynamicTable ref={tableRef} />
+            </CardContent>
+          )}
+        </Card>
 
       </main>
     </form>

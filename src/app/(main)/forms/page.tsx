@@ -7,14 +7,12 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   PlusCircle,
   Search,
   Trash2,
   FileText as FileTextIcon,
   Edit,
-  Columns
 } from 'lucide-react';
 import { getForms, deleteForm, Form } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -53,10 +51,13 @@ function PageSkeleton() {
                             <Skeleton className="h-4 w-1/2" />
                         </CardHeader>
                         <CardContent>
-                             <Skeleton className="h-20 w-full" />
+                             <Skeleton className="h-10 w-full" />
                         </CardContent>
                         <CardFooter>
-                            <Skeleton className="h-10 w-24" />
+                           <div className="flex justify-end w-full gap-2">
+                             <Skeleton className="h-8 w-8" />
+                             <Skeleton className="h-8 w-8" />
+                           </div>
                         </CardFooter>
                     </Card>
                 ))}
@@ -145,8 +146,8 @@ function FormsPageContent() {
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <Columns className="h-4 w-4" />
-                                    <span>{form.tableData?.rows || 0} lignes, {form.tableData?.cols || 0} colonnes</span>
+                                    <FileTextIcon className="h-4 w-4" />
+                                    <span>{form.tableData ? 'Formulaire avec tableau' : 'Formulaire simple'}</span>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2">
