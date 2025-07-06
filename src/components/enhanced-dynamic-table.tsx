@@ -4,9 +4,8 @@
 import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, Upload, RotateCcw, Image as ImageIcon, Trash2, Merge, Split } from 'lucide-react';
+import { Plus, Minus, Upload, RotateCcw, Trash2, Merge, Split } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableData, CellData } from '@/lib/data';
 import Image from 'next/image';
@@ -146,24 +145,37 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
   const splitCell = (row: number, col: number) => {
     const key = getCellKey(row, col);
     const cell = tableState.data[key];
-    if (!cell || (!cell.colspan && !cell.rowspan)) return;
+    if (!cell || (!cell.colspan && !cell.rowspan)) {
+      toast({ title: "Cette cellule n'est pas fusionnée.", variant: "destructive" });
+      return;
+    }
 
     const { colspan = 1, rowspan = 1 } = cell;
     const newData = { ...tableState.data };
-    
-    newData[key] = { ...cell, colspan: 1, rowspan: 1 };
+    const newSelected = new Set<string>();
 
     for (let r = row; r < row + rowspan; r++) {
       for (let c = col; c < col + colspan; c++) {
-        if (r === row && c === col) continue;
         const currentKey = getCellKey(r, c);
-        const currentCell = newData[currentKey] || {};
+        const currentCell = { ...(newData[currentKey] || {}) };
+        
+        if (r === row && c === col) {
+          delete currentCell.colspan;
+          delete currentCell.rowspan;
+        }
+        
         delete currentCell.merged;
+        
         newData[currentKey] = currentCell;
+        newSelected.add(currentKey);
       }
     }
+    
     setTableState(prev => ({...prev, data: newData}));
+    setSelectedCells(newSelected);
+    toast({ title: "Cellules défusionnées", description: "La cellule a été divisée avec succès." });
   };
+
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!activeCellForUpload) return;
@@ -184,13 +196,15 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     const cell = tableState.data[key] || { content: '' };
     if (cell.merged) return null;
 
+    const showSplitButton = (cell.colspan && cell.colspan > 1) || (cell.rowspan && cell.rowspan > 1);
+
     return (
       <td
         key={key}
         colSpan={cell.colspan}
         rowSpan={cell.rowspan}
         className={cn(
-          "border border-slate-300 p-1 relative min-h-[60px] align-top",
+          "border border-slate-300 p-1 relative min-h-[60px] align-top group",
           selectedCells.has(key) ? "bg-blue-100 ring-2 ring-blue-500 z-10" : "hover:bg-slate-50"
         )}
         onClick={(e) => handleCellClick(r, c, e)}
@@ -206,13 +220,13 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
             {cell.image && (
                 <div className="relative mt-1">
                     <Image src={cell.image} alt="preview" width={80} height={80} className="w-full h-16 object-cover rounded border"/>
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => updateCell(r, c, { image: undefined })}><Trash2 className="h-3 w-3"/></Button>
+                    <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={(e) => {e.stopPropagation(); updateCell(r, c, { image: undefined });}}><Trash2 className="h-3 w-3"/></Button>
                 </div>
             )}
         </div>
-        <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
-            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
-            {cell.colspan || cell.rowspan ? <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => splitCell(r,c)}><Split className="h-4 w-4"/></Button> : null}
+        <div className="absolute bottom-1 right-1 flex gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
+            {showSplitButton ? <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); splitCell(r,c); }}><Split className="h-4 w-4"/></Button> : null}
         </div>
       </td>
     );
