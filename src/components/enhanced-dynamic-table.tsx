@@ -206,13 +206,13 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
             {cell.image && (
                 <div className="relative mt-1">
                     <Image src={cell.image} alt="preview" width={80} height={80} className="w-full h-16 object-cover rounded border"/>
-                    <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => updateCell(r, c, { image: undefined })}><Trash2 className="h-3 w-3"/></Button>
+                    <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => updateCell(r, c, { image: undefined })}><Trash2 className="h-3 w-3"/></Button>
                 </div>
             )}
         </div>
         <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
-            {cell.colspan || cell.rowspan ? <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => splitCell(r,c)}><Split className="h-4 w-4"/></Button> : null}
+            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setActiveCellForUpload(key); fileInputRef.current?.click(); }}><Upload className="h-4 w-4"/></Button>
+            {cell.colspan || cell.rowspan ? <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => splitCell(r,c)}><Split className="h-4 w-4"/></Button> : null}
         </div>
       </td>
     );
@@ -234,19 +234,19 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       <div className="controls p-4 bg-slate-50 rounded-lg border flex flex-wrap items-center gap-4 mb-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Lignes:</span>
-          <Button size="icon" variant="outline" onClick={() => handleRowsChange(-1)}><Minus className="h-4 w-4"/></Button>
+          <Button type="button" size="icon" variant="outline" onClick={() => handleRowsChange(-1)}><Minus className="h-4 w-4"/></Button>
           <span className="text-sm font-bold w-6 text-center">{tableState.rows}</span>
-          <Button size="icon" variant="outline" onClick={() => handleRowsChange(1)}><Plus className="h-4 w-4"/></Button>
+          <Button type="button" size="icon" variant="outline" onClick={() => handleRowsChange(1)}><Plus className="h-4 w-4"/></Button>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Colonnes:</span>
-          <Button size="icon" variant="outline" onClick={() => handleColsChange(-1)}><Minus className="h-4 w-4"/></Button>
+          <Button type="button" size="icon" variant="outline" onClick={() => handleColsChange(-1)}><Minus className="h-4 w-4"/></Button>
           <span className="text-sm font-bold w-6 text-center">{tableState.cols}</span>
-          <Button size="icon" variant="outline" onClick={() => handleColsChange(1)}><Plus className="h-4 w-4"/></Button>
+          <Button type="button" size="icon" variant="outline" onClick={() => handleColsChange(1)}><Plus className="h-4 w-4"/></Button>
         </div>
           <div className="h-6 border-l border-slate-300"></div>
-        <Button variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
-        <Button variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
+        <Button type="button" variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
+        <Button type="button" variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
       </div>
 
       <div className="overflow-x-auto">
