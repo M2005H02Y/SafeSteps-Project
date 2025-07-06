@@ -1,13 +1,13 @@
 
-
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,13 +15,7 @@ import {
   Search,
   Trash2,
   FileText,
-  Printer,
   Edit,
-  File as FileIcon,
-  FileText as FileTextIcon,
-  Download,
-  Image as ImageIcon,
-  FileSpreadsheet,
 } from 'lucide-react';
 import { getStandards, deleteStandard, Standard } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -35,145 +29,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from '@/lib/utils';
-import QRCode from '@/components/qr-code';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-
-// Component for displaying standard details
-function StandardDetails({ standard }: { standard: Standard | null }) {
-  if (!standard) {
-    return null;
-  }
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  return (
-    <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pr-4">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="glass-effect">
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <CardTitle className="text-2xl truncate" title={standard.name}>{standard.name}</CardTitle>
-                <CardDescription className="pt-2 flex items-center gap-2 overflow-hidden">
-                  <Badge variant="secondary" className="truncate" title={standard.category}>
-                    {standard.category}
-                  </Badge>
-                  <span className="text-muted-foreground whitespace-nowrap">Version: {standard.version}</span>
-                </CardDescription>
-              </div>
-              <div className="print-hidden flex flex-col gap-2">
-                <Button asChild variant="outline">
-                  <Link href={`/standards/${standard.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Modifier
-                  </Link>
-                </Button>
-                <Button onClick={handlePrint} variant="outline">
-                  <Printer className="mr-2 h-4 w-4" />
-                  Imprimer
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {standard.image && (
-                <div className="relative aspect-video w-full mb-4">
-                  <Image src={standard.image} alt={standard.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="certificate document" />
-                </div>
-              )}
-              {standard.description && (
-                <div className="max-h-60 overflow-y-auto pr-2">
-                  <p className="text-muted-foreground break-words">{standard.description}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar-like content */}
-        <div className="space-y-6">
-          <QRCode type="standard" id={standard.id} data={standard} />
-
-          {standard.files && standard.files.length > 0 && (
-            <Card className="glass-effect">
-              <CardHeader>
-                <CardTitle>Fichiers joints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {standard.files.map(file => (
-                  <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                      {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                      {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                      {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                      <span className="text-sm font-medium truncate">{file.name}</span>
-                    </div>
-                    <Download className="h-4 w-4 text-muted-foreground ml-2" />
-                  </a>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </ScrollArea>
-  );
-}
 
 function PageSkeleton() {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col h-full">
         <PageHeader title="Standards" description="Gestion des documents standards et procédures">
           <Skeleton className="h-10 w-36" />
         </PageHeader>
-        <main className="flex-1 p-4 md:p-6 overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel defaultSize={35} minSize={20}>
-              <div className="flex flex-col h-full gap-6 print-hidden">
-                <Card className="glass-effect">
-                  <CardContent className="p-4">
-                      <Skeleton className="h-9 w-full" />
-                  </CardContent>
+        <main className="flex-1 p-4 md:p-6">
+            <div className="mb-6">
+                 <Card>
+                    <CardContent className="p-4">
+                        <Skeleton className="h-9 w-full max-w-sm" />
+                    </CardContent>
                 </Card>
-                <div className="flex-1 overflow-hidden">
-                     <ScrollArea className="h-full">
-                        <div className="space-y-2 pr-4">
-                            <Skeleton className="h-5 w-24 mb-2" />
-                            <Skeleton className="h-[76px] w-full" />
-                            <Skeleton className="h-[76px] w-full" />
-                            <Skeleton className="h-[76px] w-full" />
-                        </div>
-                    </ScrollArea>
-                </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={65} minSize={30}>
-              <div className="h-full overflow-hidden workstation-details-print-full pl-6">
-                <Card className="glass-effect flex items-center justify-center h-full print-hidden">
-                  <div className="text-center text-muted-foreground p-8">
-                    <FileText className="mx-auto h-16 w-16 mb-4" />
-                    <h3 className="text-xl font-semibold">Chargement...</h3>
-                    <p>Chargement des standards.</p>
-                  </div>
-                </Card>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader>
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </CardHeader>
+                        <CardContent>
+                             <Skeleton className="h-20 w-full" />
+                        </CardContent>
+                        <CardFooter>
+                            <Skeleton className="h-10 w-24" />
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
         </main>
       </div>
     );
-  }
+}
 
 function StandardsPageContent() {
+  const router = useRouter();
   const [standards, setStandards] = useState<Standard[]>([]);
-  const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [standardToDelete, setStandardToDelete] = useState<string | null>(null);
@@ -182,10 +77,6 @@ function StandardsPageContent() {
   const refreshStandards = () => {
     const freshData = getStandards();
     setStandards(freshData);
-    if (selectedStandard) {
-        const updatedSelected = freshData.find(s => s.id === selectedStandard.id) || null;
-        setSelectedStandard(updatedSelected);
-    }
   };
 
   useEffect(() => {
@@ -193,21 +84,13 @@ function StandardsPageContent() {
   }, []);
 
   const filteredStandards = useMemo(() => {
-    return standards.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return standards.filter(s => 
+        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [standards, searchTerm]);
   
-  useEffect(() => {
-    if (selectedStandard && !standards.find(s => s.id === selectedStandard.id)) {
-        setSelectedStandard(null);
-    }
-  }, [standards, selectedStandard]);
-
-  useEffect(() => {
-    if (selectedStandard && !filteredStandards.find(s => s.id === selectedStandard.id)) {
-      setSelectedStandard(null);
-    }
-  }, [filteredStandards, selectedStandard]);
-
   const openDeleteDialog = (id: string) => {
     setStandardToDelete(id);
     setIsDeleteDialogOpen(true);
@@ -228,108 +111,94 @@ function StandardsPageContent() {
 
   return (
     <>
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="print-hidden">
-            <PageHeader title="Standards" description="Gestion des documents standards et procédures">
-                <Button asChild className="gradient-primary">
-                    <Link href="/standards/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Nouveau Standard
-                    </Link>
-                </Button>
-            </PageHeader>
-        </div>
-        <main className="flex-1 p-4 md:p-6 overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel defaultSize={35} minSize={20}>
-              <div className="flex flex-col h-full gap-6 print-hidden">
-                <Card className="glass-effect">
-                  <CardContent className="p-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="Rechercher un standard..." 
-                        className="pl-9 bg-slate-50"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="flex-1 overflow-hidden">
-                    <ScrollArea className="h-full">
-                        <div className="space-y-2 pr-4">
-                            <h3 className="text-sm font-medium text-muted-foreground px-2">Standards ({filteredStandards.length})</h3>
-                            {filteredStandards.map((standard) => (
-                                <Card 
-                                    key={standard.id} 
-                                    className={cn(
-                                        "cursor-pointer transition-all duration-200 border-2",
-                                        selectedStandard?.id === standard.id ? "border-primary bg-primary/10" : "border-transparent bg-white/60 hover:border-primary/50"
-                                    )}
-                                    onClick={() => setSelectedStandard(standard)}
-                                >
-                                    <CardContent className="p-4 flex items-start justify-between">
-                                        <div className="flex-1 min-w-0 overflow-hidden space-y-1">
-                                          <div className="font-bold text-slate-800 truncate" title={standard.name}>{standard.name}</div>
-                                          <div className="text-xs text-muted-foreground truncate overflow-hidden" title={standard.description}>{standard.description}</div>
-                                          <div className="flex items-center gap-2 pt-1 overflow-hidden min-w-0">
-                                              <Badge variant="outline" className="truncate" title={standard.category}>
-                                                {standard.category}
-                                              </Badge>
-                                              <Badge variant="secondary" className="flex-shrink-0">{standard.version}</Badge>
-                                          </div>
-                                        </div>
-                                        <div className="flex flex-col gap-2 ml-2">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-7 w-7 text-slate-600 hover:bg-slate-200 shrink-0"
-                                                asChild
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <Link href={`/standards/${standard.id}/edit`}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openDeleteDialog(standard.id);
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </ScrollArea>
+      <div className="flex flex-col h-full">
+        <PageHeader title="Standards" description="Gestion des documents standards et procédures">
+            <Button asChild className="gradient-primary">
+                <Link href="/standards/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Nouveau Standard
+                </Link>
+            </Button>
+        </PageHeader>
+        
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+            <Card className="mb-6 glass-effect">
+              <CardContent className="p-4">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Rechercher par nom, catégorie, description..." 
+                    className="pl-9 bg-slate-50"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={65} minSize={30}>
-              <div className="h-full overflow-hidden workstation-details-print-full pl-6">
-                {selectedStandard ? (
-                  <StandardDetails standard={selectedStandard} />
-                ) : (
-                  <Card className="glass-effect flex items-center justify-center h-full print-hidden">
-                    <div className="text-center text-muted-foreground p-8">
-                      <FileText className="mx-auto h-16 w-16 mb-4" />
-                      <h3 className="text-xl font-semibold">Sélectionner un standard</h3>
-                      <p>Choisissez un standard dans la liste pour voir ses détails.</p>
-                    </div>
-                  </Card>
-                )}
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+              </CardContent>
+            </Card>
+
+            {filteredStandards.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredStandards.map((standard) => (
+                    <Link href={`/standards/${standard.id}`} key={standard.id} className="block hover:-translate-y-1 transition-transform duration-200">
+                        <Card className="h-full flex flex-col glass-effect hover:shadow-xl transition-shadow">
+                            <CardHeader>
+                                <CardTitle className="truncate" title={standard.name}>{standard.name}</CardTitle>
+                                <div className="flex items-center gap-2 pt-1 overflow-hidden min-w-0">
+                                    <Badge variant="outline" className="truncate" title={standard.category}>
+                                    {standard.category}
+                                    </Badge>
+                                    <Badge variant="secondary" className="flex-shrink-0">{standard.version}</Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                {standard.image && (
+                                    <div className="relative aspect-video w-full mb-4 rounded-md overflow-hidden">
+                                        <Image src={standard.image} alt={standard.name} fill={true} className="object-cover" data-ai-hint="certificate document" />
+                                    </div>
+                                )}
+                                <CardDescription className="line-clamp-3">
+                                    {standard.description}
+                                </CardDescription>
+                            </CardContent>
+                            <CardFooter className="flex justify-end gap-2">
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-slate-600 hover:bg-slate-200"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        router.push(`/standards/${standard.id}/edit`);
+                                    }}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">Modifier</span>
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        openDeleteDialog(standard.id);
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Supprimer</span>
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </Link>
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64 border-2 border-dashed rounded-lg">
+                    <FileText className="h-12 w-12 mb-4" />
+                    <h3 className="text-xl font-semibold">Aucun standard trouvé</h3>
+                    <p className="mt-2">Essayez d'ajuster votre recherche ou <Link href="/standards/new" className="text-primary underline">créez un nouveau standard</Link>.</p>
+                </div>
+            )}
         </main>
       </div>
 
