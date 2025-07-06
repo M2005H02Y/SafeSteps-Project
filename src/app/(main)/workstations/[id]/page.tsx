@@ -1,3 +1,4 @@
+
 "use client";
 
 import { notFound, useRouter, useParams } from 'next/navigation';
@@ -5,7 +6,6 @@ import { getWorkstationById, Workstation } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import { ArrowLeft, Printer, File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
@@ -63,8 +63,6 @@ export default function WorkstationDetailPage() {
     window.print();
   };
 
-  const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
-
   return (
     <div className="flex flex-col h-full">
       <div className="print-hidden">
@@ -108,31 +106,6 @@ export default function WorkstationDetailPage() {
               </CardContent>
             </Card>
 
-            {workstation.tableData && workstation.tableData.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Procédures</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {workstation.tableData.map((row, index) => (
-                                        <TableRow key={index}>
-                                            {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
           </div>
 
           <div className="space-y-6">

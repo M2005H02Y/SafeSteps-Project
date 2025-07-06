@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -33,7 +32,6 @@ export default function EditWorkstationPage() {
   const [type, setType] = useState('');
   const [customType, setCustomType] = useState('');
   const [description, setDescription] = useState('');
-  const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +55,6 @@ export default function EditWorkstationPage() {
         }
 
         setDescription(wsData.description);
-        setTableData(wsData.tableData || []);
         const allFiles = [];
         if(wsData.image){
             allFiles.push({ name: 'Image principale', url: wsData.image, type: 'image' as const});
@@ -95,7 +92,6 @@ export default function EditWorkstationPage() {
         name,
         type: finalType,
         description, 
-        tableData,
         image: mainImage?.url,
         files: otherFiles
       });
@@ -197,17 +193,6 @@ export default function EditWorkstationPage() {
             <FileUpload initialFiles={files} onUploadComplete={setFiles} />
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tableau des procédures</CardTitle>
-            <CardDescription>Modifiez les étapes, les tâches ou toute autre donnée structurée.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DynamicTable initialData={tableData} onDataChange={setTableData} />
-          </CardContent>
-        </Card>
-
       </main>
     </form>
   );

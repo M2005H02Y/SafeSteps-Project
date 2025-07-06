@@ -19,7 +19,6 @@ export type Workstation = {
   createdAt: string;
   image?: string;
   files?: FileAttachment[];
-  tableData?: { [key: string]: string }[];
 };
 
 export type Standard = {
@@ -67,12 +66,6 @@ const initialWorkstations: Workstation[] = [
     createdAt: "2024-05-21",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
-    tableData: [
-      { etape: '1', tache: 'Inspection des composants', duree: '15 min' },
-      { etape: '2', tache: 'Sous-assemblage', duree: '45 min' },
-      { etape: '3', tache: 'Assemblage final', duree: '30 min' },
-      { etape: '4', tache: 'Contrôle qualité', duree: '20 min' },
-    ],
   },
   {
     id: 'ws-002',
@@ -82,11 +75,6 @@ const initialWorkstations: Workstation[] = [
     createdAt: "2024-05-18",
     image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
     files: [],
-    tableData: [
-      { etape: '1', tache: 'Mise en boîte du produit', duree: '10 min' },
-      { etape: '2', tache: 'Impression des étiquettes', duree: '5 min' },
-      { etape: '3', tache: 'Palettisation', duree: '25 min' },
-    ],
   },
 ];
 
@@ -168,7 +156,6 @@ export function addWorkstation(workstation: Omit<Workstation, 'id' | 'createdAt'
       description: workstation.description,
       image: workstation.image,
       files: workstation.files || [],
-      tableData: workstation.tableData || [],
   };
   const updatedWorkstations = [newWorkstation, ...workstations];
   return saveToStorage('workstations', updatedWorkstations);

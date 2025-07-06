@@ -37,7 +37,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -53,8 +52,6 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   const handlePrint = () => {
     window.print();
   };
-
-  const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
@@ -93,31 +90,6 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
             )}
           </Card>
         
-          {workstation.tableData && workstation.tableData.length > 0 && (
-              <Card className="glass-effect">
-                  <CardHeader>
-                      <CardTitle>Procédures</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <div className="overflow-x-auto rounded-md border">
-                          <Table>
-                              <TableHeader>
-                                  <TableRow className="hover:bg-accent/50">
-                                      {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
-                                  </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                  {workstation.tableData.map((row, index) => (
-                                      <TableRow key={index} className="hover:bg-accent/50">
-                                          {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
-                                      </TableRow>
-                                  ))}
-                              </TableBody>
-                          </Table>
-                      </div>
-                  </CardContent>
-              </Card>
-          )}
         </div>
 
         {/* Right column (sidebar-like content) */}

@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import DynamicTable from '@/components/dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -28,7 +27,6 @@ export default function NewWorkstationPage() {
   const [type, setType] = useState('');
   const [customType, setCustomType] = useState('');
   const [description, setDescription] = useState('');
-  const [tableData, setTableData] = useState<Record<string, string>[]>([]);
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,7 +55,6 @@ export default function NewWorkstationPage() {
         name,
         type: finalType, 
         description, 
-        tableData,
         image: mainImage?.url,
         files: otherFiles
       });
@@ -149,16 +146,6 @@ export default function NewWorkstationPage() {
           </CardHeader>
           <CardContent>
             <FileUpload onUploadComplete={setFiles} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tableau des procédures</CardTitle>
-            <CardDescription>Ajoutez des étapes, des tâches ou toute autre donnée structurée dans un format de tableau.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DynamicTable onDataChange={setTableData} />
           </CardContent>
         </Card>
 
