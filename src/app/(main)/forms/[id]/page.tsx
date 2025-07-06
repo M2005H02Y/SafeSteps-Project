@@ -54,7 +54,10 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
     }
 
     return (
-        <div className="overflow-auto rounded-md border p-2 resize min-h-[200px]">
+        <div 
+            className="overflow-auto rounded-md border p-2 resize bg-background shadow-sm"
+            style={{ height: '250px' }}
+        >
             <table className="w-full border-collapse min-w-[40rem]">
                 <thead>
                     <tr>
