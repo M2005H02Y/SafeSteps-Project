@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImprovedFillableTable from '@/components/improved-fillable-table';
+import Image from 'next/image';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
@@ -96,7 +97,8 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-[600px] w-full" />
+            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-[200px] w-full" />
           </div>
           <div className="space-y-6">
             <Skeleton className="h-[250px] w-full" />
@@ -109,6 +111,9 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
   if (!form) {
     notFound();
   }
+
+  const imageFiles = form.files?.filter(f => f.type === 'image') || [];
+  const otherFiles = form.files?.filter(f => f.type !== 'image') || [];
 
   return (
     <>
@@ -135,6 +140,28 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+             {imageFiles.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Images jointes</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {imageFiles.map((file) => (
+                           <a key={file.url} href={file.url} target="_blank" rel="noopener noreferrer">
+                             <div className="relative aspect-video w-full rounded-lg overflow-hidden border hover:opacity-90 transition-opacity">
+                                <Image 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    fill
+                                    className="object-cover"
+                                    data-ai-hint="form image" 
+                                />
+                             </div>
+                           </a>
+                        ))}
+                    </CardContent>
+                </Card>
+             )}
              <Card>
                 <CardHeader>
                     <CardTitle>Aperçu du tableau</CardTitle>
@@ -148,18 +175,17 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
 
           <div className="space-y-6">
             <QRCode type="form" id={id} data={form} />
-             {form.files && form.files.length > 0 && (
+             {otherFiles.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Fichiers joints</CardTitle>
+                  <CardTitle>{imageFiles.length > 0 ? 'Autres fichiers joints' : 'Fichiers joints'}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {form.files.map(file => (
+                  {otherFiles.map(file => (
                     <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
                         {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
                         {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
                         {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
