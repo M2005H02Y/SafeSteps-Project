@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -66,7 +67,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="print-hidden">
         <CardTitle>Accès rapide</CardTitle>
         <CardDescription>Scannez ou téléchargez le code QR pour un accès public.</CardDescription>
       </CardHeader>
@@ -95,7 +96,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
             />
             
             {isDevEnv && (
-                <Alert variant="default" className="text-xs">
+                <Alert variant="default" className="text-xs print-hidden">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="text-sm font-semibold">Note de Développement</AlertTitle>
                     <AlertDescription>
@@ -104,7 +105,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
                 </Alert>
             )}
 
-            <Button variant="outline" onClick={handleDownload} className="w-full">
+            <Button variant="outline" onClick={handleDownload} className="w-full print-hidden">
               <Download className="mr-2 h-4 w-4" />
               Télécharger
             </Button>
