@@ -1,142 +1,145 @@
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Workstation } from '@/lib/data';
+import { Suspense } from 'react';
+import { useSearchParams, notFound } from 'next/navigation';
 import { b64_to_utf8 } from '@/lib/utils';
+import { Workstation, FileAttachment } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import Image from 'next/image';
+import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet, Building2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function PublicWorkstationPageContent() {
-  const params = useParams();
+// Define the Workstation type as we expect it from the QR code data.
+// We will deliberately not use the 'procedures' field even if it exists in the data.
+type PublicWorkstation = Omit<Workstation, 'id' | 'createdAt' | 'procedures'> & {
+    procedures?: any; // Acknowledge it might exist, but we won't use it.
+};
+
+function WorkstationPublicPageContent() {
   const searchParams = useSearchParams();
-  const id = params.id as string;
-  const data = searchParams.get('data');
+  const dataParam = searchParams.get('data');
 
-  const [workstation, setWorkstation] = useState<Workstation | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (data) {
-      try {
-        const decodedData = b64_to_utf8(data);
-        const parsedData = JSON.parse(decodedData);
-        if (parsedData.id === id) {
-          setWorkstation(parsedData);
-        }
-      } catch (error) {
-        console.error("Failed to parse workstation data from URL", error);
-      }
-    }
-    setLoading(false);
-  }, [id, data]);
-  
-  if (loading) {
+  if (!dataParam) {
     return (
-      <div className="p-4 md:p-8 space-y-6">
-        <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-6 w-1/2" />
-        <div className="space-y-6">
-            <Skeleton className="h-96 w-full" />
-            <Skeleton className="h-48 w-full" />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Données non valides</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Les données du poste de travail sont manquantes dans l'URL.</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!workstation) {
+  let workstation: PublicWorkstation;
+  try {
+    const decodedData = b64_to_utf8(dataParam);
+    workstation = JSON.parse(decodedData);
+  } catch (error) {
+    console.error("Failed to parse workstation data from QR code:", error);
     return (
-        <Card className="m-8">
-            <CardHeader>
-                <CardTitle className="text-destructive">Erreur de données</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Les données pour ce poste de travail n'ont pas pu être chargées à partir du code QR.</p>
-                <p>Veuillez scanner un code QR valide.</p>
-            </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Erreur de décodage</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Impossible de lire les données du code QR. Il est peut-être corrompu ou obsolète.</p>
+        </CardContent>
+      </Card>
     );
   }
   
-  const tableHeaders = workstation.tableData && workstation.tableData.length > 0 ? Object.keys(workstation.tableData[0]) : [];
+  if (!workstation || !workstation.name) {
+    notFound();
+  }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-        <header>
-            <h1 className="text-3xl font-bold">{workstation.name}</h1>
-            <p className="text-lg text-muted-foreground flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{workstation.type}</Badge> {workstation.description}
-            </p>
-        </header>
-        
-        {workstation.image && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Image</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="relative aspect-video w-full">
-                    <Image src={workstation.image} alt={workstation.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="assembly line" />
+    <div className="space-y-6">
+      <header className="space-y-2">
+        <div className="flex items-center gap-4">
+            <Building2 className="h-10 w-10 text-primary" />
+            <div>
+                <h1 className="text-3xl font-bold text-slate-800">{workstation.name}</h1>
+                <p className="text-lg text-muted-foreground flex items-center gap-2">
+                    <Badge variant="secondary">{workstation.type}</Badge>
+                    <span>{workstation.description}</span>
+                </p>
+            </div>
+        </div>
+      </header>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Image du poste</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {workstation.image ? (
+            <div className="relative aspect-video w-full">
+              <Image src={workstation.image} alt={workstation.name} fill className="rounded-lg object-cover" data-ai-hint="assembly line" />
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Aucune image disponible pour ce poste de travail.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {workstation.files && workstation.files.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fichiers joints</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {workstation.files.map((file: FileAttachment) => (
+              <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border bg-background/50 hover:bg-accent transition-colors">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  {file.type === 'pdf' && <FileTextIcon className="h-6 w-6 text-red-500 flex-shrink-0" />}
+                  {file.type === 'excel' && <FileSpreadsheet className="h-6 w-6 text-green-500 flex-shrink-0" />}
+                  {file.type === 'image' && <ImageIcon className="h-6 w-6 text-blue-500 flex-shrink-0" />}
+                  {file.type === 'other' && <FileIcon className="h-6 w-6 text-gray-500 flex-shrink-0" />}
+                  <span className="text-sm font-medium truncate">{file.name}</span>
                 </div>
-            </CardContent>
-          </Card>
-        )}
+                <Download className="h-5 w-5 text-muted-foreground ml-2"/>
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
-        {workstation.tableData && workstation.tableData.length > 0 && (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Procédures</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    {tableHeaders.map((header) => <TableHead key={header} className="capitalize">{header}</TableHead>)}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {workstation.tableData.map((row, index) => (
-                                    <TableRow key={index}>
-                                        {tableHeaders.map((header) => <TableCell key={header}>{row[header]}</TableCell>)}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
-
-        {workstation.files && workstation.files.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Fichiers joints</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {workstation.files.map(file => (
-                <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                    {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                    {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                    {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                    <span className="text-sm font-medium truncate">{file.name}</span>
-                  </div>
-                  <Download className="h-4 w-4 text-muted-foreground ml-2"/>
-                </a>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+      {/* The 'Procédures' section is intentionally not rendered here */}
     </div>
   );
 }
 
+function PageSkeleton() {
+    return (
+         <div className="space-y-6">
+            <header className="space-y-2">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div>
+                        <Skeleton className="h-8 w-64 mb-2" />
+                        <Skeleton className="h-6 w-80" />
+                    </div>
+                </div>
+            </header>
+            <Card>
+                <CardHeader>
+                     <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="aspect-video w-full" />
+                </CardContent>
+            </Card>
+         </div>
+    )
+}
+
 export default function PublicWorkstationPage() {
-    return <PublicWorkstationPageContent />;
+    return (
+        <Suspense fallback={<PageSkeleton />}>
+            <WorkstationPublicPageContent />
+        </Suspense>
+    )
 }

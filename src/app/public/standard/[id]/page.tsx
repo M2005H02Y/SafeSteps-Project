@@ -1,111 +1,133 @@
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Standard } from '@/lib/data';
+import { Suspense } from 'react';
+import { useSearchParams, notFound } from 'next/navigation';
 import { b64_to_utf8 } from '@/lib/utils';
+import { Standard, FileAttachment } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import Image from 'next/image';
+import { File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet, BookCheck } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function PublicStandardPageContent() {
-  const params = useParams();
+type PublicStandard = Omit<Standard, 'id'>;
+
+function StandardPublicPageContent() {
   const searchParams = useSearchParams();
-  const id = params.id as string;
-  const data = searchParams.get('data');
+  const dataParam = searchParams.get('data');
 
-  const [standard, setStandard] = useState<Standard | null>(null);
-  const [loading, setLoading] = useState(true);
+  if (!dataParam) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Données non valides</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Les données de la norme sont manquantes dans l'URL.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-    if (data) {
-      try {
-        const decodedData = b64_to_utf8(data);
-        const parsedData = JSON.parse(decodedData);
-        if (parsedData.id === id) {
-          setStandard(parsedData);
-        }
-      } catch (error) {
-        console.error("Failed to parse standard data from URL", error);
-      }
-    }
-    setLoading(false);
-  }, [id, data]);
-
-  if (loading) {
+  let standard: PublicStandard;
+  try {
+    const decodedData = b64_to_utf8(dataParam);
+    standard = JSON.parse(decodedData);
+  } catch (error) {
+    console.error("Failed to parse standard data from QR code:", error);
      return (
-      <div className="p-4 md:p-8 space-y-6">
-        <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-6 w-1/2" />
-        <div className="space-y-6">
-            <Skeleton className="h-96 w-full" />
-            <Skeleton className="h-48 w-full" />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Erreur de décodage</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Impossible de lire les données du code QR. Il est peut-être corrompu ou obsolète.</p>
+        </CardContent>
+      </Card>
     );
   }
   
-  if (!standard) {
-    return (
-        <Card className="m-8">
-            <CardHeader>
-                <CardTitle className="text-destructive">Erreur de données</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Les données pour cette norme n'ont pas pu être chargées à partir du code QR.</p>
-                <p>Veuillez scanner un code QR valide.</p>
-            </CardContent>
-        </Card>
-    );
+  if (!standard || !standard.name) {
+    notFound();
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-        <header>
-            <h1 className="text-3xl font-bold">{standard.name}</h1>
-            <p className="text-lg text-muted-foreground flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}
-            </p>
-        </header>
+    <div className="space-y-6">
+      <header className="space-y-2">
+         <div className="flex items-center gap-4">
+            <BookCheck className="h-10 w-10 text-primary" />
+            <div>
+                <h1 className="text-3xl font-bold text-slate-800">{standard.name}</h1>
+                <p className="text-lg text-muted-foreground flex items-center gap-2">
+                    <Badge variant="outline">{standard.category}</Badge>
+                    <Badge variant="secondary">Version: {standard.version}</Badge>
+                </p>
+            </div>
+        </div>
+      </header>
 
+      <Card>
+        <CardContent className="pt-6">
+          {standard.image && (
+            <div className="relative aspect-video w-full mb-4">
+              <Image src={standard.image} alt={standard.name} fill className="rounded-lg object-cover" data-ai-hint="certificate document" />
+            </div>
+          )}
+          {standard.description && <p className="text-muted-foreground break-words">{standard.description}</p>}
+        </CardContent>
+      </Card>
+
+      {standard.files && standard.files.length > 0 && (
         <Card>
-            <CardContent className="pt-6">
-                 {standard.image && (
-                    <div className="relative aspect-video w-full mb-4">
-                        <Image src={standard.image} alt={standard.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="certificate document"/>
-                    </div>
-                )}
-                {standard.description && <p className="text-muted-foreground break-words">{standard.description}</p>}
-            </CardContent>
+          <CardHeader>
+            <CardTitle>Fichiers joints</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {standard.files.map((file: FileAttachment) => (
+              <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border bg-background/50 hover:bg-accent transition-colors">
+                 <div className="flex items-center gap-3 overflow-hidden">
+                  {file.type === 'pdf' && <FileTextIcon className="h-6 w-6 text-red-500 flex-shrink-0" />}
+                  {file.type === 'excel' && <FileSpreadsheet className="h-6 w-6 text-green-500 flex-shrink-0" />}
+                  {file.type === 'image' && <ImageIcon className="h-6 w-6 text-blue-500 flex-shrink-0" />}
+                  {file.type === 'other' && <FileIcon className="h-6 w-6 text-gray-500 flex-shrink-0" />}
+                  <span className="text-sm font-medium truncate">{file.name}</span>
+                </div>
+                <Download className="h-5 w-5 text-muted-foreground ml-2"/>
+              </a>
+            ))}
+          </CardContent>
         </Card>
-
-        {standard.files && standard.files.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Fichiers joints</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {standard.files.map(file => (
-                <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
-                    {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
-                    {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
-                    {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
-                    <span className="text-sm font-medium truncate">{file.name}</span>
-                  </div>
-                  <Download className="h-4 w-4 text-muted-foreground ml-2"/>
-                </a>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+      )}
     </div>
   );
 }
 
+
+function PageSkeleton() {
+    return (
+         <div className="space-y-6">
+            <header className="space-y-2">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div>
+                        <Skeleton className="h-8 w-64 mb-2" />
+                        <Skeleton className="h-6 w-80" />
+                    </div>
+                </div>
+            </header>
+            <Card>
+                <CardContent className="pt-6">
+                    <Skeleton className="aspect-video w-full" />
+                </CardContent>
+            </Card>
+         </div>
+    )
+}
+
 export default function PublicStandardPage() {
-    return <PublicStandardPageContent />;
+    return (
+        <Suspense fallback={<PageSkeleton />}>
+            <StandardPublicPageContent />
+        </Suspense>
+    )
 }
