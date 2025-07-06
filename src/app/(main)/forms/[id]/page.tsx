@@ -6,7 +6,7 @@ import { getFormById, Form } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Edit, FileText as FileTextIcon, Download, File as FileIcon, ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Edit, FileText as FileTextIcon, ExternalLink, File as FileIcon, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -163,7 +163,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                         {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
                         <span className="text-sm font-medium truncate">{file.name}</span>
                       </div>
-                      <Download className="h-4 w-4 text-muted-foreground ml-2"/>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-2"/>
                     </a>
                   ))}
                 </CardContent>
