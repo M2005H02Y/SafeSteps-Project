@@ -70,9 +70,10 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
     );
 }
 
-export default function FormDetailPage({ params }: { params: { id: string } }) {
+export default function FormDetailPage() {
   const router = useRouter();
-  const id = params.id;
+  const params = useParams();
+  const id = params.id as string;
   
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
