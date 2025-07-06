@@ -38,13 +38,23 @@ function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
                 rowSpan={cell.rowspan}
                 className="border border-slate-200 p-2 align-top text-sm"
             >
-                {cell.content}
+                <div>{cell.content}</div>
+                {cell.image && (
+                     <div className="relative mt-2 w-full aspect-video">
+                        <Image 
+                            src={cell.image} 
+                            alt="Image de cellule" 
+                            fill
+                            className="object-contain rounded"
+                        />
+                     </div>
+                )}
             </td>
         );
     }
 
     return (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-auto rounded-md border p-2 resize w-full min-h-[200px]">
             <table className="w-full border-collapse">
                 <thead>
                     <tr>
@@ -165,7 +175,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
              <Card>
                 <CardHeader>
                     <CardTitle>Aperçu du tableau</CardTitle>
-                    <CardDescription>Ceci est la structure du formulaire que vous avez créée.</CardDescription>
+                    <CardDescription>Ceci est la structure du formulaire que vous avez créée. Vous pouvez redimensionner ce bloc.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ReadOnlyTable tableData={form.tableData}/>
