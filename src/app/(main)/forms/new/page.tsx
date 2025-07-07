@@ -39,7 +39,7 @@ export default function NewFormPage() {
     
     try {
       const tableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
-      const success = addForm({ name, tableData, files });
+      const success = await addForm({ name, table_data: tableData, files });
 
       if (success) {
         toast({
@@ -48,7 +48,7 @@ export default function NewFormPage() {
         });
         router.push('/forms');
       } else {
-         throw new Error("Local storage save failed");
+         throw new Error("API call failed");
       }
     } catch (error) {
        toast({

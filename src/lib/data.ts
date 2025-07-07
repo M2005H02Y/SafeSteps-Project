@@ -1,7 +1,9 @@
 
+import { supabase } from './supabaseClient';
+
 export type FileAttachment = {
   name: string;
-  url: string; // Firebase Storage URL
+  url: string;
   type: 'image' | 'pdf' | 'excel' | 'other';
 };
 
@@ -11,12 +13,13 @@ export const engineTypes = [
   "Sondeuse DKS", "Sondeuse SKF"
 ];
 
+// Types matching the Supabase table structure
 export type Workstation = {
   id: string;
   name: string;
   type: string;
-  description: string;
-  createdAt: string;
+  description: string | null;
+  created_at: string;
   image?: string;
   files?: FileAttachment[];
 };
@@ -25,13 +28,13 @@ export type Standard = {
   id: string;
   name: string;
   category: string;
-  version: string;
-  description?: string;
+  version: string | null;
+  description?: string | null;
   image?: string;
   files?: FileAttachment[];
+  last_updated: string;
 };
 
-// New types for dynamic forms
 export interface CellData {
   content: string;
   colspan?: number;
@@ -50,88 +53,10 @@ export interface TableData {
 export type Form = {
   id: string;
   name: string;
-  lastUpdated: string;
-  tableData?: TableData;
+  last_updated: string;
+  table_data?: TableData;
   files?: FileAttachment[];
 };
-
-
-const initialWorkstations: Workstation[] = [
-  {
-    id: 'ws-001',
-    name: "Ligne d'assemblage Alpha",
-    type: "Chargeuse 992K",
-    description: "Ligne d'assemblage principale pour la fabrication de composants.",
-    createdAt: "2024-05-21",
-    image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
-    files: [],
-  },
-  {
-    id: 'ws-002',
-    name: "Poste d'emballage Bravo",
-    type: "Bulls D9",
-    description: "Poste de préparation finale pour l'emballage et l'expédition.",
-    createdAt: "2024-05-18",
-    image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg',
-    files: [],
-  },
-];
-
-const initialStandards: Standard[] = [
-  { id: 'std-iso-9001', name: 'ISO 9001:2015', category: 'Management de la qualité', version: '2015', description: "Cette norme spécifie les exigences relatives aux systèmes de management de la qualité lorsqu'un organisme doit démontrer son aptitude à fournir constamment des produits et des services conformes aux exigences des clients et aux exigences légales et réglementaires applicables.", image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg', files: [] },
-  { id: 'std-iso-14001', name: 'ISO 14001:2015', category: 'Management environnemental', version: '2015', description: 'Cette norme spécifie les exigences relatives à un système de management environnemental pour permettre à un organisme de développer et de mettre en œuvre une politique et des objectifs qui prennent en compte les exigences légales et les autres exigences, ainsi que les informations sur les aspects environnementaux significatifs.', image: 'https://res.cloudinary.com/dznopvi7n/image/upload/v1716305024/prod/photo-1581092921434-08d195a4f571_p8efqs.jpg', files: [] },
-];
-
-const initialForms: Form[] = [
-  { 
-    id: 'form-01', 
-    name: "Check-list quotidienne de l'équipement", 
-    lastUpdated: '2024-05-20',
-    files: [],
-    tableData: {
-      rows: 2,
-      cols: 2,
-      headers: ["Point de Contrôle", "Statut"],
-      data: {
-        "0-0": { content: "Niveau d'huile" },
-        "0-1": { content: "" },
-        "1-0": { content: "Pression des pneus" },
-        "1-1": { content: "" },
-      }
-    }
-  },
-];
-
-function getFromStorage<T>(key: string, initialValue: T): T {
-  if (typeof window === 'undefined') {
-    return initialValue;
-  }
-  try {
-    const item = window.localStorage.getItem(key);
-    if (item) {
-      return JSON.parse(item);
-    } else {
-      window.localStorage.setItem(key, JSON.stringify(initialValue));
-      return initialValue;
-    }
-  } catch (error) {
-    console.warn(`Error reading localStorage key “${key}”:`, error);
-    return initialValue;
-  }
-}
-
-function saveToStorage<T>(key: string, value: T): boolean {
-    if (typeof window === 'undefined') {
-        return false;
-    }
-    try {
-        window.localStorage.setItem(key, JSON.stringify(value));
-        return true;
-    } catch (error) {
-        console.error(`Error setting localStorage key “${key}”:`, error);
-        return false;
-    }
-}
 
 export const getFileType = (file: File): FileAttachment['type'] => {
     if (file.type.startsWith('image/')) return 'image';
@@ -140,123 +65,168 @@ export const getFileType = (file: File): FileAttachment['type'] => {
     return 'other';
 }
 
-// Workstation Functions
-export function getWorkstations(): Workstation[] {
-  return getFromStorage('workstations', initialWorkstations);
+// --- Workstation Functions ---
+export async function getWorkstations(): Promise<Workstation[]> {
+  const { data, error } = await supabase.from('workstations').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error("Error fetching workstations:", error);
+    throw error;
+  }
+  return data || [];
 }
 
-export function addWorkstation(workstation: Omit<Workstation, 'id' | 'createdAt'>): boolean {
-  const workstations = getWorkstations();
-  const newWorkstation: Workstation = { 
-      id: `ws-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      name: workstation.name,
-      type: workstation.type,
-      description: workstation.description,
-      image: workstation.image,
-      files: workstation.files || [],
-  };
-  const updatedWorkstations = [newWorkstation, ...workstations];
-  return saveToStorage('workstations', updatedWorkstations);
+export async function getWorkstationsCount(): Promise<number> {
+  const { count, error } = await supabase.from('workstations').select('*', { count: 'exact', head: true });
+  if (error) {
+    console.error("Error counting workstations:", error);
+    return 0;
+  }
+  return count || 0;
 }
 
-export function getWorkstationById(id: string): Workstation | undefined {
-  const workstations = getWorkstations();
-  return workstations.find(ws => ws.id === id);
+export async function addWorkstation(workstation: Omit<Workstation, 'id' | 'created_at'>): Promise<boolean> {
+  const { error } = await supabase.from('workstations').insert([workstation]);
+  if (error) {
+    console.error("Error adding workstation:", error);
+    return false;
+  }
+  return true;
 }
 
-export function updateWorkstation(id: string, data: Partial<Omit<Workstation, 'id' | 'createdAt'>>): boolean {
-    const workstations = getWorkstations();
-    const index = workstations.findIndex(ws => ws.id === id);
-    if (index === -1) return false;
-    
-    workstations[index] = { ...workstations[index], ...data };
-    
-    return saveToStorage('workstations', workstations);
+export async function getWorkstationById(id: string): Promise<Workstation | undefined> {
+  const { data, error } = await supabase.from('workstations').select('*').eq('id', id).single();
+  if (error) {
+    console.error(`Error fetching workstation ${id}:`, error);
+    return undefined;
+  }
+  return data;
 }
 
-export function deleteWorkstation(id: string): boolean {
-    let workstations = getWorkstations();
-    workstations = workstations.filter(ws => ws.id !== id);
-    return saveToStorage('workstations', workstations);
+export async function updateWorkstation(id: string, updates: Partial<Omit<Workstation, 'id' | 'created_at'>>): Promise<boolean> {
+    const { error } = await supabase.from('workstations').update(updates).eq('id', id);
+    if (error) {
+        console.error(`Error updating workstation ${id}:`, error);
+        return false;
+    }
+    return true;
 }
 
-// Standard Functions
-export function getStandards(): Standard[] {
-  return getFromStorage('standards', initialStandards);
+export async function deleteWorkstation(id: string): Promise<boolean> {
+    const { error } = await supabase.from('workstations').delete().eq('id', id);
+    if (error) {
+        console.error(`Error deleting workstation ${id}:`, error);
+        return false;
+    }
+    return true;
 }
 
-export function addStandard(standard: Omit<Standard, 'id'>): boolean {
-  const standards = getStandards();
-  const newStandard: Standard = { 
-      id: `std-${Date.now()}`,
-      name: standard.name,
-      category: standard.category,
-      version: standard.version,
-      description: standard.description,
-      image: standard.image,
-      files: standard.files || []
-  };
-  const updatedStandards = [newStandard, ...standards];
-  return saveToStorage('standards', updatedStandards);
+
+// --- Standard Functions ---
+export async function getStandards(): Promise<Standard[]> {
+  const { data, error } = await supabase.from('standards').select('*').order('last_updated', { ascending: false });
+  if (error) {
+    console.error("Error fetching standards:", error);
+    throw error;
+  }
+  return data || [];
 }
 
-export function getStandardById(id: string): Standard | undefined {
-    const standards = getStandards();
-    return standards.find(s => s.id === id);
+export async function getStandardsCount(): Promise<number> {
+  const { count, error } = await supabase.from('standards').select('*', { count: 'exact', head: true });
+   if (error) {
+    console.error("Error counting standards:", error);
+    return 0;
+  }
+  return count || 0;
 }
 
-export function updateStandard(id: string, data: Partial<Omit<Standard, 'id'>>): boolean {
-    const standards = getStandards();
-    const index = standards.findIndex(s => s.id === id);
-    if (index === -1) return false;
-
-    standards[index] = { ...standards[index], ...data };
-    
-    return saveToStorage('standards', standards);
+export async function addStandard(standard: Omit<Standard, 'id' | 'last_updated'>): Promise<boolean> {
+  const { error } = await supabase.from('standards').insert([{ ...standard, last_updated: new Date().toISOString() }]);
+  if (error) {
+    console.error("Error adding standard:", error);
+    return false;
+  }
+  return true;
 }
 
-export function deleteStandard(id: string): boolean {
-    let standards = getStandards();
-    standards = standards.filter(s => s.id !== id);
-    return saveToStorage('standards', standards);
+export async function getStandardById(id: string): Promise<Standard | undefined> {
+    const { data, error } = await supabase.from('standards').select('*').eq('id', id).single();
+    if (error) {
+        console.error(`Error fetching standard ${id}:`, error);
+        return undefined;
+    }
+    return data;
 }
 
-// Form Functions
-export function getForms(): Form[] {
-  return getFromStorage('forms', initialForms);
+export async function updateStandard(id: string, updates: Partial<Omit<Standard, 'id' | 'last_updated'>>): Promise<boolean> {
+    const { error } = await supabase.from('standards').update({ ...updates, last_updated: new Date().toISOString() }).eq('id', id);
+    if (error) {
+        console.error(`Error updating standard ${id}:`, error);
+        return false;
+    }
+    return true;
 }
 
-export function addForm(form: Omit<Form, 'id' | 'lastUpdated'>): boolean {
-    const forms = getForms();
-    const newForm: Form = { 
-        id: `form-${Date.now()}`,
-        name: form.name,
-        tableData: form.tableData,
-        files: form.files || [],
-        lastUpdated: new Date().toISOString().split('T')[0],
-    };
-    const updatedForms = [newForm, ...forms];
-    return saveToStorage('forms', updatedForms);
+export async function deleteStandard(id: string): Promise<boolean> {
+    const { error } = await supabase.from('standards').delete().eq('id', id);
+     if (error) {
+        console.error(`Error deleting standard ${id}:`, error);
+        return false;
+    }
+    return true;
 }
 
-export function getFormById(id: string): Form | undefined {
-    const forms = getForms();
-    return forms.find(f => f.id === id);
+// --- Form Functions ---
+export async function getForms(): Promise<Form[]> {
+  const { data, error } = await supabase.from('forms').select('*').order('last_updated', { ascending: false });
+  if (error) {
+    console.error("Error fetching forms:", error);
+    throw error;
+  }
+  return data || [];
 }
 
-export function updateForm(id: string, data: Partial<Omit<Form, 'id' | 'lastUpdated'>>): boolean {
-    const forms = getForms();
-    const index = forms.findIndex(f => f.id === id);
-    if (index === -1) return false;
-
-    forms[index] = { ...forms[index], ...data, lastUpdated: new Date().toISOString().split('T')[0] };
-
-    return saveToStorage('forms', forms);
+export async function getFormsCount(): Promise<number> {
+  const { count, error } = await supabase.from('forms').select('*', { count: 'exact', head: true });
+  if (error) {
+    console.error("Error counting forms:", error);
+    return 0;
+  }
+  return count || 0;
 }
 
-export function deleteForm(id: string): boolean {
-    let forms = getForms();
-    forms = forms.filter(f => f.id !== id);
-    return saveToStorage('forms', forms);
+export async function addForm(form: Omit<Form, 'id' | 'last_updated'>): Promise<boolean> {
+    const { error } = await supabase.from('forms').insert([{ ...form, last_updated: new Date().toISOString() }]);
+    if (error) {
+        console.error("Error adding form:", error);
+        return false;
+    }
+    return true;
+}
+
+export async function getFormById(id: string): Promise<Form | undefined> {
+    const { data, error } = await supabase.from('forms').select('*').eq('id', id).single();
+    if (error) {
+        console.error(`Error fetching form ${id}:`, error);
+        return undefined;
+    }
+    return data;
+}
+
+export async function updateForm(id: string, updates: Partial<Omit<Form, 'id' | 'last_updated'>>): Promise<boolean> {
+    const { error } = await supabase.from('forms').update({ ...updates, last_updated: new Date().toISOString() }).eq('id', id);
+    if (error) {
+        console.error(`Error updating form ${id}:`, error);
+        return false;
+    }
+    return true;
+}
+
+export async function deleteForm(id: string): Promise<boolean> {
+    const { error } = await supabase.from('forms').delete().eq('id', id);
+    if (error) {
+        console.error(`Error deleting form ${id}:`, error);
+        return false;
+    }
+    return true;
 }

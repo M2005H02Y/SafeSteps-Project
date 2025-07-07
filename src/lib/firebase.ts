@@ -1,4 +1,10 @@
+
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
+
+// This file is kept for potential future use if other Firebase services are needed.
+// However, core functionality like database and file storage has been migrated.
+// Database is now handled by Supabase.
+// File storage is handled by Cloudinary.
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -9,8 +15,4 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase for potential future use (e.g., Firestore DB)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
-// Firebase Storage functionality has been replaced by Cloudinary.
-// The uploadFile function is no longer here.

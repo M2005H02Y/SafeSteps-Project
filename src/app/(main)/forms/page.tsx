@@ -70,14 +70,22 @@ function PageSkeleton() {
 function FormsPageContent() {
   const router = useRouter();
   const [forms, setForms] = useState<Form[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [formToDelete, setFormToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const refreshForms = () => {
-    const freshData = getForms();
-    setForms(freshData);
+  const refreshForms = async () => {
+    setLoading(true);
+    try {
+      const freshData = await getForms();
+      setForms(freshData);
+    } catch (error) {
+      toast({ title: "Erreur", description: "Impossible de charger les formulaires.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -93,9 +101,9 @@ function FormsPageContent() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (formToDelete) {
-      const success = deleteForm(formToDelete);
+      const success = await deleteForm(formToDelete);
       if (success) {
         toast({ title: "Formulaire supprimé" });
         refreshForms();
@@ -133,7 +141,27 @@ function FormsPageContent() {
               </CardContent>
             </Card>
 
-            {filteredForms.length > 0 ? (
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                         <Card key={i}>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-10 w-full" />
+                            </CardContent>
+                            <CardFooter>
+                            <div className="flex justify-end w-full gap-2">
+                                <Skeleton className="h-8 w-8" />
+                                <Skeleton className="h-8 w-8" />
+                            </div>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            ) : filteredForms.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredForms.map((form) => (
                     <Link href={`/forms/${form.id}`} key={form.id} className="block hover:-translate-y-1 transition-transform duration-200">
@@ -141,13 +169,13 @@ function FormsPageContent() {
                             <CardHeader>
                                 <CardTitle className="truncate" title={form.name}>{form.name}</CardTitle>
                                 <CardDescription>
-                                     Mis à jour le {new Date(form.lastUpdated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                     Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <FileTextIcon className="h-4 w-4" />
-                                    <span>{form.tableData ? 'Formulaire avec tableau' : 'Formulaire simple'}</span>
+                                    <span>{form.table_data ? 'Formulaire avec tableau' : 'Formulaire simple'}</span>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2">

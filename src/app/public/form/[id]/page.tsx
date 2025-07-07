@@ -1,129 +1,195 @@
+
 "use client";
 
-import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
-import { Form } from '@/lib/data';
-import { b64_to_utf8 } from '@/lib/utils';
+import { notFound, useParams } from 'next/navigation';
+import { getFormById, Form } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText as FileTextIcon, Loader2 } from 'lucide-react';
-import ImprovedFillableTable from '@/components/improved-fillable-table';
+import { FileText as FileTextIcon, ExternalLink, File as FileIcon, ImageIcon, FileSpreadsheet, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ImprovedFillableTable from '@/components/improved-fillable-table';
+import Image from 'next/image';
 
-function PublicFormPageContent({ params }: { params: { id: string } }) {
-  const searchParams = useSearchParams();
-  const id = params.id;
+function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
+    if (!tableData || !tableData.rows || !tableData.cols) {
+        return (
+            <div className="text-center text-muted-foreground p-8">
+                <p>Ce formulaire n'a pas de tableau configuré.</p>
+            </div>
+        );
+    }
+    
+    const getCellKey = (r: number, c: number) => `${r}-${c}`;
 
+    const renderCell = (r: number, c: number) => {
+        const key = getCellKey(r,c);
+        const cell = tableData.data[key] || { content: '' };
+        if (cell.merged) return null;
+
+        return (
+            <td
+                key={key}
+                colSpan={cell.colspan}
+                rowSpan={cell.rowspan}
+                className="border border-slate-300 p-2 text-sm bg-white"
+            >
+                <div>{cell.content}</div>
+            </td>
+        );
+    }
+
+    return (
+        <div 
+            className="overflow-auto rounded-md border p-2 resize bg-slate-100 shadow-sm"
+        >
+            <table className="w-full border-collapse min-w-[40rem]">
+                <thead>
+                    <tr>
+                        {[...Array(tableData.cols)].map((_, c) => (
+                            <th key={c} className="border border-slate-300 p-2 bg-slate-200 text-sm font-medium text-left">
+                                {tableData.headers?.[c] || `Colonne ${c + 1}`}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {[...Array(tableData.rows)].map((_, r) => (
+                        <tr key={r}>
+                            {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+export default function PublicFormPage() {
+  const params = useParams();
+  const id = params.id as string;
+  
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
 
   useEffect(() => {
-    const dataParam = searchParams.get('data');
-    let formData: Form | null = null;
-
-    if (dataParam) {
-      try {
-        const decodedData = b64_to_utf8(decodeURIComponent(dataParam));
-        if (decodedData) {
-          formData = JSON.parse(decodedData) as Form;
+    if (id) {
+      const fetchForm = async () => {
+        setLoading(true);
+        try {
+          const f = await getFormById(id);
+          setForm(f || null);
+        } catch (error) {
+          console.error("Failed to fetch form:", error);
+          setForm(null);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Failed to parse form data from URL", error);
       }
+      fetchForm();
     }
-    
-    if (formData) {
-      setForm(formData);
-    }
-    setLoading(false);
-  }, [id, searchParams]);
+  }, [id]);
 
   if (loading) {
     return (
-        <div className="p-4 md:p-6 space-y-6">
-            <Skeleton className="h-10 w-2/3" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex justify-center mt-4">
-                <Skeleton className="h-12 w-48" />
-            </div>
-            <Card className="mt-6">
-                <CardHeader>
-                    <Skeleton className="h-6 w-1/3" />
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-48 w-full" />
-                </CardContent>
-            </Card>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (!form) {
-    return (
-        <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-destructive">Données du formulaire non valides</h1>
-            <p className="text-muted-foreground mt-2">Impossible de charger les données du formulaire à partir du code QR. Veuillez réessayer de le scanner.</p>
-        </div>
-    );
+    notFound();
   }
+
+  const imageFiles = form.files?.filter(f => f.type === 'image') || [];
+  const otherFiles = form.files?.filter(f => f.type !== 'image') || [];
 
   return (
     <>
-      <div className="p-4 md:p-6 space-y-4">
-        <h1 className="text-3xl font-bold">{form.name}</h1>
-        <p className="text-muted-foreground">Formulaire public. Cliquez sur le bouton ci-dessous pour remplir et exporter.</p>
-        
-        <div className="flex justify-center mt-4">
-            <Button size="lg" onClick={() => setIsFillModalOpen(true)}>
-                <FileTextIcon className="mr-2 h-5 w-5" />
-                Remplir et Exporter
-            </Button>
-        </div>
-
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Aperçu du Tableau</CardTitle>
-            <CardDescription>Ceci est une représentation statique de la structure du formulaire.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             {form.tableData ? (
-                 <div className="text-center text-muted-foreground p-4 border rounded-md bg-slate-100">
-                    La structure du tableau s'affichera dans le formulaire interactif.
-                 </div>
-             ) : (
-                <div className="text-center text-muted-foreground p-4 border rounded-md bg-slate-100">
-                    Ce formulaire ne contient pas de tableau.
-                </div>
-             )}
-          </CardContent>
+      <main className="flex-1 p-4 md:p-6 space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>{form.name}</CardTitle>
+                <CardDescription>Mis à jour le {new Date(form.last_updated).toLocaleDateString()}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button onClick={() => setIsFillModalOpen(true)} className="w-full">
+                    <FileTextIcon className="mr-2 h-4 w-4" />
+                    Remplir et Exporter le formulaire
+                </Button>
+            </CardContent>
         </Card>
-      </div>
-      
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+             {imageFiles.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Images jointes</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 gap-4">
+                        {imageFiles.map((file) => (
+                           <a key={file.url} href={file.url} target="_blank" rel="noopener noreferrer">
+                             <div className="relative aspect-video w-full rounded-lg overflow-hidden border hover:opacity-90 transition-opacity">
+                                <Image 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    fill
+                                    className="object-cover"
+                                    data-ai-hint="form image" 
+                                />
+                             </div>
+                           </a>
+                        ))}
+                    </CardContent>
+                </Card>
+             )}
+             <Card>
+                <CardHeader>
+                    <CardTitle>Aperçu du tableau</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ReadOnlyTable tableData={form.table_data}/>
+                </CardContent>
+             </Card>
+          </div>
+
+          <div className="space-y-6">
+             {otherFiles.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{imageFiles.length > 0 ? 'Autres fichiers joints' : 'Fichiers joints'}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {otherFiles.map(file => (
+                    <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-2"/>
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </main>
+    
       {isFillModalOpen && (
-        <ImprovedFillableTable
-          formName={form.name}
-          tableData={form.tableData}
-          isOpen={isFillModalOpen}
-          onClose={() => setIsFillModalOpen(false)}
-        />
+          <ImprovedFillableTable
+              formName={form.name}
+              tableData={form.table_data}
+              isOpen={isFillModalOpen}
+              onClose={() => setIsFillModalOpen(false)}
+          />
       )}
     </>
   );
-}
-
-function LoadingFallback() {
-    return (
-        <div className="flex items-center justify-center h-screen">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-    );
-}
-
-export default function PublicFormPage({ params }: { params: { id: string } }) {
-    return (
-        <Suspense fallback={<LoadingFallback />}>
-            <PublicFormPageContent params={params} />
-        </Suspense>
-    );
 }

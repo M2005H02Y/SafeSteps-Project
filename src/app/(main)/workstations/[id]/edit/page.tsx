@@ -40,32 +40,36 @@ export default function EditWorkstationPage() {
 
   useEffect(() => {
     if (id) {
-      const wsData = getWorkstationById(id);
-      if (wsData) {
-        setWorkstation(wsData);
-        setName(wsData.name);
-        
-        const isCustomType = !engineTypes.includes(wsData.type);
-        if (isCustomType) {
-            setType(OTHER_ENGINE_VALUE);
-            setCustomType(wsData.type);
-        } else {
-            setType(wsData.type);
-            setCustomType('');
-        }
+      const fetchWorkstation = async () => {
+        setIsLoading(true);
+        const wsData = await getWorkstationById(id);
+        if (wsData) {
+          setWorkstation(wsData);
+          setName(wsData.name);
+          
+          const isCustomType = !engineTypes.includes(wsData.type);
+          if (isCustomType) {
+              setType(OTHER_ENGINE_VALUE);
+              setCustomType(wsData.type);
+          } else {
+              setType(wsData.type);
+              setCustomType('');
+          }
 
-        setDescription(wsData.description);
-        const allFiles = [];
-        if(wsData.image){
-            allFiles.push({ name: 'Image principale', url: wsData.image, type: 'image' as const});
-        }
-        if(wsData.files){
-            allFiles.push(...wsData.files);
-        }
-        setFiles(allFiles);
+          setDescription(wsData.description || '');
+          const allFiles = [];
+          if(wsData.image){
+              allFiles.push({ name: 'Image principale', url: wsData.image, type: 'image' as const});
+          }
+          if(wsData.files){
+              allFiles.push(...wsData.files);
+          }
+          setFiles(allFiles);
 
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
+      fetchWorkstation();
     }
   }, [id]);
 
@@ -88,7 +92,7 @@ export default function EditWorkstationPage() {
       const mainImage = files.find(f => f.type === 'image');
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
-      const success = updateWorkstation(id, { 
+      const success = await updateWorkstation(id, { 
         name,
         type: finalType,
         description, 
@@ -104,7 +108,7 @@ export default function EditWorkstationPage() {
         router.push('/workstations');
         router.refresh();
       } else {
-        throw new Error("Local storage save failed");
+        throw new Error("API call failed");
       }
     } catch(error) {
         toast({
@@ -118,7 +122,28 @@ export default function EditWorkstationPage() {
   };
 
   if (isLoading) {
-    return <div className="p-6"><Skeleton className="w-full h-96" /></div>;
+    return (
+      <div className="p-6 space-y-6">
+        <PageHeader title="Chargement...">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-48" />
+          </div>
+        </PageHeader>
+        <Card>
+          <CardHeader><CardTitle><Skeleton className="h-6 w-1/3" /></CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle><Skeleton className="h-6 w-1/4" /></CardTitle></CardHeader>
+          <CardContent><Skeleton className="h-24 w-full" /></CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!workstation) {

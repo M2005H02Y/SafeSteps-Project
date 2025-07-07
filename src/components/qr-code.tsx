@@ -12,45 +12,24 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
   id: string;
-  data?: any;
 };
 
-// Helper function to safely encode a UTF-8 string to Base64
-function utf8_to_b64(str: string): string {
-    return btoa(unescape(encodeURIComponent(str)));
-}
-
-export default function QRCode({ type, id, data }: QRCodeProps) {
+export default function QRCode({ type, id }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [isDevEnv, setIsDevEnv] = useState(false);
 
   useEffect(() => {
     // This component runs only on the client, so `window` is safe to use.
-    if (typeof window !== 'undefined' && data) {
-      const { hostname } = window.location;
+    if (typeof window !== 'undefined' && id) {
+      const { hostname, origin } = window.location;
       
       const isCloudWorkstation = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
       setIsDevEnv(isCloudWorkstation);
 
-      const baseUrl = window.location.origin;
-
-      let url = `${baseUrl}/public/${type}/${id}`;
-
-      try {
-        const dataForQr = JSON.parse(JSON.stringify(data));
-        
-        if(Object.keys(dataForQr).length > 0) {
-            const jsonString = JSON.stringify(dataForQr);
-            const encodedData = utf8_to_b64(jsonString);
-            url += `?data=${encodeURIComponent(encodedData)}`;
-        }
-      } catch (error) {
-        console.error("Could not encode data for QR code.", error);
-      }
-      
+      const url = `${origin}/public/${type}/${id}`;
       setPublicUrl(url);
     }
-  }, [type, id, data]);
+  }, [type, id]);
 
   const handleDownload = () => {
     const canvas = document.getElementById(`qr-canvas-download-${id}`) as HTMLCanvasElement;
@@ -100,7 +79,7 @@ export default function QRCode({ type, id, data }: QRCodeProps) {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="text-sm font-semibold">Note de Développement</AlertTitle>
                     <AlertDescription>
-                        Ce QR code utilise votre URL de développement privée. L'accès peut être limité à votre réseau ou aux appareils connectés à votre compte. Il utilisera l'URL publique après le déploiement.
+                        Ce QR code utilise votre URL de développement privée. Il utilisera l'URL publique après le déploiement sur Vercel.
                     </AlertDescription>
                 </Alert>
             )}

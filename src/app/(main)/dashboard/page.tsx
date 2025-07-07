@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,7 +14,8 @@ import {
   FileUp,
   LineChart
 } from 'lucide-react';
-import { getWorkstations, getStandards, getForms } from '@/lib/data';
+import { getWorkstationsCount, getStandardsCount, getFormsCount } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const engines = [
   "NIV KOM", "ARR CAT", "Bulls D9", "Bulls D11", "Camion ravitaillement GO CAT", 
@@ -27,6 +29,22 @@ const quickActions = [
     { title: "Nouveau Formulaire", icon: <FileText className="h-10 w-10" />, href: "/forms/new", description: "Créer un nouveau formulaire configurable." },
 ];
 
+function StatCardSkeleton() {
+  return (
+    <Card className="p-6">
+      <div className="flex justify-between items-start mb-2">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+      <div>
+        <Skeleton className="h-8 w-12 mb-2" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </Card>
+  );
+}
+
+
 export default function DashboardPage() {
   const [stats, setStats] = useState([
     { title: 'Postes de travail', value: '0', icon: <Building2 className="h-8 w-8 text-blue-500" />, change: "+2%", changeType: 'positive' as const, href: '/workstations' },
@@ -34,18 +52,30 @@ export default function DashboardPage() {
     { title: 'Formulaires Remplis', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
     { title: 'Anomalies Signalées', value: '3', icon: <LineChart className="h-8 w-8 text-red-500" />, change: "-5%", changeType: 'negative' as const, href: '/anomalies' },
   ]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const workstationCount = getWorkstations().length;
-    const standardCount = getStandards().length;
-    const formCount = getForms().length;
+    async function fetchStats() {
+      try {
+        const [workstationCount, standardCount, formCount] = await Promise.all([
+          getWorkstationsCount(),
+          getStandardsCount(),
+          getFormsCount(),
+        ]);
 
-    setStats(prevStats => [
-        { ...prevStats[0], value: workstationCount.toString() },
-        { ...prevStats[1], value: standardCount.toString() },
-        { ...prevStats[2], value: formCount.toString() },
-        prevStats[3]
-    ]);
+        setStats(prevStats => [
+            { ...prevStats[0], value: workstationCount.toString() },
+            { ...prevStats[1], value: standardCount.toString() },
+            { ...prevStats[2], value: formCount.toString() },
+            prevStats[3]
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
   }, []);
 
   return (
@@ -61,20 +91,29 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="glass-effect p-6 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
-                <div className="flex justify-between items-start">
-                    <h3 className="text-sm font-medium text-slate-700">{stat.title}</h3>
-                    {stat.icon}
-                </div>
-                <div>
-                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                    <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : stat.changeType === 'negative' ? 'text-red-600' : 'text-slate-500'}`}>
-                        {stat.change} vs mois dernier
-                    </p>
-                </div>
-            </Card>
-          ))}
+          {loading ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : (
+            stats.map((stat) => (
+              <Card key={stat.title} className="glass-effect p-6 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex justify-between items-start">
+                      <h3 className="text-sm font-medium text-slate-700">{stat.title}</h3>
+                      {stat.icon}
+                  </div>
+                  <div>
+                      <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                      <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : stat.changeType === 'negative' ? 'text-red-600' : 'text-slate-500'}`}>
+                          {stat.change} vs mois dernier
+                      </p>
+                  </div>
+              </Card>
+            ))
+          )}
         </div>
         
         <div className="grid lg:grid-cols-3 gap-8">

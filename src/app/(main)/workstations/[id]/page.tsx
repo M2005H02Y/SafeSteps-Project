@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
-import { ArrowLeft, Printer, File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Printer, File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,11 +23,15 @@ export default function WorkstationDetailPage() {
 
   useEffect(() => {
     if (id) {
-      const ws = getWorkstationById(id);
-      if (ws) {
-        setWorkstation(ws);
-      }
-      setLoading(false);
+      const fetchWorkstation = async () => {
+        setLoading(true);
+        const ws = await getWorkstationById(id);
+        if (ws) {
+          setWorkstation(ws);
+        }
+        setLoading(false);
+      };
+      fetchWorkstation();
     }
   }, [id]);
 
@@ -109,7 +113,7 @@ export default function WorkstationDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <QRCode type="workstation" id={id} data={workstation} />
+            <QRCode type="workstation" id={id} />
             
             {workstation.files && workstation.files.length > 0 && (
               <Card>

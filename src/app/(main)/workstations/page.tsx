@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -94,7 +93,7 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
 
         {/* Right column (sidebar-like content) */}
         <div className="space-y-6">
-          <QRCode type="workstation" id={workstation.id} data={workstation} />
+          <QRCode type="workstation" id={workstation.id} />
           
           {workstation.files && workstation.files.length > 0 && (
             <Card className="glass-effect">
@@ -142,9 +141,9 @@ function PageSkeleton() {
                      <ScrollArea className="h-full">
                         <div className="space-y-2 pr-4">
                             <Skeleton className="h-5 w-24 mb-2" />
-                            <Skeleton className="h-[76px] w-full" />
-                            <Skeleton className="h-[76px] w-full" />
-                            <Skeleton className="h-[76px] w-full" />
+                            {[...Array(5)].map((_, i) => (
+                                <Skeleton key={i} className="h-[76px] w-full" />
+                            ))}
                         </div>
                     </ScrollArea>
                 </div>
@@ -155,7 +154,7 @@ function PageSkeleton() {
                <div className="h-full overflow-hidden workstation-details-print-full pl-6">
                   <Card className="glass-effect flex items-center justify-center h-full print-hidden">
                     <div className="text-center text-muted-foreground p-8">
-                      <Cog className="mx-auto h-16 w-16 mb-4" />
+                      <Cog className="mx-auto h-16 w-16 mb-4 animate-spin" />
                       <h3 className="text-xl font-semibold">Chargement...</h3>
                       <p>Chargement des postes de travail.</p>
                     </div>
@@ -170,6 +169,7 @@ function PageSkeleton() {
 
 function WorkstationsPageContent() {
   const [workstations, setWorkstations] = useState<Workstation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedWorkstation, setSelectedWorkstation] = useState<Workstation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -178,18 +178,24 @@ function WorkstationsPageContent() {
   const searchParams = useSearchParams();
   const engineFilter = searchParams.get('engine');
 
-  const refreshWorkstations = () => {
-    const freshData = getWorkstations();
-    setWorkstations(freshData);
-    if (selectedWorkstation) {
-        const updatedSelected = freshData.find(ws => ws.id === selectedWorkstation.id) || null;
-        setSelectedWorkstation(updatedSelected);
+  const refreshWorkstations = async () => {
+    setLoading(true);
+    try {
+        const freshData = await getWorkstations();
+        setWorkstations(freshData);
+        if (selectedWorkstation) {
+            const updatedSelected = freshData.find(ws => ws.id === selectedWorkstation.id) || null;
+            setSelectedWorkstation(updatedSelected);
+        }
+    } catch (error) {
+        toast({ title: "Erreur", description: "Impossible de charger les postes.", variant: "destructive" });
+    } finally {
+        setLoading(false);
     }
   };
 
   useEffect(() => {
-    const freshData = getWorkstations();
-    setWorkstations(freshData);
+    refreshWorkstations();
   }, []);
 
   const filteredWorkstations = useMemo(() => {
@@ -201,14 +207,12 @@ function WorkstationsPageContent() {
   }, [workstations, searchTerm, engineFilter]);
 
   useEffect(() => {
-    // If a workstation is deleted, and it was the selected one, clear selection.
     if (selectedWorkstation && !workstations.find(ws => ws.id === selectedWorkstation.id)) {
         setSelectedWorkstation(null);
     }
   }, [workstations, selectedWorkstation]);
 
   useEffect(() => {
-    // If the selected workstation is not in the filtered list (due to search/filter), deselect it.
     if (selectedWorkstation && !filteredWorkstations.find(ws => ws.id === selectedWorkstation.id)) {
       setSelectedWorkstation(null);
     }
@@ -219,25 +223,26 @@ function WorkstationsPageContent() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (workstationToDelete) {
-      const success = deleteWorkstation(workstationToDelete);
+      const success = await deleteWorkstation(workstationToDelete);
       if (success) {
-        toast({
-          title: "Poste de travail supprimé",
-        });
+        toast({ title: "Poste de travail supprimé" });
+        if (selectedWorkstation?.id === workstationToDelete) {
+          setSelectedWorkstation(null);
+        }
         refreshWorkstations();
       } else {
-        toast({
-          title: "Erreur",
-          description: "La suppression du poste de travail a échoué.",
-          variant: "destructive",
-        });
+        toast({ title: "Erreur", description: "La suppression du poste de travail a échoué.", variant: "destructive" });
       }
       setWorkstationToDelete(null);
     }
   };
   
+  if(loading) {
+    return <PageSkeleton />;
+  }
+
   return (
     <>
       <div className="flex flex-col h-full overflow-hidden">
@@ -287,7 +292,7 @@ function WorkstationsPageContent() {
                                           <div className="font-bold text-slate-800 truncate" title={ws.name}>{ws.name}</div>
                                           <Badge variant="secondary" className="font-normal">{ws.type}</Badge>
                                           <div className="text-xs text-muted-foreground pt-1">
-                                              Créé le {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
+                                              Créé le {ws.created_at ? new Date(ws.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Date inconnue'}
                                           </div>
                                         </div>
                                         <div className="flex flex-col gap-2 ml-2">
@@ -326,7 +331,7 @@ function WorkstationsPageContent() {
                     <div className="text-center text-muted-foreground p-8">
                       <Cog className="mx-auto h-16 w-16 mb-4" />
                       <h3 className="text-xl font-semibold">{engineFilter ? `Postes de type ${engineFilter}` : 'Sélectionner un poste'}</h3>
-                      <p>{filteredWorkstations.length > 0 ? `Choisissez un poste de travail dans la liste pour voir ses détails.` : `Aucun poste de travail trouvé pour "${engineFilter}".`}</p>
+                      <p>{filteredWorkstations.length > 0 ? `Choisissez un poste de travail dans la liste pour voir ses détails.` : `Aucun poste de travail trouvé pour "${engineFilter || searchTerm}".`}</p>
                     </div>
                   </Card>
                 )}

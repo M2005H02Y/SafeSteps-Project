@@ -1,120 +1,97 @@
+
 "use client";
 
-import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
-import { Standard } from '@/lib/data';
-import { b64_to_utf8 } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import { notFound, useParams } from 'next/navigation';
+import { getStandardById, Standard } from '@/lib/data';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
-import { File as FileIcon, FileText as FileTextIcon, ImageIcon, FileSpreadsheet, Download, Loader2 } from 'lucide-react';
+import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react';
 
-function PublicStandardPageContent({ params }: { params: { id: string } }) {
-  const searchParams = useSearchParams();
-  const id = params.id;
+export default function PublicStandardPage() {
+  const params = useParams();
+  const id = params.id as string;
 
   const [standard, setStandard] = useState<Standard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const dataParam = searchParams.get('data');
-    let sData: Standard | null = null;
-
-    if (dataParam) {
-      try {
-        const decodedData = b64_to_utf8(decodeURIComponent(dataParam));
-        if (decodedData) {
-          sData = JSON.parse(decodedData) as Standard;
+    if (id) {
+      const fetchStandard = async () => {
+        setLoading(true);
+        try {
+          const s = await getStandardById(id);
+          setStandard(s || null);
+        } catch (error) {
+          console.error("Failed to fetch standard:", error);
+          setStandard(null);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Failed to parse standard data from URL", error);
-      }
+      };
+      fetchStandard();
     }
-
-    if (sData) {
-      setStandard(sData);
-    }
-    setLoading(false);
-  }, [id, searchParams]);
+  }, [id]);
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-6 w-1/3" />
-        <Skeleton className="aspect-video w-full" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!standard) {
-    return (
-        <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-destructive">Données du standard non valides</h1>
-            <p className="text-muted-foreground mt-2">Impossible de charger les données. Veuillez réessayer de scanner le code QR.</p>
-        </div>
-    );
+    notFound();
   }
-
+  
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-4xl font-bold tracking-tight">{standard.name}</h1>
-        <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline" className="text-md">{standard.category}</Badge>
-            <Badge variant="secondary" className="text-md">Version: {standard.version}</Badge>
-        </div>
-        {standard.description && <p className="text-lg text-muted-foreground mt-2">{standard.description}</p>}
-      </header>
+    <div className="flex flex-col h-full">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="break-words text-2xl md:text-3xl">{standard.name}</CardTitle>
+                    <CardDescription className="break-words pt-2">Catégorie: <Badge variant="secondary">{standard.category}</Badge> | Version: {standard.version}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {standard.image && (
+                        <div className="relative aspect-video w-full mb-4">
+                            <Image src={standard.image} alt={standard.name} width={800} height={450} className="rounded-lg w-full h-auto object-cover" data-ai-hint="certificate document"/>
+                        </div>
+                    )}
+                    {standard.description && <p className="text-muted-foreground break-words">{standard.description}</p>}
+                </CardContent>
+            </Card>
+          </div>
 
-      {standard.image && (
-        <Card>
-            <CardContent className="p-0">
-                <div className="relative aspect-video w-full">
-                    <Image src={standard.image} alt={standard.name} fill className="rounded-lg object-cover" data-ai-hint="certificate document" />
-                </div>
-            </CardContent>
-        </Card>
-      )}
-      
-      {standard.files && standard.files.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Fichiers joints</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {standard.files.map(file => (
-                <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-md border bg-background/50 hover:bg-accent transition-colors">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    {file.type === 'pdf' && <FileTextIcon className="h-6 w-6 text-red-500 flex-shrink-0" />}
-                    {file.type === 'excel' && <FileSpreadsheet className="h-6 w-6 text-green-500 flex-shrink-0" />}
-                    {file.type === 'image' && <ImageIcon className="h-6 w-6 text-blue-500 flex-shrink-0" />}
-                    {file.type === 'other' && <FileIcon className="h-6 w-6 text-gray-500 flex-shrink-0" />}
-                    <span className="text-base font-medium truncate">{file.name}</span>
-                  </div>
-                  <Download className="h-5 w-5 text-muted-foreground ml-2"/>
-                </a>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+          <div className="space-y-6">
+            {standard.files && standard.files.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Fichiers joints</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {standard.files.map(file => (
+                    <a key={file.name} href={file.url} target='_blank' rel='noopener noreferrer' className="flex items-center justify-between p-2 rounded-md border bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <div className="flex items-center gap-3">
+                        {file.type === 'pdf' && <FileTextIcon className="h-5 w-5 text-red-500 flex-shrink-0" />}
+                        {file.type === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500 flex-shrink-0" />}
+                        {file.type === 'image' && <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                        {file.type === 'other' && <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />}
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <Download className="h-4 w-4 text-muted-foreground"/>
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
-}
-
-function LoadingFallback() {
-    return (
-        <div className="flex items-center justify-center h-screen">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-    );
-}
-
-export default function PublicStandardPage({ params }: { params: { id: string } }) {
-    return (
-        <Suspense fallback={<LoadingFallback />}>
-            <PublicStandardPageContent params={params} />
-        </Suspense>
-    );
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -40,7 +41,7 @@ export default function NewStandardPage() {
       const mainImage = files.find(f => f.type === 'image');
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
-      const success = addStandard({ 
+      const success = await addStandard({ 
         name, 
         category, 
         version, 
@@ -56,7 +57,7 @@ export default function NewStandardPage() {
         });
         router.push('/standards');
       } else {
-        throw new Error("Local storage save failed");
+        throw new Error("API call failed");
       }
     } catch (error) {
       toast({

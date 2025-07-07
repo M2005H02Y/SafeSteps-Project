@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter, useParams, notFound } from 'next/navigation';
@@ -30,23 +31,27 @@ export default function EditStandardPage() {
 
   useEffect(() => {
     if (id) {
-      const sData = getStandardById(id);
-      if (sData) {
-        setStandard(sData);
-        setName(sData.name);
-        setCategory(sData.category);
-        setVersion(sData.version);
-        setDescription(sData.description || '');
-        const allFiles = [];
-        if(sData.image){
-            allFiles.push({ name: 'Image principale', url: sData.image, type: 'image' as const});
+      const fetchStandard = async () => {
+        setIsLoading(true);
+        const sData = await getStandardById(id);
+        if (sData) {
+          setStandard(sData);
+          setName(sData.name);
+          setCategory(sData.category);
+          setVersion(sData.version || '');
+          setDescription(sData.description || '');
+          const allFiles = [];
+          if(sData.image){
+              allFiles.push({ name: 'Image principale', url: sData.image, type: 'image' as const});
+          }
+          if(sData.files){
+              allFiles.push(...sData.files);
+          }
+          setFiles(allFiles);
         }
-        if(sData.files){
-            allFiles.push(...sData.files);
-        }
-        setFiles(allFiles);
+        setIsLoading(false);
       }
-      setIsLoading(false);
+      fetchStandard();
     }
   }, [id]);
 
@@ -67,7 +72,7 @@ export default function EditStandardPage() {
       const mainImage = files.find(f => f.type === 'image');
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
-      const success = updateStandard(id, { 
+      const success = await updateStandard(id, { 
         name, 
         category, 
         version, 
@@ -84,7 +89,7 @@ export default function EditStandardPage() {
         router.push('/standards');
         router.refresh();
       } else {
-        throw new Error("Local storage save failed");
+        throw new Error("API call failed");
       }
     } catch (error) {
       toast({
@@ -98,7 +103,28 @@ export default function EditStandardPage() {
   };
 
   if (isLoading) {
-    return <div className="p-6"><Skeleton className="w-full h-96" /></div>;
+    return (
+      <div className="p-6 space-y-6">
+        <PageHeader title="Chargement...">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-48" />
+          </div>
+        </PageHeader>
+        <Card>
+          <CardHeader><CardTitle><Skeleton className="h-6 w-1/3" /></CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle><Skeleton className="h-6 w-1/4" /></CardTitle></CardHeader>
+          <CardContent><Skeleton className="h-24 w-full" /></CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!standard) {

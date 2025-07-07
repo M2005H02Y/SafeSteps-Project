@@ -56,7 +56,10 @@ function PageSkeleton() {
                              <Skeleton className="h-20 w-full" />
                         </CardContent>
                         <CardFooter>
-                            <Skeleton className="h-10 w-24" />
+                           <div className="flex justify-end w-full gap-2">
+                             <Skeleton className="h-8 w-8" />
+                             <Skeleton className="h-8 w-8" />
+                           </div>
                         </CardFooter>
                     </Card>
                 ))}
@@ -69,14 +72,22 @@ function PageSkeleton() {
 function StandardsPageContent() {
   const router = useRouter();
   const [standards, setStandards] = useState<Standard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [standardToDelete, setStandardToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const refreshStandards = () => {
-    const freshData = getStandards();
-    setStandards(freshData);
+  const refreshStandards = async () => {
+    setLoading(true);
+    try {
+      const freshData = await getStandards();
+      setStandards(freshData);
+    } catch(error) {
+       toast({ title: "Erreur", description: "Impossible de charger les standards.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -96,9 +107,9 @@ function StandardsPageContent() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (standardToDelete) {
-      const success = deleteStandard(standardToDelete);
+      const success = await deleteStandard(standardToDelete);
       if (success) {
         toast({ title: "Norme supprimée" });
         refreshStandards();
@@ -136,7 +147,27 @@ function StandardsPageContent() {
               </CardContent>
             </Card>
 
-            {filteredStandards.length > 0 ? (
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                         <Card key={i}>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-20 w-full" />
+                            </CardContent>
+                            <CardFooter>
+                              <div className="flex justify-end w-full gap-2">
+                                <Skeleton className="h-8 w-8" />
+                                <Skeleton className="h-8 w-8" />
+                              </div>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            ) : filteredStandards.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredStandards.map((standard) => (
                     <Link href={`/standards/${standard.id}`} key={standard.id} className="block hover:-translate-y-1 transition-transform duration-200">

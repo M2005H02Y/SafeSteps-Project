@@ -1,3 +1,4 @@
+
 "use client";
 
 import { notFound, useRouter, useParams } from 'next/navigation';
@@ -7,7 +8,7 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
-import { ArrowLeft, Printer, Edit, File as FileIcon, FileText as FileTextIcon, Download, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Printer, Edit, File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -24,11 +25,15 @@ export default function StandardDetailPage() {
 
   useEffect(() => {
     if (id) {
-      const s = getStandardById(id);
-      if(s) {
-          setStandard(s);
+      const fetchStandard = async () => {
+        setLoading(true);
+        const s = await getStandardById(id);
+        if(s) {
+            setStandard(s);
+        }
+        setLoading(false);
       }
-      setLoading(false);
+      fetchStandard();
     }
   }, [id]);
 
@@ -38,6 +43,7 @@ export default function StandardDetailPage() {
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-1/2" />
           <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
           </div>
@@ -112,7 +118,7 @@ export default function StandardDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <QRCode type="standard" id={id} data={standard} />
+            <QRCode type="standard" id={id} />
             
             {standard.files && standard.files.length > 0 && (
               <Card>

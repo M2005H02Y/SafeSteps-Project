@@ -51,7 +51,7 @@ export default function NewWorkstationPage() {
       const mainImage = files.find(f => f.type === 'image');
       const otherFiles = files.filter(f => f.url !== mainImage?.url);
 
-      const success = addWorkstation({ 
+      const success = await addWorkstation({ 
         name,
         type: finalType, 
         description, 
@@ -67,7 +67,7 @@ export default function NewWorkstationPage() {
         router.push('/workstations');
         router.refresh();
       } else {
-        throw new Error("Local storage save failed");
+        throw new Error("API call failed");
       }
     } catch(error) {
         toast({
@@ -109,7 +109,7 @@ export default function NewWorkstationPage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="ws-type">Type d'engine</Label>
-                 <Select onValuechange={setType} value={type} required>
+                 <Select onValueChange={setType} value={type} required>
                     <SelectTrigger id="ws-type">
                         <SelectValue placeholder="Sélectionnez un type d'engine" />
                     </SelectTrigger>

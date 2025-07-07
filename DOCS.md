@@ -28,10 +28,6 @@ Voici une description des principales dépendances du projet, regroupées par fo
 - **Recharts** : Utilisée pour créer des graphiques et des visualisations de données.
 - **tailwindcss-animate** : Un plugin pour Tailwind qui facilite l'ajout d'animations.
 
-### 3. Intelligence Artificielle (IA)
-
-- **Genkit** : Le framework de Google pour construire des applications basées sur l'IA. Il simplifie l'interaction avec les modèles de langage (LLM) comme Gemini. Nous l'utilisons pour définir des "flux" (`flows`) qui encapsulent la logique IA.
-- **@genkit-ai/googleai** : Le plugin spécifique pour connecter Genkit aux modèles d'IA de Google (Gemini).
 
 ### 4. Gestion de Formulaires
 

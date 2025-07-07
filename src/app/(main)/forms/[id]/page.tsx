@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ImprovedFillableTable from '@/components/improved-fillable-table';
 import Image from 'next/image';
 
-function ReadOnlyTable({ tableData }: { tableData: Form['tableData'] }) {
+function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
         return (
             <div className="text-center text-muted-foreground p-8">
@@ -81,11 +81,15 @@ export default function FormDetailPage() {
 
   useEffect(() => {
     if (id) {
-      const f = getFormById(id);
-      if(f) {
-          setForm(f);
+      const fetchForm = async () => {
+        setLoading(true);
+        const f = await getFormById(id);
+        if(f) {
+            setForm(f);
+        }
+        setLoading(false);
       }
-      setLoading(false);
+      fetchForm();
     }
   }, [id]);
 
@@ -97,6 +101,7 @@ export default function FormDetailPage() {
           <div className="flex gap-2">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-40" />
           </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
@@ -172,13 +177,13 @@ export default function FormDetailPage() {
                     <CardDescription>Ceci est la structure du formulaire que vous avez créée. Vous pouvez redimensionner ce bloc.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ReadOnlyTable tableData={form.tableData}/>
+                    <ReadOnlyTable tableData={form.table_data}/>
                 </CardContent>
              </Card>
           </div>
 
           <div className="space-y-6">
-            <QRCode type="form" id={id} data={form} />
+            <QRCode type="form" id={id} />
              {otherFiles.length > 0 && (
               <Card>
                 <CardHeader>
@@ -207,7 +212,7 @@ export default function FormDetailPage() {
     {isFillModalOpen && (
         <ImprovedFillableTable
             formName={form.name}
-            tableData={form.tableData}
+            tableData={form.table_data}
             isOpen={isFillModalOpen}
             onClose={() => setIsFillModalOpen(false)}
         />
