@@ -22,18 +22,15 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 
 Une fois votre projet prêt, nous devons créer les tables qui contiendront nos données.
 
-1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **SQL Editor**.
-2.  Cliquez sur le grand bouton **"+ New query"** ou **"+ New SQL Snippet"**.
+1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **SQL Editor** (qui ressemble à `</>`).
+2.  Cliquez sur le grand bouton **"+ New SQL Snippet"** ou **"+ New query"**.
 3.  **Copiez le script SQL ci-dessous.**
 
     **ATTENTION : INSTRUCTION LA PLUS IMPORTANTE**
     *   La meilleure méthode est d'utiliser **l'icône de copie** (souvent 📋 ou deux carrés) qui apparaît en haut à droite du bloc de code ci-dessous.
-    *   Si vous sélectionnez le texte manuellement, votre sélection doit commencer au tout début de la ligne `-- Désactive la sécurité...` et se terminer à la toute fin de la ligne `... with check (true);`. **Ne copiez rien avant ou après.**
+    *   Si vous sélectionnez le texte manuellement, votre sélection doit commencer au tout début de la ligne `-- Création de la table...` et se terminer à la toute fin de la ligne `... with check (true);`. **Ne copiez rien avant ou après.**
 
 ```sql
--- Désactive la sécurité au niveau des lignes pour permettre la création. Nous la réactiverons plus tard.
-alter table "storage".objects drop constraint if exists "project_id_fk";
-
 -- Création de la table pour les Postes de Travail (Workstations)
 -- Cette table stocke les informations sur chaque poste ou type d'engine.
 create table public.workstations (
@@ -99,7 +96,7 @@ create policy "Anyone can delete a form." on public.forms for delete using (true
 ```
 
 4.  **Collez le script dans l'éditeur SQL de Supabase.**
-5.  **Vérification cruciale :** Assurez-vous que la première ligne dans l'éditeur est bien `-- Désactive la sécurité...` et **PAS** ` ```sql `. Si vous voyez ````sql`, supprimez cette ligne.
+5.  **Vérification cruciale :** Assurez-vous que la première ligne dans l'éditeur est bien `-- Création de la table...` et **PAS** ` ```sql `. Si vous voyez ````sql`, supprimez cette ligne.
 6.  Cliquez sur le bouton vert **"RUN"**. Si tout est correct, vous devriez voir un message de succès.
 
 ### Étape 3 : Récupérer vos Clés d'API
@@ -123,6 +120,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=VOTRE_ANON_KEY_DE_SUPABASE_ICI
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=VOTRE_CLOUD_NAME_DE_CLOUDINARY
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=VOTRE_UPLOAD_PRESET_DE_CLOUDINARY
 ```
+
+---
+
+> 🚨 **DÉPANNAGE : Si vous voyez l'erreur "Clés manquantes"...**
+>
+> Si votre application affiche une erreur concernant des clés Supabase manquantes, c'est presque certainement un problème avec ce fichier `.env.local`. Voici une liste de vérification :
+>
+> *   **1. Le Nom est-il Parfait ?** Le fichier doit s'appeler ` .env.local ` (avec le point au début). Il ne doit pas être `.env` ou `.env.local.txt`.
+> *   **2. Le Fichier est-il au Bon Endroit ?** Il doit être à la racine du projet, au même niveau que les fichiers `package.json` et `ARCHITECTURE.md`.
+> *   **3. Les Clés sont-elles Correctes ?** Avez-vous remplacé `VOTRE_PROJECT_URL_...` par la vraie URL de votre projet ? La clé `anon` ne doit pas contenir le mot "secret".
+> *   **4. Avez-vous Redémarré ?** Après avoir créé ou modifié le fichier, arrêtez le serveur de développement (souvent avec `CTRL+C` dans le terminal) et relancez-le. C'est parfois nécessaire pour que les changements soient pris en compte.
+
+---
 
 **Votre application est maintenant configurée pour utiliser Supabase en local !**
 
