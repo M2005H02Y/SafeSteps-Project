@@ -23,7 +23,7 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 Une fois votre projet prêt, nous devons créer les tables qui contiendront nos données.
 
 1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **SQL Editor**.
-2.  Cliquez sur **"New query"**.
+2.  Cliquez sur **"+ New query"** ou sur le grand bouton **"New SQL Snippet"**.
 3.  Copiez-collez l'intégralité du script SQL ci-dessous dans l'éditeur.
 4.  Cliquez sur le bouton **"RUN"**.
 
