@@ -92,31 +92,63 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
   
   const deleteRow = (atIndex: number) => {
     if (tableState.rows <= 1) {
-        toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une ligne.", variant: "destructive" });
-        return;
+      toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une ligne.", variant: "destructive" });
+      return;
     }
     const { rows, cols, data, headers } = tableState;
     const newRows = rows - 1;
     let newData: Record<string, CellData> = {};
 
     for (let r = 0; r < rows; r++) {
-        if (r === atIndex) continue;
-        for(let c = 0; c < cols; c++) {
-            const oldKey = getCellKey(r,c);
-            const oldCell = data[oldKey];
-            if(oldCell) {
-                const newR = r > atIndex ? r-1 : r;
-                const newKey = getCellKey(newR, c);
-                let newCell = {...oldCell};
-                if(r < atIndex && newCell.rowspan && (r + newCell.rowspan > atIndex)){
-                    newCell.rowspan--;
-                }
-                newData[newKey] = newCell;
-            }
+      for (let c = 0; c < cols; c++) {
+        const oldKey = getCellKey(r, c);
+        const cell = data[oldKey];
+        if (cell?.merged) continue;
+
+        const rowspan = cell?.rowspan || 1;
+        if (r > atIndex) {
+          const newKey = getCellKey(r - 1, c);
+          newData[newKey] = { ...cell };
+        } else if (r + rowspan <= atIndex) {
+          const newKey = getCellKey(r, c);
+          newData[newKey] = { ...cell };
+        } else if (r === atIndex) {
+          if (rowspan > 1) {
+            const newKey = getCellKey(r, c);
+            newData[newKey] = {
+              ...(data[getCellKey(r + 1, c)] || { content: "" }),
+              merged: false,
+              colspan: cell.colspan,
+              rowspan: rowspan - 1,
+            };
+          }
+        } else { // r < atIndex && r + rowspan > atIndex
+          const newKey = getCellKey(r, c);
+          newData[newKey] = { ...cell, rowspan: rowspan - 1 };
         }
+      }
     }
 
-    setTableState({ rows: newRows, cols, data: newData, headers });
+    const finalData = { ...newData };
+    for (const key in finalData) {
+      const cell = finalData[key];
+      if (cell && !cell.merged) {
+        const [rStr, cStr] = key.split('-');
+        const r = parseInt(rStr);
+        const c = parseInt(cStr);
+        const rowspan = cell.rowspan || 1;
+        const colspan = cell.colspan || 1;
+        for (let i = 0; i < rowspan; i++) {
+          for (let j = 0; j < colspan; j++) {
+            if (i === 0 && j === 0) continue;
+            const mergedKey = getCellKey(r + i, c + j);
+            finalData[mergedKey] = { ...(finalData[mergedKey] || {}), content: '', merged: true };
+          }
+        }
+      }
+    }
+
+    setTableState({ rows: newRows, cols, data: finalData, headers });
   };
   
   const addCol = (atIndex: number) => {
@@ -147,8 +179,8 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
 
   const deleteCol = (atIndex: number) => {
     if (tableState.cols <= 1) {
-        toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une colonne.", variant: "destructive" });
-        return;
+      toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une colonne.", variant: "destructive" });
+      return;
     }
     const { rows, cols, data, headers } = tableState;
     const newCols = cols - 1;
@@ -157,23 +189,55 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     newHeaders.splice(atIndex, 1);
 
     for (let r = 0; r < rows; r++) {
-        for(let c = 0; c < cols; c++) {
-            if(c === atIndex) continue;
-            const oldKey = getCellKey(r,c);
-            const oldCell = data[oldKey];
-            if(oldCell) {
-                const newC = c > atIndex ? c - 1 : c;
-                const newKey = getCellKey(r, newC);
-                let newCell = {...oldCell};
-                if(c < atIndex && newCell.colspan && (c + newCell.colspan > atIndex)) {
-                    newCell.colspan--;
-                }
-                newData[newKey] = newCell;
-            }
+      for (let c = 0; c < cols; c++) {
+        const oldKey = getCellKey(r, c);
+        const cell = data[oldKey];
+        if (cell?.merged) continue;
+
+        const colspan = cell?.colspan || 1;
+        if (c > atIndex) {
+          const newKey = getCellKey(r, c - 1);
+          newData[newKey] = { ...cell };
+        } else if (c + colspan <= atIndex) {
+          const newKey = getCellKey(r, c);
+          newData[newKey] = { ...cell };
+        } else if (c === atIndex) {
+          if (colspan > 1) {
+            const newKey = getCellKey(r, c);
+            newData[newKey] = {
+              ...(data[getCellKey(r, c + 1)] || { content: "" }),
+              merged: false,
+              rowspan: cell.rowspan,
+              colspan: colspan - 1,
+            };
+          }
+        } else { // c < atIndex && c + colspan > atIndex
+          const newKey = getCellKey(r, c);
+          newData[newKey] = { ...cell, colspan: colspan - 1 };
         }
+      }
     }
     
-    setTableState({ rows, cols: newCols, data: newData, headers: newHeaders });
+    const finalData = { ...newData };
+    for (const key in finalData) {
+      const cell = finalData[key];
+      if (cell && !cell.merged) {
+        const [rStr, cStr] = key.split('-');
+        const r = parseInt(rStr);
+        const c = parseInt(cStr);
+        const rowspan = cell.rowspan || 1;
+        const colspan = cell.colspan || 1;
+        for (let i = 0; i < rowspan; i++) {
+          for (let j = 0; j < colspan; j++) {
+            if (i === 0 && j === 0) continue;
+            const mergedKey = getCellKey(r + i, c + j);
+            finalData[mergedKey] = { ...(finalData[mergedKey] || {}), content: '', merged: true };
+          }
+        }
+      }
+    }
+
+    setTableState({ rows, cols: newCols, data: finalData, headers: newHeaders });
   };
 
 
