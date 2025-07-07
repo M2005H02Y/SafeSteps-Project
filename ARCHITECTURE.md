@@ -14,7 +14,7 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 2.  Créez une **Nouvelle Organisation** (par exemple, le nom de votre entreprise ou projet).
 3.  Créez un **Nouveau Projet** au sein de cette organisation.
     *   Donnez-lui un nom clair (ex: `sgi-prod`).
-    *   Générez un **mot de passe de base de données** et **conservez-le précieusement** dans un gestionnaire de mots de passe.
+    *   **Générez un mot de passe de base de données** et **conservez-le précieusement** dans un gestionnaire de mots de passe. C'est une clé maîtresse que Supabase ne vous montrera plus.
     *   Choisissez la région du serveur la plus proche de vos utilisateurs.
 4.  Attendez quelques minutes que votre projet soit provisionné.
 
@@ -23,9 +23,12 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 Une fois votre projet prêt, nous devons créer les tables qui contiendront nos données.
 
 1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **SQL Editor**.
-2.  Cliquez sur **"+ New query"** ou sur le grand bouton **"New SQL Snippet"**.
-3.  Copiez-collez l'intégralité du script SQL ci-dessous dans l'éditeur.
-4.  Cliquez sur le bouton **"RUN"**.
+2.  Cliquez sur le grand bouton **"+ New query"** ou **"+ New SQL Snippet"**.
+3.  **Copiez le script SQL ci-dessous.**
+
+    **ATTENTION : INSTRUCTION LA PLUS IMPORTANTE**
+    *   La meilleure méthode est d'utiliser **l'icône de copie** (souvent 📋 ou deux carrés) qui apparaît en haut à droite du bloc de code ci-dessous.
+    *   Si vous sélectionnez le texte manuellement, votre sélection doit commencer au tout début de la ligne `-- Désactive la sécurité...` et se terminer à la toute fin de la ligne `... with check (true);`. **Ne copiez rien avant ou après.**
 
 ```sql
 -- Désactive la sécurité au niveau des lignes pour permettre la création. Nous la réactiverons plus tard.
@@ -94,6 +97,10 @@ create policy "Anyone can insert a new form." on public.forms for insert with ch
 create policy "Anyone can update a form." on public.forms for update using (true);
 create policy "Anyone can delete a form." on public.forms for delete using (true);
 ```
+
+4.  **Collez le script dans l'éditeur SQL de Supabase.**
+5.  **Vérification cruciale :** Assurez-vous que la première ligne dans l'éditeur est bien `-- Désactive la sécurité...` et **PAS** ` ```sql `. Si vous voyez ````sql`, supprimez cette ligne.
+6.  Cliquez sur le bouton vert **"RUN"**. Si tout est correct, vous devriez voir un message de succès.
 
 ### Étape 3 : Récupérer vos Clés d'API
 
