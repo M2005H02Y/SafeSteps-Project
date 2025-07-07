@@ -5,7 +5,7 @@ import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RotateCcw, Merge, Split, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Merge, Split, Trash2, Undo2, Redo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableData, CellData } from '@/lib/data';
 
@@ -18,10 +18,34 @@ const getCellKey = (row: number, col: number) => `${row}-${col}`;
 const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTableProps, ref) => {
   const { toast } = useToast();
   
-  const [tableState, setTableState] = useState<TableData>(
+  const [history, setHistory] = useState<TableData[]>([
     initialData || { rows: 3, cols: 3, data: {}, headers: [] }
-  );
+  ]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const tableState = history[historyIndex];
+
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+
+  const updateTableState = (updater: TableData | ((prevState: TableData) => TableData)) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    const currentState = newHistory[newHistory.length - 1];
+    const newState = typeof updater === 'function' ? updater(currentState) : updater;
+
+    setHistory([...newHistory, newState]);
+    setHistoryIndex(newHistory.length);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     getTableData: () => {
@@ -40,7 +64,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
 
   const updateCellData = (row: number, col: number, newCellData: Partial<CellData>) => {
     const key = getCellKey(row, col);
-    setTableState(prev => ({
+    updateTableState(prev => ({
       ...prev,
       data: {
         ...prev.data,
@@ -87,46 +111,76 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
     }
     
-    setTableState({ rows: newRows, cols, data: newData, headers });
+    updateTableState({ rows: newRows, cols, data: newData, headers });
   };
   
   const deleteRow = (atIndex: number) => {
-    if (tableState.rows <= 1) {
+    const { rows, cols, headers, data } = tableState;
+
+    if (rows <= 1) {
       toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une ligne.", variant: "destructive" });
       return;
     }
-    const { rows, cols, data, headers } = tableState;
     const newRows = rows - 1;
     let newData: Record<string, CellData> = {};
 
+    // Copy cells to new positions, adjusting for the deleted row
     for (let r = 0; r < rows; r++) {
+      if (r === atIndex) continue;
+      const newR = r > atIndex ? r - 1 : r;
       for (let c = 0; c < cols; c++) {
         const oldKey = getCellKey(r, c);
-        const cell = data[oldKey];
-        if (cell?.merged) continue;
-
-        const rowspan = cell?.rowspan || 1;
-        if (r > atIndex) {
-          const newKey = getCellKey(r - 1, c);
-          newData[newKey] = { ...cell };
-        } else if (r + rowspan <= atIndex) {
-          const newKey = getCellKey(r, c);
-          newData[newKey] = { ...cell };
-        } else if (r === atIndex) {
-          if (rowspan > 1) {
-            const newKey = getCellKey(r, c);
-            newData[newKey] = {
-              ...(data[getCellKey(r + 1, c)] || { content: "" }),
-              merged: false,
-              colspan: cell.colspan,
-              rowspan: rowspan - 1,
-            };
-          }
-        } else { // r < atIndex && r + rowspan > atIndex
-          const newKey = getCellKey(r, c);
-          newData[newKey] = { ...cell, rowspan: rowspan - 1 };
+        const newKey = getCellKey(newR, c);
+        if (data[oldKey]) {
+            newData[newKey] = { ...data[oldKey] };
         }
       }
+    }
+
+    // Adjust rowspans of cells that spanned across the deleted row
+    for (let r = 0; r < atIndex; r++) {
+      for (let c = 0; c < cols; c++) {
+        const key = getCellKey(r, c);
+        const cell = newData[key];
+        if (cell && !cell.merged && cell.rowspan && (r + cell.rowspan > atIndex)) {
+          newData[key] = { ...cell, rowspan: cell.rowspan - 1 };
+        }
+      }
+    }
+
+    // Unmerge cells that might have been part of a deleted merged area
+    for (let c = 0; c < cols; c++) {
+        const key = getCellKey(atIndex, c);
+        const cell = data[key];
+        if (cell?.merged) {
+            // Find the master cell for this merged area
+            let masterR = atIndex;
+            let masterC = c;
+            let found = false;
+            while(masterR >= 0 && !found) {
+                masterC = c;
+                while(masterC >=0 && !found) {
+                    const masterKey = getCellKey(masterR, masterC);
+                    const masterCell = data[masterKey];
+                    if (masterCell && !masterCell.merged && (masterR + (masterCell.rowspan || 1) > atIndex) && (masterC + (masterCell.colspan || 1) > c)) {
+                        found = true;
+                    } else {
+                        masterC--;
+                    }
+                }
+                if(!found) masterR--;
+            }
+
+            if(found) {
+                const masterKey = getCellKey(masterR, masterC);
+                const newMasterKey = getCellKey(masterR > atIndex ? masterR - 1 : masterR, masterC);
+                const newMasterCell = {...newData[newMasterKey]};
+                if (newMasterCell.rowspan) {
+                    newMasterCell.rowspan--;
+                }
+                newData[newMasterKey] = newMasterCell;
+            }
+        }
     }
 
     const finalData = { ...newData };
@@ -148,7 +202,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       }
     }
 
-    setTableState({ rows: newRows, cols, data: finalData, headers });
+    updateTableState({ rows: newRows, cols, data: finalData, headers });
   };
   
   const addCol = (atIndex: number) => {
@@ -174,48 +228,75 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
     }
 
-    setTableState({ rows, cols: newCols, data: newData, headers: newHeaders });
+    updateTableState({ rows, cols: newCols, data: newData, headers: newHeaders });
   };
 
   const deleteCol = (atIndex: number) => {
-    if (tableState.cols <= 1) {
-      toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une colonne.", variant: "destructive" });
-      return;
-    }
     const { rows, cols, data, headers } = tableState;
+
+    if (cols <= 1) {
+        toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une colonne.", variant: "destructive" });
+        return;
+    }
     const newCols = cols - 1;
     let newData: Record<string, CellData> = {};
-    const newHeaders = [...(headers || [])];
-    newHeaders.splice(atIndex, 1);
-
+    const newHeaders = (headers || []).filter((_, i) => i !== atIndex);
+    
+    // Copy cells to new positions, adjusting for the deleted column
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
+        if (c === atIndex) continue;
+        const newC = c > atIndex ? c - 1 : c;
         const oldKey = getCellKey(r, c);
-        const cell = data[oldKey];
-        if (cell?.merged) continue;
-
-        const colspan = cell?.colspan || 1;
-        if (c > atIndex) {
-          const newKey = getCellKey(r, c - 1);
-          newData[newKey] = { ...cell };
-        } else if (c + colspan <= atIndex) {
-          const newKey = getCellKey(r, c);
-          newData[newKey] = { ...cell };
-        } else if (c === atIndex) {
-          if (colspan > 1) {
-            const newKey = getCellKey(r, c);
-            newData[newKey] = {
-              ...(data[getCellKey(r, c + 1)] || { content: "" }),
-              merged: false,
-              rowspan: cell.rowspan,
-              colspan: colspan - 1,
-            };
-          }
-        } else { // c < atIndex && c + colspan > atIndex
-          const newKey = getCellKey(r, c);
-          newData[newKey] = { ...cell, colspan: colspan - 1 };
+        const newKey = getCellKey(r, newC);
+         if (data[oldKey]) {
+            newData[newKey] = { ...data[oldKey] };
         }
       }
+    }
+
+    // Adjust colspans of cells that spanned across the deleted column
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < atIndex; c++) {
+        const key = getCellKey(r, c);
+        const cell = newData[key];
+        if (cell && !cell.merged && cell.colspan && (c + cell.colspan > atIndex)) {
+          newData[key] = { ...cell, colspan: cell.colspan - 1 };
+        }
+      }
+    }
+
+    // Unmerge cells that might have been part of a deleted merged area
+    for (let r = 0; r < rows; r++) {
+        const key = getCellKey(r, atIndex);
+        const cell = data[key];
+        if (cell?.merged) {
+             let masterR = r;
+            let masterC = atIndex;
+            let found = false;
+            while(masterR >= 0 && !found) {
+                masterC = atIndex;
+                while(masterC >=0 && !found) {
+                    const masterKey = getCellKey(masterR, masterC);
+                    const masterCell = data[masterKey];
+                    if (masterCell && !masterCell.merged && (masterR + (masterCell.rowspan || 1) > r) && (masterC + (masterCell.colspan || 1) > atIndex)) {
+                        found = true;
+                    } else {
+                        masterC--;
+                    }
+                }
+                if(!found) masterR--;
+            }
+            if(found) {
+                const masterKey = getCellKey(masterR, masterC);
+                const newMasterKey = getCellKey(masterR, masterC > atIndex ? masterC - 1 : masterC);
+                const newMasterCell = {...newData[newMasterKey]};
+                if (newMasterCell.colspan) {
+                    newMasterCell.colspan--;
+                }
+                newData[newMasterKey] = newMasterCell;
+            }
+        }
     }
     
     const finalData = { ...newData };
@@ -236,8 +317,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
       }
     }
-
-    setTableState({ rows, cols: newCols, data: finalData, headers: newHeaders });
+    updateTableState({ rows, cols: newCols, data: finalData, headers: newHeaders });
   };
 
 
@@ -283,7 +363,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
       }
     }
-    setTableState(prev => ({ ...prev, data: newData }));
+    updateTableState(prev => ({ ...prev, data: newData }));
     setSelectedCells(new Set([getCellKey(minRow, minCol)]));
   };
   
@@ -313,7 +393,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       }
     }
     
-    setTableState(prev => ({...prev, data: newData}));
+    updateTableState(prev => ({...prev, data: newData}));
     setSelectedCells(newSelected);
     toast({ title: "Cellules défusionnées", description: "La cellule a été divisée avec succès." });
   };
@@ -351,19 +431,29 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
   };
   
   const resetTable = () => {
-    setTableState({ rows: 3, cols: 3, data: {}, headers: [] });
+    updateTableState({ rows: 3, cols: 3, data: {}, headers: [] });
     setSelectedCells(new Set());
   }
   
   const handleHeaderChange = (index: number, value: string) => {
-      const newHeaders = [...(tableState.headers || [])];
-      newHeaders[index] = value;
-      setTableState(prev => ({...prev, headers: newHeaders}));
+      updateTableState(prev => {
+        const newHeaders = [...(prev.headers || [])];
+        newHeaders[index] = value;
+        return {...prev, headers: newHeaders};
+      });
   }
 
   return (
     <div>
         <div className="controls p-2 bg-slate-50 rounded-lg border flex flex-wrap items-center gap-4 mb-4">
+            <Button type="button" variant="outline" onClick={handleUndo} disabled={historyIndex === 0}>
+                <Undo2 className="mr-2 h-4 w-4"/>
+                Annuler
+            </Button>
+            <Button type="button" variant="outline" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
+                <Redo2 className="mr-2 h-4 w-4"/>
+                Rétablir
+            </Button>
             <Button type="button" variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
             <Button type="button" variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
         </div>
