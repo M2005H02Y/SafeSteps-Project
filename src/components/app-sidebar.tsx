@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -23,8 +22,6 @@ const menuItems = [
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
-const logoUrl = "/logo.jpg";
-
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
@@ -34,7 +31,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
           <div className="relative h-9 w-9 rounded-lg bg-white p-1">
-            <Image src={logoUrl} alt="SafeSteps Logo" fill className="object-contain" />
+            <Image src="/logo.jpg" alt="SafeSteps Logo" fill className="object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
