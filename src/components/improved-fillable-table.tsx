@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -148,10 +147,11 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
       document.body.appendChild(link);
       link.click();
-
-      // Clean up the temporary link
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
 
     } catch (e) {
       console.error(e);
@@ -197,8 +197,10 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
           <DialogClose asChild>
             <Button variant="outline">Annuler</Button>
           </DialogClose>
-          <Button variant="destructive" onClick={exportToPDF}><Download className="mr-2 h-4 w-4" /> Télécharger PDF</Button>
-          <Button className="bg-green-600 hover:bg-green-700" onClick={exportToExcel}><Download className="mr-2 h-4 w-4" /> Télécharger Excel</Button>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4">
+            <Button variant="destructive" onClick={exportToPDF}><Download className="mr-2 h-4 w-4" /> Télécharger PDF</Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={exportToExcel}><Download className="mr-2 h-4 w-4" /> Télécharger Excel</Button>
+          </div>
         </DialogFooter>
 
         {/* Hidden printable element for PDF generation */}
