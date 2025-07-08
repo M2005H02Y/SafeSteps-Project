@@ -11,8 +11,7 @@ import {
   FileText, 
   Cog,
   PlusCircle,
-  FileUp,
-  LineChart
+  FileUp
 } from 'lucide-react';
 import { getWorkstationsCount, getStandardsCount, getFormsCount } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,8 +48,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState([
     { title: 'Postes de travail', value: '0', icon: <Building2 className="h-8 w-8 text-blue-500" />, change: "+2%", changeType: 'positive' as const, href: '/workstations' },
     { title: 'Standards Actifs', value: '0', icon: <BookCheck className="h-8 w-8 text-green-500" />, change: "Stable", changeType: 'neutral' as const, href: '/standards' },
-    { title: 'Formulaires Remplis', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
-    { title: 'Anomalies Signalées', value: '3', icon: <LineChart className="h-8 w-8 text-red-500" />, change: "-5%", changeType: 'negative' as const, href: '/anomalies' },
+    { title: 'Formulaires', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +65,6 @@ export default function DashboardPage() {
             { ...prevStats[0], value: workstationCount.toString() },
             { ...prevStats[1], value: standardCount.toString() },
             { ...prevStats[2], value: formCount.toString() },
-            prevStats[3]
         ]);
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
@@ -90,28 +87,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <>
-              <StatCardSkeleton />
               <StatCardSkeleton />
               <StatCardSkeleton />
               <StatCardSkeleton />
             </>
           ) : (
             stats.map((stat) => (
-              <Card key={stat.title} className="glass-effect p-6 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
-                  <div className="flex justify-between items-start">
-                      <h3 className="text-sm font-medium text-slate-700">{stat.title}</h3>
-                      {stat.icon}
-                  </div>
-                  <div>
-                      <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                      <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : stat.changeType === 'negative' ? 'text-red-600' : 'text-slate-500'}`}>
-                          {stat.change} vs mois dernier
-                      </p>
-                  </div>
-              </Card>
+              <Link href={stat.href} key={stat.title} className="block hover:-translate-y-1 transition-transform duration-200">
+                <Card className="glass-effect p-6 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 h-full">
+                    <div className="flex justify-between items-start">
+                        <h3 className="text-sm font-medium text-slate-700">{stat.title}</h3>
+                        {stat.icon}
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                        <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : 'text-slate-500'}`}>
+                            {stat.change} vs mois dernier
+                        </p>
+                    </div>
+                </Card>
+              </Link>
             ))
           )}
         </div>
