@@ -133,8 +133,26 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Réponses Formulaire');
 
+      // Generate the Excel file in memory as a buffer
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      
+      // Create a Blob from the buffer
+      const dataBlob = new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"});
+      
+      // Create a temporary link to trigger the download, which is more mobile-friendly
+      const blobUrl = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
       const filename = `${formName}_${generateTimestamp()}.xlsx`;
-      XLSX.writeFile(workbook, filename);
+      link.setAttribute('download', filename);
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up the temporary link
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
     } catch (e) {
       console.error(e);
       toast({ title: "Erreur Excel", description: "La génération du fichier Excel a échoué.", variant: "destructive"});
