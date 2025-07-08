@@ -197,6 +197,20 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
 >
 > 3.  Retournez au terminal, relancez la commande `git push -u origin HEAD:main` si nécessaire, et quand il demande le mot de passe, **collez le token** que vous venez de créer. Appuyez sur Entrée. Votre code sera envoyé.
 
+> 🚨 **DÉPANNAGE : Le terminal ne demande pas le nom d'utilisateur/mot de passe**
+>
+> Si la commande `git push` échoue avec une erreur `ECONNREFUSED` sans vous demander vos identifiants, c'est que Git essaie de parler à un assistant de l'éditeur qui ne répond pas. Pour forcer la demande dans le terminal :
+>
+> 1.  **Mettez à jour l'URL du dépôt** pour inclure votre nom d'utilisateur. Remplacez `VOTRE_NOM_UTILISATEUR` et l'URL par les vôtres :
+>     ```bash
+>     git remote set-url origin https://VOTRE_NOM_UTILISATEUR@github.com/NOM_PROPRIETAIRE/NOM_DEPOT.git
+>     ```
+> 2.  **Relancez la commande `push` :**
+>     ```bash
+>     git push -u origin HEAD:main
+>     ```
+> 3.  Cette fois, il devrait vous demander uniquement le mot de passe (`Password`). Collez votre **Jeton d'Accès Personnel (PAT)** à ce moment-là.
+
 Une fois ces commandes exécutées, votre code est sur GitHub, prêt pour Vercel.
 
 ### Étape 2 : Créer un Compte Vercel
@@ -224,4 +238,3 @@ Vercel va maintenant construire et déployer votre application. Après quelques 
 ### Le Flux de Travail Futur
 
 Désormais, à chaque fois que vous ferez un `git push` sur votre branche `main`, Vercel redéploiera automatiquement la nouvelle version de votre site. C'est magique !
-```
