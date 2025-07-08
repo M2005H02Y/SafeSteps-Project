@@ -84,7 +84,7 @@ export default function NewStandardPage() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              Enregistrer la norme
+              Enregistrer le nouveau standard
             </Button>
         </div>
       </PageHeader>
