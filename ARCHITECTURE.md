@@ -180,6 +180,23 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
     git push -u origin HEAD:main
     ```
 
+> 🚨 **DÉPANNAGE : Erreur `fatal: Authentication failed`**
+>
+> Si c'est la première fois que vous faites un `push` depuis cet environnement, Git a besoin de vérifier qui vous êtes. L'erreur est normale.
+>
+> 1.  Le terminal vous demandera un `Username for 'https://github.com'`: Entrez votre nom d'utilisateur GitHub.
+> 2.  Il demandera un `Password...`: **N'utilisez PAS votre mot de passe GitHub habituel.** Vous devez utiliser un **Personal Access Token (PAT)**.
+>
+> **Comment créer un PAT :**
+> -   Allez dans les [Paramètres développeur de GitHub](https://github.com/settings/tokens) (`Settings > Developer settings > Personal access tokens > Tokens (classic)`).
+> -   Cliquez sur `Generate new token (classic)`.
+> -   Donnez un nom (ex: "Firebase Studio"), choisissez une date d'expiration (ex: 90 jours).
+> -   Cochez la case `repo` (c'est la seule permission nécessaire).
+> -   Cliquez sur `Generate token`.
+> -   **Copiez le token qui commence par `ghp_...` et gardez-le précieusement. C'est la seule fois qu'il sera affiché.**
+>
+> 3.  Retournez au terminal, relancez la commande `git push -u origin HEAD:main` si nécessaire, et quand il demande le mot de passe, **collez le token** que vous venez de créer. Appuyez sur Entrée. Votre code sera envoyé.
+
 Une fois ces commandes exécutées, votre code est sur GitHub, prêt pour Vercel.
 
 ### Étape 2 : Créer un Compte Vercel
@@ -207,3 +224,4 @@ Vercel va maintenant construire et déployer votre application. Après quelques 
 ### Le Flux de Travail Futur
 
 Désormais, à chaque fois que vous ferez un `git push` sur votre branche `main`, Vercel redéploiera automatiquement la nouvelle version de votre site. C'est magique !
+```
