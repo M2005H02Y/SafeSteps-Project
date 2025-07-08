@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { getFormById, Form } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +17,7 @@ function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     const getCellKey = (r: number, c: number) => `${r}-${c}`;
 
     const renderCell = (r: number, c: number) => {
-        const key = getCellKey(r,c);
+        const key = getCellKey(r, c);
         const cell = tableData.data[key] || { content: '' };
         if (cell.merged) return null;
 
@@ -70,8 +71,8 @@ async function FormPublicPage({ params }: { params: { id: string } }) {
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
             <main className="w-full max-w-4xl mx-auto space-y-6">
                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
-                        <img src="/logo.jpg" alt="SafeSteps Logo" className="h-16 w-16 object-contain" />
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md p-2">
+                        <Image src="/logo.jpg" alt="SafeSteps Logo" width={64} height={64} className="h-full w-full object-contain" />
                     </div>
                     <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
                 </div>

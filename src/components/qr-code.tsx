@@ -26,7 +26,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
       const isCloudWorkstation = hostname.includes('cloudworkstations.dev') || hostname.includes('app.goog');
       setIsDevEnv(isCloudWorkstation);
 
-      const url = `${origin}/public/${type}/${id}`;
+      const url = `${origin}/${type}/${id}`;
       setPublicUrl(url);
     }
   }, [type, id]);
@@ -45,7 +45,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
   };
 
   const imageSettings = {
-      src: '/logo.jpg',
+      src: "/logo.jpg",
       height: 40,
       width: 40,
       excavate: true,
