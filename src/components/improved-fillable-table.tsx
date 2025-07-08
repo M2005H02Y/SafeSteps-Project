@@ -32,13 +32,25 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
 
-  // When component unmounts, revoke any existing blob URLs to prevent memory leaks
+  // Separate useEffect for each blob URL to manage its lifecycle independently.
+  // This prevents generating one file from invalidating the other's blob URL.
+  useEffect(() => {
+    // This cleanup function will run when the component unmounts or when pdfBlobUrl changes.
+    // It will revoke the *previous* blob URL, preventing memory leaks.
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [pdfBlobUrl]);
+
   useEffect(() => {
     return () => {
-      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-      if (excelBlobUrl) URL.revokeObjectURL(excelBlobUrl);
+      if (excelBlobUrl) {
+        URL.revokeObjectURL(excelBlobUrl);
+      }
     };
-  }, [pdfBlobUrl, excelBlobUrl]);
+  }, [excelBlobUrl]);
 
   if (!tableData) return null;
 
@@ -57,7 +69,6 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
   };
 
   const generateAndSetPdf = async () => {
-    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     setIsGeneratingPdf(true);
     setPdfBlobUrl(null);
 
@@ -88,7 +99,6 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
 
   const generateAndSetExcel = () => {
-    if (excelBlobUrl) URL.revokeObjectURL(excelBlobUrl);
     setIsGeneratingExcel(true);
     setExcelBlobUrl(null);
     
@@ -195,7 +205,7 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
             )}
           </div>
         </ScrollArea>
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex-col sm:flex-row sm:justify-end sm:items-center gap-4">
           <DialogClose asChild>
             <Button variant="outline">Fermer</Button>
           </DialogClose>
