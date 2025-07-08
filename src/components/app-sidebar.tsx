@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -13,7 +14,6 @@ import {
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import Image from 'next/image';
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", subLabel: "Vue d'ensemble", icon: LayoutGrid },
@@ -31,7 +31,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50">
-            <Image src="/logo.jpg" alt="SafeSteps Logo" width={28} height={28} className="object-contain" />
+            <img src="/logo.jpg" alt="SafeSteps Logo" className="h-7 w-7 object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">

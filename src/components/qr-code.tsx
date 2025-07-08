@@ -16,7 +16,6 @@ type QRCodeProps = {
 
 export default function QRCode({ type, id }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isDevEnv, setIsDevEnv] = useState(false);
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export default function QRCode({ type, id }: QRCodeProps) {
 
       const url = `${origin}/public/${type}/${id}`;
       setPublicUrl(url);
-      setLogoUrl(`${origin}/logo.jpg`);
     }
   }, [type, id]);
 
@@ -46,12 +44,12 @@ export default function QRCode({ type, id }: QRCodeProps) {
     }
   };
 
-  const imageSettings = logoUrl ? {
-      src: logoUrl,
+  const imageSettings = {
+      src: '/logo.jpg',
       height: 40,
       width: 40,
       excavate: true,
-  } : undefined;
+  };
 
   return (
     <Card>
