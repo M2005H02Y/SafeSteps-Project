@@ -22,7 +22,7 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 
 Une fois votre projet prêt, nous devons créer les tables qui contiendront nos données.
 
-1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **SQL Editor** (qui ressemble à `</>`).
+1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **Table Editor** (qui ressemble à une grille de table).
 2.  Cliquez sur le grand bouton **"+ New SQL Snippet"** ou **"+ New query"**.
 3.  **Copiez le script SQL ci-dessous.**
 
@@ -159,21 +159,25 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
 2.  Dans le terminal de votre environnement de développement, exécutez les commandes suivantes une par une :
 
     ```bash
-    # Initialise un nouveau dépôt Git et nomme la branche principale "main"
+    # Initialise un nouveau dépôt Git. Si un projet Git existe déjà, cette commande est sans danger.
     git init -b main
 
     # Ajoute tous les fichiers du projet pour la sauvegarde
     git add .
 
-    # Crée une sauvegarde locale avec un message
+    # Crée une sauvegarde locale avec un message.
+    # Si vous voyez "nothing to commit", ce n'est pas une erreur, continuez simplement.
     git commit -m "Initial commit"
 
-    # Lie votre projet local au dépôt distant sur GitHub
-    # Remplacez l'URL par celle que vous avez copiée
+    # Lie votre projet local au dépôt distant sur GitHub.
+    # Remplacez l'URL par celle que vous avez copiée.
+    # Si vous voyez une erreur "remote origin already exists", ce n'est pas grave, continuez.
     git remote add origin https://github.com/VOTRE_NOM/VOTRE_PROJET.git
 
-    # Envoie votre code vers GitHub
-    git push -u origin main
+    # Envoie votre code vers la branche 'main' de GitHub.
+    # La commande HEAD:main est la plus robuste : elle envoie votre branche actuelle
+    # (peu importe son nom local) vers la branche 'main' sur GitHub.
+    git push -u origin HEAD:main
     ```
 
 Une fois ces commandes exécutées, votre code est sur GitHub, prêt pour Vercel.
