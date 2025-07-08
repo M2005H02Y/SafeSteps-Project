@@ -14,10 +14,9 @@ type QRCodeProps = {
   id: string;
 };
 
-const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/OCP_Group.svg/240px-OCP_Group.svg.png";
-
 export default function QRCode({ type, id }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isDevEnv, setIsDevEnv] = useState(false);
 
   useEffect(() => {
@@ -30,6 +29,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
 
       const url = `${origin}/public/${type}/${id}`;
       setPublicUrl(url);
+      setLogoUrl(`${origin}/logo.png`);
     }
   }, [type, id]);
 
@@ -46,12 +46,12 @@ export default function QRCode({ type, id }: QRCodeProps) {
     }
   };
 
-  const imageSettings = {
+  const imageSettings = logoUrl ? {
       src: logoUrl,
       height: 40,
       width: 40,
       excavate: true,
-  };
+  } : undefined;
 
   return (
     <Card>
@@ -81,7 +81,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
               fgColor={"#000000"}
               level={"H"}
               includeMargin={true}
-              imageSettings={{...imageSettings, height: 80, width: 80}}
+              imageSettings={imageSettings ? {...imageSettings, height: 80, width: 80} : undefined}
               className="hidden"
             />
             
