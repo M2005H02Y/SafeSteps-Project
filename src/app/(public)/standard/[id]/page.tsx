@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Image from 'next/image';
 import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/Logo.jpg';
 
 async function StandardPublicPage({ params }: { params: { id: string } }) {
   const standard = await getStandardById(params.id);

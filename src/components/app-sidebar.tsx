@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Cog, FileText, File } from "lucide-react";
 import Image from "next/image";
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/Logo.jpg';
 import {
   SidebarHeader,
   SidebarContent,

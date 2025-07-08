@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Download, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/Logo.jpg';
 
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
