@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Download, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import logo from '@/assets/logo.jpg';
 
 type QRCodeProps = {
   type: 'workstation' | 'standard' | 'form';
@@ -45,7 +46,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
   };
 
   const imageSettings = {
-      src: "/logo.jpg?v=3",
+      src: logo.src,
       height: 40,
       width: 40,
       excavate: true,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Cog, FileText, File } from "lucide-react";
 import Image from "next/image";
+import logo from '@/assets/logo.jpg';
 import {
   SidebarHeader,
   SidebarContent,
@@ -32,7 +33,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1">
-            <Image src="/logo.jpg?v=3" alt="SafeSteps Logo" width={32} height={32} className="h-full w-full object-contain" />
+            <Image src={logo} alt="SafeSteps Logo" className="h-full w-full object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">

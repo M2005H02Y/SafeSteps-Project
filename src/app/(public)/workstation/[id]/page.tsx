@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Image from 'next/image';
 import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import logo from '@/assets/logo.jpg';
 
 async function WorkstationPublicPage({ params }: { params: { id: string } }) {
   const workstation = await getWorkstationById(params.id);
@@ -18,7 +19,7 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
       <main className="w-full max-w-2xl mx-auto space-y-6">
         <div className="text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md p-2">
-                <Image src="/logo.jpg?v=3" alt="SafeSteps Logo" width={64} height={64} className="h-full w-full object-contain" />
+                <Image src={logo} alt="SafeSteps Logo" className="h-full w-full object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
         </div>
