@@ -154,7 +154,7 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
 5.  **ATTENTION :** Ne cochez **AUCUNE** case ("Add a README file", "Add .gitignore", "Choose a license"). Votre projet contient déjà ces fichiers.
 6.  Cliquez sur **"Create repository"**.
 
-**B. Envoyer le code depuis votre environnement**
+**B. Envoyer le code depuis votre environnement (Méthode 1 : Ligne de Commande)**
 1.  Après la création, GitHub vous montrera une page avec une URL qui se termine par `.git`. Copiez cette URL.
 2.  Dans le terminal de votre environnement de développement, exécutez les commandes suivantes une par une :
 
@@ -180,38 +180,36 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
     git push -u origin HEAD:main
     ```
 
-> 🚨 **DÉPANNAGE : Erreur `fatal: Authentication failed`**
+> 🚨 **DÉPANNAGE : Problèmes avec `git push` (Méthode Alternative Recommandée)**
 >
-> Si c'est la première fois que vous faites un `push` depuis cet environnement, Git a besoin de vérifier qui vous êtes. L'erreur est normale.
+> Si vous rencontrez des erreurs de connexion (`ECONNREFUSED`), d'authentification (`Authentication failed`), ou si le terminal se bloque, c'est très probablement dû aux limitations réseau de l'environnement de développement web (comme Firebase Studio).
 >
-> 1.  Le terminal vous demandera un `Username for 'https://github.com'`: Entrez votre nom d'utilisateur GitHub.
-> 2.  Il demandera un `Password...`: **N'utilisez PAS votre mot de passe GitHub habituel.** Vous devez utiliser un **Personal Access Token (PAT)**.
+> **Ne vous inquiétez pas, il existe une méthode beaucoup plus simple et fiable qui contourne complètement le terminal.**
 >
-> **Comment créer un PAT :**
-> -   Allez dans les [Paramètres développeur de GitHub](https://github.com/settings/tokens) (`Settings > Developer settings > Personal access tokens > Tokens (classic)`).
-> -   Cliquez sur `Generate new token (classic)`.
-> -   Donnez un nom (ex: "Firebase Studio"), choisissez une date d'expiration (ex: 90 jours).
-> -   Cochez la case `repo` (c'est la seule permission nécessaire).
-> -   Cliquez sur `Generate token`.
-> -   **Copiez le token qui commence par `ghp_...` et gardez-le précieusement. C'est la seule fois qu'il sera affiché.**
+> ### La Méthode par Téléversement Web (Recommandée)
 >
-> 3.  Retournez au terminal, relancez la commande `git push -u origin HEAD:main` si nécessaire, et quand il demande le mot de passe, **collez le token** que vous venez de créer. Appuyez sur Entrée. Votre code sera envoyé.
+> **Étape 1 : Télécharger votre projet depuis Firebase Studio**
+> 1.  Dans Firebase Studio, trouvez la fonctionnalité pour télécharger votre projet. Cela se trouve généralement dans le menu "File" > "Download" ou via la palette de commandes (`Ctrl+Shift+P` ou `Cmd+Shift+P`) en cherchant "Download Workspace".
+> 2.  Cela téléchargera un fichier `.zip` contenant tout votre projet sur votre ordinateur.
+> 3.  Décompressez (extrayez) ce fichier `.zip` dans un dossier sur votre ordinateur.
+>
+> **Étape 2 : Téléverser les fichiers sur GitHub**
+> 1.  Retournez sur la page de votre dépôt GitHub (celle qui est vide).
+> 2.  Cliquez sur le lien qui dit **`uploading an existing file`**.
+> 3.  Une nouvelle page s'ouvrira, vous invitant à glisser-déposer des fichiers.
+> 4.  Ouvrez le dossier que vous avez décompressé à l'étape 1.
+> 5.  Sélectionnez **tous les fichiers et dossiers** de votre projet et **glissez-les** dans la fenêtre de votre navigateur.
+>     *   **IMPORTANT :** N'incluez pas le dossier `.git` s'il existe. Vous pouvez aussi exclure `node_modules` s'il est présent.
+> 6.  Attendez que GitHub traite tous les fichiers.
+>
+> **Étape 3 : Finaliser le téléversement (Commit)**
+> 1.  Une fois tous les fichiers chargés, une boîte de dialogue apparaîtra en bas de la page.
+> 2.  Dans la première case, écrivez un message descriptif, par exemple : `Initial project upload`.
+> 3.  Assurez-vous que l'option "Commit directly to the `main` branch" est cochée.
+> 4.  Cliquez sur le bouton vert **"Commit changes"**.
+>
+> Et voilà ! Votre code est sur GitHub. Vous pouvez maintenant passer directement à la **Partie 2 : Déploiement sur Vercel**.
 
-> 🚨 **DÉPANNAGE : Le terminal ne demande pas le nom d'utilisateur/mot de passe**
->
-> Si la commande `git push` échoue avec une erreur `ECONNREFUSED` sans vous demander vos identifiants, c'est que Git essaie de parler à un assistant de l'éditeur qui ne répond pas. Pour forcer la demande dans le terminal :
->
-> 1.  **Mettez à jour l'URL du dépôt** pour inclure votre nom d'utilisateur. Remplacez `VOTRE_NOM_UTILISATEUR` et l'URL par les vôtres :
->     ```bash
->     git remote set-url origin https://VOTRE_NOM_UTILISATEUR@github.com/NOM_PROPRIETAIRE/NOM_DEPOT.git
->     ```
-> 2.  **Relancez la commande `push` :**
->     ```bash
->     git push -u origin HEAD:main
->     ```
-> 3.  Cette fois, il devrait vous demander uniquement le mot de passe (`Password`). Collez votre **Jeton d'Accès Personnel (PAT)** à ce moment-là.
-
-Une fois ces commandes exécutées, votre code est sur GitHub, prêt pour Vercel.
 
 ### Étape 2 : Créer un Compte Vercel
 
