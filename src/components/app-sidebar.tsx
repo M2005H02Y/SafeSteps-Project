@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -31,7 +32,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1">
-            <Image src="/logo.jpg" alt="SafeSteps Logo" width={32} height={32} className="h-full w-full object-contain" />
+            <Image src="/logo.jpg?v=3" alt="SafeSteps Logo" width={32} height={32} className="h-full w-full object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">

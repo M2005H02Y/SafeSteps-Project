@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -44,7 +45,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
   };
 
   const imageSettings = {
-      src: "/logo.jpg",
+      src: "/logo.jpg?v=3",
       height: 40,
       width: 40,
       excavate: true,
