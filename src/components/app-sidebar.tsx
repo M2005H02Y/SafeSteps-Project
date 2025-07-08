@@ -23,7 +23,7 @@ const menuItems = [
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
-const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/OCP_Group.svg/240px-OCP_Group.svg.png";
+const logoUrl = "/logo.png";
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -33,8 +33,8 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5">
-            <Image src={logoUrl} alt="SafeSteps Logo" width={32} height={32} />
+          <div className="relative h-9 w-9 rounded-lg bg-white">
+            <Image src={logoUrl} alt="SafeSteps Logo" fill className="p-1 object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
