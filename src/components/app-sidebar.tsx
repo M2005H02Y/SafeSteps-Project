@@ -1,7 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { LayoutGrid, Cog, FileText, File } from "lucide-react";
 import {
   SidebarHeader,
@@ -21,6 +23,8 @@ const menuItems = [
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
+const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/OCP_Group.svg/240px-OCP_Group.svg.png";
+
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
@@ -29,13 +33,13 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Cog className="h-5 w-5"/>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5">
+            <Image src={logoUrl} alt="SafeSteps Logo" width={32} height={32} />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
-              <h1 className="text-base font-semibold text-white">SGI</h1>
-              <p className="text-xs text-sidebar-foreground">Système Industriel</p>
+              <h1 className="text-base font-semibold text-white">SafeSteps</h1>
+              <p className="text-xs text-sidebar-foreground">Procédures & Sécurité</p>
             </div>
           )}
         </div>

@@ -13,7 +13,7 @@ Supabase sera notre source de vérité pour toutes les données de l'application
 1.  Rendez-vous sur [supabase.com](https://supabase.com) et créez un compte (vous pouvez utiliser votre compte GitHub pour plus de simplicité).
 2.  Créez une **Nouvelle Organisation** (par exemple, le nom de votre entreprise ou projet).
 3.  Créez un **Nouveau Projet** au sein de cette organisation.
-    *   Donnez-lui un nom clair (ex: `sgi-prod`).
+    *   Donnez-lui un nom clair (ex: `safesteps-prod`).
     *   **Générez un mot de passe de base de données** et **conservez-le précieusement** dans un gestionnaire de mots de passe. C'est une clé maîtresse que Supabase ne vous montrera plus.
     *   Choisissez la région du serveur la plus proche de vos utilisateurs.
 4.  Attendez quelques minutes que votre projet soit provisionné.
@@ -149,7 +149,7 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
 **A. Créer le dépôt sur GitHub.com**
 1.  Rendez-vous sur [github.com](https://github.com) et connectez-vous.
 2.  Cliquez sur le bouton **"New"** (ou sur l'icône `+` en haut à droite, puis "New repository").
-3.  Donnez un nom à votre dépôt (ex: `sgi-app`).
+3.  Donnez un nom à votre dépôt (ex: `safesteps-app`).
 4.  Laissez l'option **Public** sélectionnée.
 5.  **ATTENTION :** Ne cochez **AUCUNE** case ("Add a README file", "Add .gitignore", "Choose a license"). Votre projet contient déjà ces fichiers.
 6.  Cliquez sur **"Create repository"**.
@@ -189,9 +189,12 @@ Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitH
 > ### La Méthode par Téléversement Web (Recommandée)
 >
 > **Étape 1 : Télécharger votre projet depuis Firebase Studio**
-> 1.  Dans Firebase Studio, trouvez la fonctionnalité pour télécharger votre projet. Cela se trouve généralement dans le menu "File" > "Download" ou via la palette de commandes (`Ctrl+Shift+P` ou `Cmd+Shift+P`) en cherchant "Download Workspace".
-> 2.  Cela téléchargera un fichier `.zip` contenant tout votre projet sur votre ordinateur.
-> 3.  Décompressez (extrayez) ce fichier `.zip` dans un dossier sur votre ordinateur.
+> 1.  Pour télécharger le projet, la méthode la plus simple est d'utiliser la **Palette de Commandes**.
+> 2.  Appuyez sur la touche `F1` (ou `Ctrl+Shift+P` / `Cmd+Shift+P`).
+> 3.  Une barre de recherche s'ouvre. Tapez-y `Download Workspace` et sélectionnez cette option.
+> 4.  Alternativement, dans le menu `File` (Fichier) en haut à gauche, cherchez une option comme **`Save Workspace As...`** qui aura le même effet.
+> 5.  Cela téléchargera un fichier `.zip` contenant tout votre projet sur votre ordinateur.
+> 6.  Décompressez (extrayez) ce fichier `.zip` dans un dossier sur votre ordinateur.
 >
 > **Étape 2 : Téléverser les fichiers sur GitHub**
 > 1.  Retournez sur la page de votre dépôt GitHub (celle qui est vide).

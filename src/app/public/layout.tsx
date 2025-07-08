@@ -1,27 +1,24 @@
+import Image from 'next/image';
+import type { ReactNode } from 'react';
 
-import { Cog } from "lucide-react";
+const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/OCP_Group.svg/240px-OCP_Group.svg.png";
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="p-4 border-b bg-white">
-        <div className="container mx-auto flex items-center gap-2">
-           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Cog className="h-5 w-5"/>
-          </div>
-          <h1 className="text-xl font-bold">SGI - Vue Publique</h1>
+      <header className="p-4 bg-white shadow-md">
+        <div className="container mx-auto flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white p-0.5">
+                <Image src={logoUrl} alt="SafeSteps Logo" width={36} height={36} />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-800">SafeSteps</h1>
         </div>
       </header>
-      <main className="container mx-auto py-8">
-        {children}
+      <main className="p-4 md:p-8">
+        <div className="container mx-auto">
+          {children}
+        </div>
       </main>
-      <footer className="py-4 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Système de Gestion Industrielle. Tous droits réservés.</p>
-      </footer>
     </div>
   );
 }

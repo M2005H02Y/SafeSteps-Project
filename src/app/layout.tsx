@@ -10,8 +10,8 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SGI - Système de Gestion Industrielle',
-  description: 'Gestion des postes, standards et formulaires',
+  title: 'SafeSteps - Gestion de la Sécurité',
+  description: 'Gestion des postes, standards et formulaires pour la sécurité',
 };
 
 export default function RootLayout({

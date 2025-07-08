@@ -14,6 +14,8 @@ type QRCodeProps = {
   id: string;
 };
 
+const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/OCP_Group.svg/240px-OCP_Group.svg.png";
+
 export default function QRCode({ type, id }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [isDevEnv, setIsDevEnv] = useState(false);
@@ -44,6 +46,13 @@ export default function QRCode({ type, id }: QRCodeProps) {
     }
   };
 
+  const imageSettings = {
+      src: logoUrl,
+      height: 40,
+      width: 40,
+      excavate: true,
+  };
+
   return (
     <Card>
       <CardHeader className="print-hidden">
@@ -59,8 +68,9 @@ export default function QRCode({ type, id }: QRCodeProps) {
               size={150}
               bgColor={"#ffffff"}
               fgColor={"#000000"}
-              level={"L"}
-              includeMargin={false}
+              level={"H"} // Level H for better error correction with logo
+              includeMargin={true}
+              imageSettings={imageSettings}
             />
             {/* Hidden QR Code for high-resolution download */}
             <QRCodeCanvas
@@ -71,6 +81,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
               fgColor={"#000000"}
               level={"H"}
               includeMargin={true}
+              imageSettings={{...imageSettings, height: 80, width: 80}}
               className="hidden"
             />
             
