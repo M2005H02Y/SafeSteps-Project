@@ -5,12 +5,13 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { TableData } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, FileArchive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
@@ -26,31 +27,27 @@ const getCellKey = (row: number, col: number) => `${row}-${col}`;
 export default function ImprovedFillableTable({ formName, tableData, isOpen, onClose }: ImprovedFillableTableProps) {
   const { toast } = useToast();
   const [filledData, setFilledData] = useState<Record<string, string>>({});
-
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [excelBlobUrl, setExcelBlobUrl] = useState<string | null>(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
-
-  // Separate useEffect for each blob URL to manage its lifecycle independently.
-  // This prevents generating one file from invalidating the other's blob URL.
-  useEffect(() => {
-    // This cleanup function will run when the component unmounts or when pdfBlobUrl changes.
-    // It will revoke the *previous* blob URL, preventing memory leaks.
-    return () => {
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
-      }
-    };
-  }, [pdfBlobUrl]);
+  const [zipBlobUrl, setZipBlobUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
+    // Cleanup function to revoke the blob URL when the component unmounts
+    // or when a new blob URL is created.
     return () => {
-      if (excelBlobUrl) {
-        URL.revokeObjectURL(excelBlobUrl);
+      if (zipBlobUrl) {
+        URL.revokeObjectURL(zipBlobUrl);
       }
     };
-  }, [excelBlobUrl]);
+  }, [zipBlobUrl]);
+
+  // Reset state when the dialog is closed.
+  useEffect(() => {
+    if (!isOpen) {
+      setIsGenerating(false);
+      setZipBlobUrl(null);
+      // We keep filledData so the user doesn't lose their work if they accidentally close the modal.
+    }
+  }, [isOpen]);
 
   if (!tableData) return null;
 
@@ -65,20 +62,13 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     const year = now.getFullYear();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${day}-${month}-${year}_${hours}h${minutes}m`;
+    return `${day}-${month}-${year}_${hours}h${minutes}`;
   };
 
-  const generateAndSetPdf = async () => {
-    setIsGeneratingPdf(true);
-    setPdfBlobUrl(null);
-
+  const generatePdfBlob = async (): Promise<Blob | null> => {
     const printableElement = document.getElementById('printable-table-container');
-    if (!printableElement) {
-        toast({ title: "Erreur PDF", description: "Élément imprimable non trouvé.", variant: "destructive" });
-        setIsGeneratingPdf(false);
-        return;
-    }
-
+    if (!printableElement) return null;
+    
     try {
         const canvas = await html2canvas(printableElement, { scale: 2, useCORS: true, logging: false });
         const imgData = canvas.toDataURL('image/png');
@@ -86,22 +76,14 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         const pdfHeight = canvas.height;
         const pdf = new jsPDF({ orientation: pdfWidth > pdfHeight ? 'l' : 'p', unit: 'px', format: [pdfWidth, pdfHeight] });
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        
-        const pdfBlob = pdf.output('blob');
-        setPdfBlobUrl(URL.createObjectURL(pdfBlob));
-    } catch(e) {
-        console.error(e);
-        toast({ title: "Erreur PDF", description: "La génération du PDF a échoué.", variant: "destructive"});
-    } finally {
-        setIsGeneratingPdf(false);
+        return pdf.output('blob');
+    } catch (e) {
+        console.error("PDF generation failed:", e);
+        return null;
     }
   };
 
-
-  const generateAndSetExcel = () => {
-    setIsGeneratingExcel(true);
-    setExcelBlobUrl(null);
-    
+  const generateExcelBlob = (): Blob | null => {
     try {
       const headerRow = tableData.headers || Array(tableData.cols).fill('').map((_, i) => `Colonne ${i+1}`);
       const aoa: (string | null)[][] = [headerRow];
@@ -126,7 +108,7 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
           if (cell?.colspan || cell?.rowspan) {
             const rowspan = cell.rowspan || 1;
             const colspan = cell.colspan || 1;
-            if(rowspan > 1 || colspan > 1) {
+            if (rowspan > 1 || colspan > 1) {
               merges.push({
                 s: { r: r + 1, c: c },
                 e: { r: r + rowspan - 1 + 1, c: c + colspan - 1 }
@@ -157,19 +139,45 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Réponses Formulaire');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const dataBlob = new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"});
-      
-      setExcelBlobUrl(URL.createObjectURL(dataBlob));
+      return new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"});
     } catch (e) {
-      console.error(e);
-      toast({ title: "Erreur Excel", description: "La génération du fichier Excel a échoué.", variant: "destructive"});
-    } finally {
-      setIsGeneratingExcel(false);
+        console.error("Excel generation failed:", e);
+        return null;
     }
   };
 
-  const pdfFilename = `${formName}_${generateTimestamp()}.pdf`;
-  const excelFilename = `${formName}_${generateTimestamp()}.xlsx`;
+  const handleGenerateZip = async () => {
+    setIsGenerating(true);
+    setZipBlobUrl(null); // Revoke old URL if it exists
+    toast({ title: "Préparation des fichiers...", description: "Veuillez patienter pendant la génération du PDF et de l'Excel." });
+
+    const pdfBlob = await generatePdfBlob();
+    const excelBlob = generateExcelBlob();
+
+    if (!pdfBlob || !excelBlob) {
+        toast({ title: "Erreur de génération", description: "Impossible de créer un ou plusieurs fichiers.", variant: "destructive"});
+        setIsGenerating(false);
+        return;
+    }
+
+    try {
+        const zip = new JSZip();
+        const timestamp = generateTimestamp();
+        zip.file(`${formName}_${timestamp}.pdf`, pdfBlob);
+        zip.file(`${formName}_${timestamp}.xlsx`, excelBlob);
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        setZipBlobUrl(URL.createObjectURL(zipBlob));
+        toast({ title: "Fichiers prêts !", description: "Vous pouvez maintenant télécharger le fichier ZIP." });
+    } catch (e) {
+        console.error("ZIP generation failed:", e);
+        toast({ title: "Erreur ZIP", description: "La création du fichier ZIP a échoué.", variant: "destructive"});
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const zipFilename = `${formName}_${generateTimestamp()}.zip`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -205,46 +213,28 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
             )}
           </div>
         </ScrollArea>
-        <DialogFooter className="mt-4 flex-col sm:flex-row sm:justify-end sm:items-center gap-4">
+        <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <DialogClose asChild>
             <Button variant="outline">Fermer</Button>
           </DialogClose>
+          
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4">
-            {/* PDF Button Logic */}
-            {isGeneratingPdf ? (
-              <Button variant="destructive" disabled>
+            {isGenerating ? (
+              <Button disabled className="w-full sm:w-auto">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Génération PDF...
+                Génération en cours...
               </Button>
-            ) : pdfBlobUrl ? (
-              <Button asChild variant="destructive">
-                <a href={pdfBlobUrl} download={pdfFilename}>
+            ) : zipBlobUrl ? (
+              <Button asChild className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+                <a href={zipBlobUrl} download={zipFilename}>
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger PDF
+                  Télécharger le ZIP
                 </a>
               </Button>
             ) : (
-              <Button variant="destructive" onClick={generateAndSetPdf}>
-                Générer PDF
-              </Button>
-            )}
-            
-            {/* Excel Button Logic */}
-            {isGeneratingExcel ? (
-              <Button className="bg-green-600 hover:bg-green-700" disabled>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Génération Excel...
-              </Button>
-            ) : excelBlobUrl ? (
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <a href={excelBlobUrl} download={excelFilename}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Télécharger Excel
-                </a>
-              </Button>
-            ) : (
-              <Button className="bg-green-600 hover:bg-green-700" onClick={generateAndSetExcel}>
-                Générer Excel
+              <Button onClick={handleGenerateZip} className="w-full sm:w-auto">
+                <FileArchive className="mr-2 h-4 w-4" />
+                Générer les Fichiers (PDF & Excel)
               </Button>
             )}
           </div>
