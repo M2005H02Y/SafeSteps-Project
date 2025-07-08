@@ -29,7 +29,7 @@ export default function QRCode({ type, id }: QRCodeProps) {
 
       const url = `${origin}/public/${type}/${id}`;
       setPublicUrl(url);
-      setLogoUrl(`${origin}/logo.png`);
+      setLogoUrl(`${origin}/logo.jpg`);
     }
   }, [type, id]);
 

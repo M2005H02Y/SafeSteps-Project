@@ -23,7 +23,7 @@ const menuItems = [
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
-const logoUrl = "/logo.png";
+const logoUrl = "/logo.jpg";
 
 export default function AppSidebar() {
   const pathname = usePathname();
