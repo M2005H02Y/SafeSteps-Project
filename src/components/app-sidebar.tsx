@@ -13,6 +13,7 @@ import {
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import Image from 'next/image';
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", subLabel: "Vue d'ensemble", icon: LayoutGrid },
@@ -29,8 +30,8 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
-          <div className="relative h-9 w-9 rounded-lg bg-white p-1">
-            <img src="/logo.jpg" alt="SafeSteps Logo" className="object-contain w-full h-full" />
+          <div className="relative h-9 w-9">
+            <Image src="/logo.jpg" alt="SafeSteps Logo" layout="fill" className="rounded-lg object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">

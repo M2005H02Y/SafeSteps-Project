@@ -70,7 +70,7 @@ async function FormPublicPage({ params }: { params: { id: string } }) {
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
             <main className="w-full max-w-4xl mx-auto space-y-6">
                  <div className="text-center">
-                    <img src="/logo.jpg" alt="SafeSteps Logo" width={80} height={80} className="mx-auto mb-4" />
+                    <Image src="/logo.jpg" alt="SafeSteps Logo" width={80} height={80} className="mx-auto mb-4" />
                     <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
                 </div>
 
