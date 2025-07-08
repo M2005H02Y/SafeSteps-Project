@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { 
   Building2, 
@@ -30,14 +29,13 @@ const quickActions = [
 
 function StatCardSkeleton() {
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-start mb-2">
+    <Card className="p-6 flex flex-col justify-between h-full">
+      <div className="flex justify-between items-start">
         <Skeleton className="h-5 w-24" />
         <Skeleton className="h-8 w-8 rounded-full" />
       </div>
       <div>
-        <Skeleton className="h-8 w-12 mb-2" />
-        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-8 w-12" />
       </div>
     </Card>
   );
@@ -46,9 +44,9 @@ function StatCardSkeleton() {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState([
-    { title: 'Postes de travail', value: '0', icon: <Building2 className="h-8 w-8 text-blue-500" />, change: "+2%", changeType: 'positive' as const, href: '/workstations' },
-    { title: 'Standards Actifs', value: '0', icon: <BookCheck className="h-8 w-8 text-green-500" />, change: "Stable", changeType: 'neutral' as const, href: '/standards' },
-    { title: 'Formulaires', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, change: "+15%", changeType: 'positive' as const, href: '/forms' },
+    { title: 'Postes de travail', value: '0', icon: <Building2 className="h-8 w-8 text-blue-500" />, href: '/workstations' },
+    { title: 'Standards Actifs', value: '0', icon: <BookCheck className="h-8 w-8 text-green-500" />, href: '/standards' },
+    { title: 'Formulaires', value: '0', icon: <FileText className="h-8 w-8 text-purple-500" />, href: '/forms' },
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -103,10 +101,7 @@ export default function DashboardPage() {
                         {stat.icon}
                     </div>
                     <div>
-                        <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                        <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : 'text-slate-500'}`}>
-                            {stat.change} vs mois dernier
-                        </p>
+                        <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
                     </div>
                 </Card>
               </Link>
