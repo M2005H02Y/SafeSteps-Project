@@ -10,7 +10,7 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SafeSteps - Gestion de la Sécurité',
+  title: 'WorkHub Central - App',
   description: 'Gestion des postes, standards et formulaires pour la sécurité',
 };
 

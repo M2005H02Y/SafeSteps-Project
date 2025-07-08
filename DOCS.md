@@ -1,4 +1,4 @@
-# Documentation de la Pile Technique du Projet
+# Documentation de la Pile Technique de WorkHub Central
 
 Ce document offre une vue d'ensemble des langages, bibliothèques et technologies qui composent ce projet, ainsi que des notes sur leur compatibilité.
 

@@ -1,241 +1,181 @@
-# Guide d'Architecture et de Déploiement
+# Guide de Déploiement Complet pour WorkHub Central
 
-Ce document vous guide pour configurer l'infrastructure de production de ce projet en utilisant Supabase pour la base de données et Vercel pour l'hébergement.
+Félicitations pour avoir terminé votre projet ! Ce document vous guide pas à pas pour prendre le projet que vous avez exporté, le configurer sur votre ordinateur, le publier sur GitHub, et le déployer en production avec Vercel et Supabase.
 
 ---
 
-## Partie 1 : Configuration de la Base de Données avec Supabase
+## Étape 1 : Obtenir vos Clés d'API (Supabase & Cloudinary)
 
-Supabase sera notre source de vérité pour toutes les données de l'application (postes, standards, formulaires).
+Avant de pouvoir lancer le projet, vous avez besoin de clés secrètes pour connecter l'application à ses services externes.
 
-### Étape 1 : Créer votre projet Supabase
+### A. Base de Données avec Supabase
 
-1.  Rendez-vous sur [supabase.com](https://supabase.com) et créez un compte (vous pouvez utiliser votre compte GitHub pour plus de simplicité).
-2.  Créez une **Nouvelle Organisation** (par exemple, le nom de votre entreprise ou projet).
-3.  Créez un **Nouveau Projet** au sein de cette organisation.
-    *   Donnez-lui un nom clair (ex: `safesteps-prod`).
-    *   **Générez un mot de passe de base de données** et **conservez-le précieusement** dans un gestionnaire de mots de passe. C'est une clé maîtresse que Supabase ne vous montrera plus.
+Supabase sera notre source de vérité pour toutes les données (postes, standards, formulaires).
+
+1.  **Créez votre projet Supabase :**
+    *   Rendez-vous sur [supabase.com](https://supabase.com) et créez un compte (celui de GitHub est parfait).
+    *   Créez une **Nouvelle Organisation**, puis un **Nouveau Projet**.
+    *   Donnez-lui un nom clair (ex: `workhub-central-prod`).
+    *   **Générez un mot de passe de base de données** et **conservez-le précieusement**. C'est une clé maîtresse.
     *   Choisissez la région du serveur la plus proche de vos utilisateurs.
-4.  Attendez quelques minutes que votre projet soit provisionné.
 
-### Étape 2 : Créer le Schéma de la Base de Données
+2.  **Exécutez le script SQL pour créer les tables :**
+    *   Une fois votre projet prêt, allez dans l'**Éditeur SQL** (icône de table de base de données).
+    *   Cliquez sur **"+ New query"**.
+    *   Copiez-collez l'intégralité du script ci-dessous et cliquez sur **"RUN"**.
 
-Une fois votre projet prêt, nous devons créer les tables qui contiendront nos données.
+    ```sql
+    -- Création de la table pour les Postes de Travail (Workstations)
+    create table public.workstations (
+      id uuid primary key default gen_random_uuid(),
+      name text not null,
+      type text not null,
+      description text,
+      image text,
+      files jsonb,
+      created_at timestamp with time zone default timezone('utc'::text, now()) not null
+    );
 
-1.  Dans le menu de gauche de votre projet Supabase, cliquez sur l'icône **Table Editor** (qui ressemble à une grille de table).
-2.  Cliquez sur le grand bouton **"+ New SQL Snippet"** ou **"+ New query"**.
-3.  **Copiez le script SQL ci-dessous.**
+    -- Création de la table pour les Standards
+    create table public.standards (
+      id uuid primary key default gen_random_uuid(),
+      name text not null,
+      category text not null,
+      version text,
+      description text,
+      image text,
+      files jsonb,
+      last_updated timestamp with time zone default timezone('utc'::text, now()) not null
+    );
 
-    **ATTENTION : INSTRUCTION LA PLUS IMPORTANTE**
-    *   La meilleure méthode est d'utiliser **l'icône de copie** (souvent 📋 ou deux carrés) qui apparaît en haut à droite du bloc de code ci-dessous.
-    *   Si vous sélectionnez le texte manuellement, votre sélection doit commencer au tout début de la ligne `-- Création de la table...` et se terminer à la toute fin de la ligne `... with check (true);`. **Ne copiez rien avant ou après.**
+    -- Création de la table pour les Formulaires (Forms)
+    create table public.forms (
+      id uuid primary key default gen_random_uuid(),
+      name text not null,
+      table_data jsonb,
+      files jsonb,
+      last_updated timestamp with time zone default timezone('utc'::text, now()) not null
+    );
 
-```sql
--- Création de la table pour les Postes de Travail (Workstations)
--- Cette table stocke les informations sur chaque poste ou type d'engine.
-create table public.workstations (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  type text not null,
-  description text,
-  image text, -- URL vers l'image principale sur Cloudinary
-  files jsonb, -- Tableau d'objets pour les fichiers joints
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+    -- Activer la sécurité au niveau des lignes (RLS) - Étape CRUCIALE
+    alter table public.workstations enable row level security;
+    alter table public.standards enable row level security;
+    alter table public.forms enable row level security;
 
--- Création de la table pour les Standards
--- Cette table stocke les documents de procédure et les normes.
-create table public.standards (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  category text not null,
-  version text,
-  description text,
-  image text, -- URL vers l'image principale sur Cloudinary
-  files jsonb,
-  last_updated timestamp with time zone default timezone('utc'::text, now()) not null
-);
+    -- Créer des politiques d'accès public en lecture seule
+    create policy "Public workstations are viewable by everyone." on public.workstations for select using (true);
+    create policy "Public standards are viewable by everyone." on public.standards for select using (true);
+    create policy "Public forms are viewable by everyone." on public.forms for select using (true);
 
--- Création de la table pour les Formulaires (Forms)
--- Contient la structure des formulaires dynamiques.
-create table public.forms (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  table_data jsonb, -- Structure du tableau dynamique
-  files jsonb,
-  last_updated timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Activer la sécurité au niveau des lignes (Row Level Security - RLS) pour toutes les tables.
--- C'est une étape CRUCIALE pour la sécurité. Par défaut, personne ne peut rien voir.
-alter table public.workstations enable row level security;
-alter table public.standards enable row level security;
-alter table public.forms enable row level security;
-
--- Créer des politiques (policies) qui autorisent l'accès public en lecture seule.
--- Cela permet à quiconque de voir les données, ce qui est nécessaire pour nos pages publiques et notre prototype.
--- Pour une application avec des comptes utilisateurs, ces règles seraient plus restrictives.
-create policy "Public workstations are viewable by everyone." on public.workstations for select using (true);
-create policy "Public standards are viewable by everyone." on public.standards for select using (true);
-create policy "Public forms are viewable by everyone." on public.forms for select using (true);
-
--- Créer des politiques qui autorisent tout le monde à insérer, mettre à jour et supprimer.
--- ATTENTION : C'est acceptable pour notre prototype, mais pour une vraie production,
--- vous voudriez restreindre cela aux utilisateurs authentifiés.
-create policy "Anyone can insert a new workstation." on public.workstations for insert with check (true);
-create policy "Anyone can update a workstation." on public.workstations for update using (true);
-create policy "Anyone can delete a workstation." on public.workstations for delete using (true);
-
-create policy "Anyone can insert a new standard." on public.standards for insert with check (true);
-create policy "Anyone can update a standard." on public.standards for update using (true);
-create policy "Anyone can delete a standard." on public.standards for delete using (true);
-
-create policy "Anyone can insert a new form." on public.forms for insert with check (true);
-create policy "Anyone can update a form." on public.forms for update using (true);
-create policy "Anyone can delete a form." on public.forms for delete using (true);
-```
-
-4.  **Collez le script dans l'éditeur SQL de Supabase.**
-5.  **Vérification cruciale :** Assurez-vous que la première ligne dans l'éditeur est bien `-- Création de la table...` et **PAS** ` ```sql `. Si vous voyez ````sql`, supprimez cette ligne.
-6.  Cliquez sur le bouton vert **"RUN"**. Si tout est correct, vous devriez voir un message de succès.
-
-### Étape 3 : Récupérer vos Clés d'API
-
-1.  Dans le menu de gauche de Supabase, allez dans **Project Settings** (icône d'engrenage) > **API**.
-2.  Vous y trouverez deux informations essentielles :
-    *   **Project URL**
-    *   Sous **Project API Keys**, copiez la clé `anon` `public`. **N'utilisez jamais la clé `service_role` (secrète) dans le code frontend.**
-
-### Étape 4 : Configurer votre Environnement Local
-
-1.  À la racine de notre projet, créez un fichier nommé `.env.local`.
-2.  Ajoutez-y les clés récupérées à l'étape 3, ainsi que vos clés Cloudinary :
-
-```
-# Clés Supabase
-NEXT_PUBLIC_SUPABASE_URL=VOTRE_PROJECT_URL_DE_SUPABASE_ICI
-NEXT_PUBLIC_SUPABASE_ANON_KEY=VOTRE_ANON_KEY_DE_SUPABASE_ICI
-
-# Clés Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=VOTRE_CLOUD_NAME_DE_CLOUDINARY
-NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=VOTRE_UPLOAD_PRESET_DE_CLOUDINARY
-```
-
----
-
-> 🚨 **DÉPANNAGE : Si vous voyez l'erreur "Clés manquantes"...**
->
-> Si votre application affiche une erreur concernant des clés Supabase manquantes, c'est presque certainement un problème avec ce fichier `.env.local`. Voici une liste de vérification :
->
-> *   **1. Le Nom est-il Parfait ?** Le fichier doit s'appeler ` .env.local ` (avec le point au début). Il ne doit pas être `.env` ou `.env.local.txt`.
-> *   **2. Le Fichier est-il au Bon Endroit ?** Il doit être à la racine du projet, au même niveau que les fichiers `package.json` et `ARCHITECTURE.md`.
-> *   **3. Les Clés sont-elles Correctes ?** Avez-vous remplacé `VOTRE_PROJECT_URL_...` par la vraie URL de votre projet ? La clé `anon` ne doit pas contenir le mot "secret".
-> *   **4. Avez-vous Redémarré ?** Après avoir créé ou modifié le fichier, arrêtez le serveur de développement (souvent avec `CTRL+C` dans le terminal) et relancez-le. C'est parfois nécessaire pour que les changements soient pris en compte.
-
----
-
-**Votre application est maintenant configurée pour utiliser Supabase en local !**
-
----
-
-## Partie 2 : Déploiement sur Vercel
-
-Vercel hébergera notre application et la rendra accessible au monde.
-
-### Étape 1 : Mettre le Projet sur GitHub
-
-Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitHub.
-
-**A. Créer le dépôt sur GitHub.com**
-1.  Rendez-vous sur [github.com](https://github.com) et connectez-vous.
-2.  Cliquez sur le bouton **"New"** (ou sur l'icône `+` en haut à droite, puis "New repository").
-3.  Donnez un nom à votre dépôt (ex: `safesteps-app`).
-4.  Laissez l'option **Public** sélectionnée.
-5.  **ATTENTION :** Ne cochez **AUCUNE** case ("Add a README file", "Add .gitignore", "Choose a license"). Votre projet contient déjà ces fichiers.
-6.  Cliquez sur **"Create repository"**.
-
-**B. Envoyer le code depuis votre environnement (Méthode 1 : Ligne de Commande)**
-1.  Après la création, GitHub vous montrera une page avec une URL qui se termine par `.git`. Copiez cette URL.
-2.  Dans le terminal de votre environnement de développement, exécutez les commandes suivantes une par une :
-
-    ```bash
-    # Initialise un nouveau dépôt Git. Si un projet Git existe déjà, cette commande est sans danger.
-    git init -b main
-
-    # Ajoute tous les fichiers du projet pour la sauvegarde
-    git add .
-
-    # Crée une sauvegarde locale avec un message.
-    # Si vous voyez "nothing to commit", ce n'est pas une erreur, continuez simplement.
-    git commit -m "Initial commit"
-
-    # Lie votre projet local au dépôt distant sur GitHub.
-    # Remplacez l'URL par celle que vous avez copiée.
-    # Si vous voyez une erreur "remote origin already exists", ce n'est pas grave, continuez.
-    git remote add origin https://github.com/VOTRE_NOM/VOTRE_PROJET.git
-
-    # Envoie votre code vers la branche 'main' de GitHub.
-    # La commande HEAD:main est la plus robuste : elle envoie votre branche actuelle
-    # (peu importe son nom local) vers la branche 'main' sur GitHub.
-    git push -u origin HEAD:main
+    -- Créer des politiques autorisant l'écriture (pour le prototype)
+    create policy "Anyone can manage workstations." on public.workstations for all with check (true);
+    create policy "Anyone can manage standards." on public.standards for all with check (true);
+    create policy "Anyone can manage forms." on public.forms for all with check (true);
     ```
 
-> 🚨 **DÉPANNAGE : Problèmes avec `git push` (Méthode Alternative Recommandée)**
->
-> Si vous rencontrez des erreurs de connexion (`ECONNREFUSED`), d'authentification (`Authentication failed`), ou si le terminal se bloque, c'est très probablement dû aux limitations réseau de l'environnement de développement web (comme Firebase Studio).
->
-> **Ne vous inquiétez pas, il existe une méthode beaucoup plus simple et fiable qui contourne complètement le terminal.**
->
-> ### La Méthode par Téléversement Web (Recommandée)
->
-> **Étape 1 : Télécharger votre projet depuis Firebase Studio**
-> 1.  Pour télécharger le projet, la méthode la plus simple est d'utiliser la **Palette de Commandes**.
-> 2.  Appuyez sur la touche `F1` (ou `Ctrl+Shift+P` / `Cmd+Shift+P`).
-> 3.  Une barre de recherche s'ouvre. Tapez-y `Download Workspace` et sélectionnez cette option.
-> 4.  Alternativement, dans le menu `File` (Fichier) en haut à gauche, cherchez une option comme **`Save Workspace As...`** qui aura le même effet.
-> 5.  Cela téléchargera un fichier `.zip` contenant tout votre projet sur votre ordinateur.
-> 6.  Décompressez (extrayez) ce fichier `.zip` dans un dossier sur votre ordinateur.
->
-> **Étape 2 : Téléverser les fichiers sur GitHub**
-> 1.  Retournez sur la page de votre dépôt GitHub (celle qui est vide).
-> 2.  Cliquez sur le lien qui dit **`uploading an existing file`**.
-> 3.  Une nouvelle page s'ouvrira, vous invitant à glisser-déposer des fichiers.
-> 4.  Ouvrez le dossier que vous avez décompressé à l'étape 1.
-> 5.  Sélectionnez **tous les fichiers et dossiers** de votre projet et **glissez-les** dans la fenêtre de votre navigateur.
->     *   **IMPORTANT :** N'incluez pas le dossier `.git` s'il existe. Vous pouvez aussi exclure `node_modules` s'il est présent.
-> 6.  Attendez que GitHub traite tous les fichiers.
->
-> **Étape 3 : Finaliser le téléversement (Commit)**
-> 1.  Une fois tous les fichiers chargés, une boîte de dialogue apparaîtra en bas de la page.
-> 2.  Dans la première case, écrivez un message descriptif, par exemple : `Initial project upload`.
-> 3.  Assurez-vous que l'option "Commit directly to the `main` branch" est cochée.
-> 4.  Cliquez sur le bouton vert **"Commit changes"**.
->
-> Et voilà ! Votre code est sur GitHub. Vous pouvez maintenant passer directement à la **Partie 2 : Déploiement sur Vercel**.
+3.  **Récupérez vos clés Supabase :**
+    *   Dans **Project Settings** (icône d'engrenage) > **API**.
+    *   Conservez la **Project URL**.
+    *   Conservez la clé `anon` `public` (jamais la clé `service_role` secrète).
 
+### B. Stockage de Fichiers avec Cloudinary
 
-### Étape 2 : Créer un Compte Vercel
+Cloudinary gère le téléversement des images et des fichiers.
 
-1.  Rendez-vous sur [vercel.com](https://vercel.com) et inscrivez-vous (utilisez votre compte GitHub pour une intégration simplifiée).
+1.  **Créez un compte Cloudinary :** Allez sur [cloudinary.com](https://cloudinary.com) et inscrivez-vous. Le plan gratuit est largement suffisant.
+2.  **Récupérez votre "Cloud Name" :** Il est visible en haut de votre tableau de bord.
+3.  **Créez un "Upload Preset" :**
+    *   Allez dans **Settings** (icône d'engrenage) > **Upload**.
+    *   Faites défiler jusqu'à **Upload presets** et cliquez sur **"Add upload preset"**.
+    *   Changez le **Signing Mode** de `Signed` à `Unsigned`. C'est plus simple pour notre cas d'usage.
+    *   Donnez-lui un nom mémorable (ex: `workhub-preset`).
+    *   Sauvegardez et **copiez le nom du preset**.
 
-### Étape 3 : Importer et Déployer le Projet
+---
 
-1.  Depuis votre tableau de bord Vercel, cliquez sur **"Add New... > Project"**.
-2.  Choisissez le dépôt GitHub de notre projet et cliquez sur **"Import"**.
-3.  Vercel va automatiquement détecter que c'est un projet Next.js. Vous n'avez aucun réglage de build à modifier.
+## Étape 2 : Configuration de votre Environnement Local
 
-### Étape 4 : Configurer les Variables d'Environnement (Étape la plus importante)
+Une fois le projet téléchargé et décompressé sur votre ordinateur :
 
-1.  Déroulez la section **"Environment Variables"**.
-2.  C'est ici que vous devez ajouter les mêmes clés que dans votre fichier `.env.local`. Pour chaque clé, entrez le nom et la valeur.
-    *   `NEXT_PUBLIC_SUPABASE_URL`
-    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-    *   `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
-    *   `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`
-3.  Cliquez sur **"Deploy"**.
+1.  **Ouvrez un terminal** à la racine du projet.
+2.  **Installez les dépendances** en exécutant la commande :
+    ```bash
+    npm install
+    ```
+3.  **Créez le fichier d'environnement :**
+    *   À la racine du projet, créez un fichier nommé exactement `.env.local`.
+    *   Ce fichier est crucial : il contient vos clés secrètes et **ne doit JAMAIS être partagé ou mis sur GitHub**.
+    *   Copiez-collez le modèle ci-dessous dans ce fichier et remplacez les valeurs par VOS clés obtenues à l'étape 1.
 
-Vercel va maintenant construire et déployer votre application. Après quelques minutes, vous recevrez une URL publique et votre site sera en ligne, entièrement connecté à votre base de données Supabase.
+    ```
+    # Clés Supabase
+    NEXT_PUBLIC_SUPABASE_URL=VOTRE_PROJECT_URL_DE_SUPABASE_ICI
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=VOTRE_ANON_KEY_DE_SUPABASE_ICI
 
-### Le Flux de Travail Futur
+    # Clés Cloudinary
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=VOTRE_CLOUD_NAME_DE_CLOUDINARY
+    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=VOTRE_UPLOAD_PRESET_DE_CLOUDINARY
+    ```
+4.  **Lancez le serveur de développement :**
+    ```bash
+    npm run dev
+    ```
+    Ouvrez votre navigateur à l'adresse [http://localhost:9003](http://localhost:9003). L'application devrait fonctionner !
 
-Désormais, à chaque fois que vous ferez un `git push` sur votre branche `main`, Vercel redéploiera automatiquement la nouvelle version de votre site. C'est magique !
+> 🚨 **Que faire si j'obtiens une erreur "Clés manquantes" ?**
+> C'est presque toujours un problème avec le fichier `.env.local`. Vérifiez :
+> *   Le nom du fichier est-il bien `.env.local` (avec le point) ?
+> *   Est-il à la racine du projet (au même niveau que `package.json`) ?
+> *   Avez-vous bien remplacé les valeurs d'exemple par vos vraies clés ?
+> *   Avez-vous redémarré le serveur (`CTRL+C` puis `npm run dev`) après avoir modifié le fichier ?
+
+---
+
+## Étape 3 : Mettre votre Code sur GitHub
+
+Pour que Vercel puisse déployer votre site, le code doit être sur GitHub.
+
+### A. Créer le dépôt sur GitHub.com
+
+1.  Sur [github.com](https://github.com), cliquez sur **"New repository"**.
+2.  Donnez-lui un nom (ex: `workhub-central-app`).
+3.  Laissez-le **Public**.
+4.  **Ne cochez AUCUNE case** ("Add a README file", etc.). Votre projet a déjà tout ce qu'il faut.
+5.  Cliquez sur **"Create repository"**.
+
+### B. Envoyer le code (Méthode recommandée : téléversement web)
+
+C'est la méthode la plus simple et la plus fiable.
+
+1.  Sur la page de votre dépôt GitHub vide, cliquez sur le lien **`uploading an existing file`**.
+2.  Ouvrez le dossier de votre projet sur votre ordinateur.
+3.  Sélectionnez **tous les fichiers et dossiers** SAUF :
+    *   le dossier `node_modules` (très lourd et inutile)
+    *   le dossier `.next` (fichiers de build temporaires)
+    *   le fichier `.env.local` (contient vos secrets !)
+4.  **Glissez-déposez** les fichiers sélectionnés dans la fenêtre de votre navigateur.
+5.  Attendez que GitHub traite tous les fichiers.
+6.  Écrivez un message de commit (ex: `Initial project upload`) et cliquez sur **"Commit changes"**.
+
+Et voilà ! Votre code est sur GitHub, prêt à être déployé.
+
+---
+
+## Étape 4 : Déployer sur Vercel
+
+1.  **Créez un compte Vercel :** Allez sur [vercel.com](https://vercel.com) et inscrivez-vous avec votre compte GitHub.
+2.  **Importez votre projet :**
+    *   Depuis votre tableau de bord, cliquez sur **"Add New... > Project"**.
+    *   Choisissez le dépôt GitHub que vous venez de créer et cliquez sur **"Import"**.
+    *   Vercel détectera automatiquement que c'est un projet Next.js.
+3.  **Configurez les variables d'environnement (Étape la plus importante) :**
+    *   Déroulez la section **"Environment Variables"**.
+    *   Ajoutez une par une les **quatre mêmes clés** que vous avez dans votre fichier `.env.local`.
+        *   `NEXT_PUBLIC_SUPABASE_URL`
+        *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+        *   `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+        *   `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`
+    *   Vérifiez bien que les noms et les valeurs sont corrects.
+4.  **Déployez !** Cliquez sur **"Deploy"**.
+
+Après quelques minutes, votre site sera en ligne, entièrement fonctionnel. Désormais, chaque fois que vous mettrez à jour votre code et le pousserez sur GitHub, Vercel redéploiera automatiquement la nouvelle version. C'est magique !
