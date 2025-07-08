@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { addWorkstation, FileAttachment, engineTypes } from '@/lib/data';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -23,6 +23,7 @@ import {
 
 export default function NewWorkstationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState('');
   const [type, setType] = useState('');
   const [customType, setCustomType] = useState('');
@@ -31,6 +32,12 @@ export default function NewWorkstationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const OTHER_ENGINE_VALUE = 'AUTRE';
+
+  useEffect(() => {
+    if (searchParams.get('newEngine') === 'true') {
+      setType(OTHER_ENGINE_VALUE);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

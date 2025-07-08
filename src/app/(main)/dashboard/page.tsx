@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -128,7 +127,7 @@ export default function DashboardPage() {
                       <span>{engine}</span>
                     </Link>
                   ))}
-                  <Link href="/workstations/new" className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
+                  <Link href="/workstations/new?newEngine=true" className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
                       <div className="h-2 w-2 rounded-full bg-slate-300"></div>
                       <span>Ajouter un engine...</span>
                   </Link>
