@@ -30,8 +30,8 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
-          <div className="relative h-9 w-9">
-            <Image src="/logo.jpg" alt="SafeSteps Logo" layout="fill" className="rounded-lg object-contain" />
+           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50">
+            <Image src="/logo.jpg" alt="SafeSteps Logo" width={28} height={28} className="object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
