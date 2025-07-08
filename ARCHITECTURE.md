@@ -144,7 +144,39 @@ Vercel hébergera notre application et la rendra accessible au monde.
 
 ### Étape 1 : Mettre le Projet sur GitHub
 
-Si ce n'est pas déjà fait, créez un dépôt sur [GitHub](https://github.com) et envoyez-y le code de notre projet.
+Pour que Vercel puisse accéder à notre code, celui-ci doit se trouver sur GitHub.
+
+**A. Créer le dépôt sur GitHub.com**
+1.  Rendez-vous sur [github.com](https://github.com) et connectez-vous.
+2.  Cliquez sur le bouton **"New"** (ou sur l'icône `+` en haut à droite, puis "New repository").
+3.  Donnez un nom à votre dépôt (ex: `sgi-app`).
+4.  Laissez l'option **Public** sélectionnée.
+5.  **ATTENTION :** Ne cochez **AUCUNE** case ("Add a README file", "Add .gitignore", "Choose a license"). Votre projet contient déjà ces fichiers.
+6.  Cliquez sur **"Create repository"**.
+
+**B. Envoyer le code depuis votre environnement**
+1.  Après la création, GitHub vous montrera une page avec une URL qui se termine par `.git`. Copiez cette URL.
+2.  Dans le terminal de votre environnement de développement, exécutez les commandes suivantes une par une :
+
+    ```bash
+    # Initialise un nouveau dépôt Git et nomme la branche principale "main"
+    git init -b main
+
+    # Ajoute tous les fichiers du projet pour la sauvegarde
+    git add .
+
+    # Crée une sauvegarde locale avec un message
+    git commit -m "Initial commit"
+
+    # Lie votre projet local au dépôt distant sur GitHub
+    # Remplacez l'URL par celle que vous avez copiée
+    git remote add origin https://github.com/VOTRE_NOM/VOTRE_PROJET.git
+
+    # Envoie votre code vers GitHub
+    git push -u origin main
+    ```
+
+Une fois ces commandes exécutées, votre code est sur GitHub, prêt pour Vercel.
 
 ### Étape 2 : Créer un Compte Vercel
 
