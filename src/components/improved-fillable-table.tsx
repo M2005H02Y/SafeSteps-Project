@@ -1,15 +1,16 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { TableData, CellData } from '@/lib/data';
+import { TableData } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
@@ -25,6 +26,19 @@ const getCellKey = (row: number, col: number) => `${row}-${col}`;
 export default function ImprovedFillableTable({ formName, tableData, isOpen, onClose }: ImprovedFillableTableProps) {
   const { toast } = useToast();
   const [filledData, setFilledData] = useState<Record<string, string>>({});
+
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [excelBlobUrl, setExcelBlobUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
+
+  // When component unmounts, revoke any existing blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+      if (excelBlobUrl) URL.revokeObjectURL(excelBlobUrl);
+    };
+  }, [pdfBlobUrl, excelBlobUrl]);
 
   if (!tableData) return null;
 
@@ -42,41 +56,42 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     return `${day}-${month}-${year}_${hours}h${minutes}m`;
   };
 
-  const exportToPDF = async () => {
+  const generateAndSetPdf = async () => {
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    setIsGeneratingPdf(true);
+    setPdfBlobUrl(null);
+
     const printableElement = document.getElementById('printable-table-container');
     if (!printableElement) {
         toast({ title: "Erreur PDF", description: "Élément imprimable non trouvé.", variant: "destructive" });
+        setIsGeneratingPdf(false);
         return;
     }
 
     try {
-        const canvas = await html2canvas(printableElement, {
-            scale: 2, // Higher scale for better quality
-            useCORS: true,
-            logging: false,
-        });
-
+        const canvas = await html2canvas(printableElement, { scale: 2, useCORS: true, logging: false });
         const imgData = canvas.toDataURL('image/png');
         const pdfWidth = canvas.width;
         const pdfHeight = canvas.height;
-        
-        const pdf = new jsPDF({
-            orientation: pdfWidth > pdfHeight ? 'l' : 'p',
-            unit: 'px',
-            format: [pdfWidth, pdfHeight]
-        });
-
+        const pdf = new jsPDF({ orientation: pdfWidth > pdfHeight ? 'l' : 'p', unit: 'px', format: [pdfWidth, pdfHeight] });
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        const filename = `${formName}_${generateTimestamp()}.pdf`;
-        pdf.save(filename);
+        
+        const pdfBlob = pdf.output('blob');
+        setPdfBlobUrl(URL.createObjectURL(pdfBlob));
     } catch(e) {
         console.error(e);
         toast({ title: "Erreur PDF", description: "La génération du PDF a échoué.", variant: "destructive"});
+    } finally {
+        setIsGeneratingPdf(false);
     }
   };
 
 
-  const exportToExcel = () => {
+  const generateAndSetExcel = () => {
+    if (excelBlobUrl) URL.revokeObjectURL(excelBlobUrl);
+    setIsGeneratingExcel(true);
+    setExcelBlobUrl(null);
+    
     try {
       const headerRow = tableData.headers || Array(tableData.cols).fill('').map((_, i) => `Colonne ${i+1}`);
       const aoa: (string | null)[][] = [headerRow];
@@ -131,33 +146,20 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
       
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Réponses Formulaire');
-
-      // Generate the Excel file in memory as a buffer
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      
-      // Create a Blob from the buffer
       const dataBlob = new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"});
       
-      // Create a temporary link to trigger the download, which is more mobile-friendly
-      const blobUrl = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      const filename = `${formName}_${generateTimestamp()}.xlsx`;
-      link.setAttribute('download', filename);
-
-      document.body.appendChild(link);
-      link.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-
+      setExcelBlobUrl(URL.createObjectURL(dataBlob));
     } catch (e) {
       console.error(e);
       toast({ title: "Erreur Excel", description: "La génération du fichier Excel a échoué.", variant: "destructive"});
+    } finally {
+      setIsGeneratingExcel(false);
     }
   };
+
+  const pdfFilename = `${formName}_${generateTimestamp()}.pdf`;
+  const excelFilename = `${formName}_${generateTimestamp()}.xlsx`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -195,11 +197,46 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         </ScrollArea>
         <DialogFooter className="mt-4">
           <DialogClose asChild>
-            <Button variant="outline">Annuler</Button>
+            <Button variant="outline">Fermer</Button>
           </DialogClose>
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4">
-            <Button variant="destructive" onClick={exportToPDF}><Download className="mr-2 h-4 w-4" /> Télécharger PDF</Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={exportToExcel}><Download className="mr-2 h-4 w-4" /> Télécharger Excel</Button>
+            {/* PDF Button Logic */}
+            {isGeneratingPdf ? (
+              <Button variant="destructive" disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Génération PDF...
+              </Button>
+            ) : pdfBlobUrl ? (
+              <Button asChild variant="destructive">
+                <a href={pdfBlobUrl} download={pdfFilename}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Télécharger PDF
+                </a>
+              </Button>
+            ) : (
+              <Button variant="destructive" onClick={generateAndSetPdf}>
+                Générer PDF
+              </Button>
+            )}
+            
+            {/* Excel Button Logic */}
+            {isGeneratingExcel ? (
+              <Button className="bg-green-600 hover:bg-green-700" disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Génération Excel...
+              </Button>
+            ) : excelBlobUrl ? (
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <a href={excelBlobUrl} download={excelFilename}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Télécharger Excel
+                </a>
+              </Button>
+            ) : (
+              <Button className="bg-green-600 hover:bg-green-700" onClick={generateAndSetExcel}>
+                Générer Excel
+              </Button>
+            )}
           </div>
         </DialogFooter>
 
