@@ -134,9 +134,9 @@ export default function FormPublicPage() {
                 <main className="w-full max-w-4xl mx-auto space-y-6">
                     <div className="text-center">
                         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md p-2">
-                            <Image src={logoUrl} alt="SafeSteps Logo" width={80} height={80} className="h-full w-full object-contain" />
+                            <Image src={logoUrl} alt="WorkHub Central Logo" width={80} height={80} className="h-full w-full object-contain" />
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
+                        <h1 className="text-3xl font-bold text-slate-900">WorkHub Central</h1>
                     </div>
 
                     <Card>

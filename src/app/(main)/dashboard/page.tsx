@@ -80,7 +80,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600">Vue d'ensemble de l'activité de SafeSteps.</p>
+            <p className="text-slate-600">Vue d'ensemble de l'activité de WorkHub Central.</p>
           </div>
         </div>
 
