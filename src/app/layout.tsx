@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: 'SafeSteps',
   description: 'Gestion des postes, standards et formulaires pour la sécurité',
   icons: {
-    icon: 'https://i.postimg.cc/nzSLBHck/Logo.png',
+    icon: '/logo.png',
   },
 };
 
