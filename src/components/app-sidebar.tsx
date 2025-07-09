@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Cog, FileText, File } from "lucide-react";
 import Image from "next/image";
-import logo from '@/assets/Logo.jpg';
 import {
   SidebarHeader,
   SidebarContent,
@@ -24,6 +23,8 @@ const menuItems = [
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
 
+const logoUrl = 'https://i.postimg.cc/nzSLBHck/Logo.png';
+
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
@@ -33,7 +34,7 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2.5">
            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1">
-            <Image src={logo} alt="SafeSteps Logo" className="h-full w-full object-contain" />
+            <Image src={logoUrl} alt="SafeSteps Logo" width={32} height={32} className="h-full w-full object-contain" />
           </div>
           {state === 'expanded' && (
             <div className="flex flex-col">
