@@ -148,7 +148,11 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
   const handleGenerateZip = async () => {
     setIsGenerating(true);
-    setZipBlobUrl(null); // Revoke old URL if it exists
+    // Revoke any existing blob URL to prevent memory leaks
+    if (zipBlobUrl) {
+      URL.revokeObjectURL(zipBlobUrl);
+    }
+    setZipBlobUrl(null);
     toast({ title: "Préparation des fichiers...", description: "Veuillez patienter pendant la génération du PDF et de l'Excel." });
 
     const pdfBlob = await generatePdfBlob();
