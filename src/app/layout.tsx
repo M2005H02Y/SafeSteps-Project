@@ -10,7 +10,7 @@ const fontSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'WorkHub Central - App',
+  title: 'WorkHub Central',
   description: 'Gestion des postes, standards et formulaires pour la sécurité',
   icons: {
     icon: 'https://i.postimg.cc/nzSLBHck/Logo.png',
