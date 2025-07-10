@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import ImprovedFillableTable from '@/components/improved-fillable-table';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const logoUrl = 'https://i.postimg.cc/nzSLBHck/Logo.png';
+const logoUrl = '/ocplogo.png';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {

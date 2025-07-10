@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-const logoUrl = 'https://i.postimg.cc/nzSLBHck/Logo.png';
+const logoUrl = '/ocplogo.png';
 
 async function WorkstationPublicPage({ params }: { params: { id: string } }) {
   const workstation = await getWorkstationById(params.id);
