@@ -51,10 +51,10 @@ function StatCardSkeleton() {
 
 function ChartSkeleton() {
     return (
-        <Card className="p-6 col-span-1 lg:col-span-2">
+        <Card className="p-6">
             <CardHeader className="p-0 mb-4">
-                <Skeleton className="h-6 w-1/3 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-6 w-1/2 mb-2" />
+                <Skeleton className="h-4 w-2/3" />
             </CardHeader>
             <CardContent className="p-0">
                 <Skeleton className="h-[250px] w-full" />
@@ -64,29 +64,31 @@ function ChartSkeleton() {
 }
 
 function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
-    if (data.length === 0) {
+    if (data.every(d => d.value === 0)) {
         return (
             <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground p-8">
                 <BarChart3 className="h-12 w-12 mb-4" />
                 <h3 className="text-xl font-semibold">Pas encore de données</h3>
-                <p className="mt-2">Les données de consultation des postes de travail apparaîtront ici une fois collectées.</p>
+                <p className="mt-2">Les données de consultation apparaîtront ici une fois collectées.</p>
             </div>
         )
     }
 
+    const isDailyData = data.length > 7; // Heuristic to check if it's daily data
+
     return (
         <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: isDailyData ? 30 : 5 }}>
                 <XAxis 
                     dataKey="name" 
                     stroke="#888888"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
+                    angle={isDailyData ? -45 : 0}
+                    textAnchor={isDailyData ? "end" : "middle"}
+                    height={isDailyData ? 50 : 20}
+                    interval={'preserveStartEnd'}
                 />
                 <YAxis 
                     stroke="#888888"
@@ -219,20 +221,44 @@ export default function DashboardPage() {
                 )}
             </div>
         </div>
-
+        
         <div className="grid lg:grid-cols-3 gap-8 items-start">
             {loading ? <ChartSkeleton/> : (
-                <Card className="glass-effect p-6 col-span-1 lg:col-span-2">
+                <Card className="glass-effect p-6">
                     <CardHeader className="p-0 mb-4">
                         <CardTitle>Consultations par Engine</CardTitle>
-                        <CardDescription>Nombre de scans par type de poste de travail (30 derniers jours).</CardDescription>
+                        <CardDescription>Nombre de scans par type de poste (30 derniers jours).</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                         {analytics && <AnalyticsChart data={analytics.consultationsByEngine}/>}
                     </CardContent>
                 </Card>
             )}
+             {loading ? <ChartSkeleton/> : (
+                <Card className="glass-effect p-6">
+                    <CardHeader className="p-0 mb-4">
+                        <CardTitle>Consultations des Standards</CardTitle>
+                        <CardDescription>Activité quotidienne (30 derniers jours).</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {analytics && <AnalyticsChart data={analytics.consultationsByDayStandards}/>}
+                    </CardContent>
+                </Card>
+            )}
+            {loading ? <ChartSkeleton/> : (
+                <Card className="glass-effect p-6">
+                    <CardHeader className="p-0 mb-4">
+                        <CardTitle>Consultations des Formulaires</CardTitle>
+                        <CardDescription>Activité quotidienne (30 derniers jours).</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {analytics && <AnalyticsChart data={analytics.consultationsByDayForms}/>}
+                    </CardContent>
+                </Card>
+            )}
+        </div>
 
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
             <Card className="glass-effect p-6 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                   <Cog className="h-6 w-6 text-primary" />
@@ -251,22 +277,22 @@ export default function DashboardPage() {
                   </Link>
               </div>
             </Card>
-        </div>
-        
-        <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Actions Rapides</h3>
-            <div className="grid gap-6 md:grid-cols-3">
-                {quickActions.map(action => (
-                    <Link href={action.href} key={action.title}>
-                        <Card className="glass-effect p-6 text-center hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1">
-                            <div className="flex justify-center text-primary mb-3">
-                                {action.icon}
-                            </div>
-                            <h4 className="font-bold text-lg text-slate-900">{action.title}</h4>
-                            <p className="text-sm text-slate-600">{action.description}</p>
-                        </Card>
-                    </Link>
-                ))}
+
+            <div className="lg:col-span-2">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Actions Rapides</h3>
+                <div className="grid gap-6 md:grid-cols-3">
+                    {quickActions.map(action => (
+                        <Link href={action.href} key={action.title}>
+                            <Card className="glass-effect p-6 text-center hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1">
+                                <div className="flex justify-center text-primary mb-3">
+                                    {action.icon}
+                                </div>
+                                <h4 className="font-bold text-lg text-slate-900">{action.title}</h4>
+                                <p className="text-sm text-slate-600">{action.description}</p>
+                            </Card>
+                        </Link>
+                    ))}
+                </div>
             </div>
         </div>
 

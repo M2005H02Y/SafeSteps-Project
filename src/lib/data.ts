@@ -1,6 +1,8 @@
 
 import { supabase } from './supabaseClient';
-import { subDays } from 'date-fns';
+import { subDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
 
 export type FileAttachment = {
   name: string;
@@ -75,6 +77,8 @@ export interface AnalyticsSummary {
   formsConsultationsLast7Days: number;
   formsFilledLast7Days: number;
   consultationsByEngine: { name: string; value: number }[];
+  consultationsByDayStandards: { name: string; value: number }[];
+  consultationsByDayForms: { name: string; value: number }[];
 }
 
 
@@ -84,6 +88,32 @@ export const getFileType = (file: File): FileAttachment['type'] => {
     if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) return 'excel';
     return 'other';
 }
+
+// Helper to create a daily summary from raw events
+const summarizeDailyEvents = (events: { created_at: string }[], days: number): { name: string; value: number }[] => {
+    const endDate = new Date();
+    const startDate = subDays(endDate, days - 1);
+    const interval = eachDayOfInterval({ start: startDate, end: endDate });
+
+    const dailyCounts: Record<string, number> = interval.reduce((acc, date) => {
+        const formattedDate = format(date, 'dd/MM');
+        acc[formattedDate] = 0;
+        return acc;
+    }, {} as Record<string, number>);
+
+    if (events) {
+        for (const event of events) {
+            const date = startOfDay(new Date(event.created_at));
+            const formattedDate = format(date, 'dd/MM');
+            if (formattedDate in dailyCounts) {
+                dailyCounts[formattedDate]++;
+            }
+        }
+    }
+    
+    return Object.entries(dailyCounts).map(([name, value]) => ({ name, value }));
+}
+
 
 // --- Analytics Functions ---
 export async function logAnalyticsEvent(event: AnalyticsEvent): Promise<boolean> {
@@ -101,10 +131,12 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
 
     const [
         scans,
-        standardsConsultations,
-        formsConsultations,
+        standardsConsultations7Days,
+        formsConsultations7Days,
         formsFilled,
-        engineConsultations
+        engineConsultations30Days,
+        standardsConsultations30Days,
+        formsConsultations30Days,
     ] = await Promise.all([
         // Total scans (any consultation) in last 7 days
         supabase
@@ -142,13 +174,28 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
             .select('target_details')
             .eq('event_type', 'consultation')
             .eq('target_type', 'workstation')
-            .gte('created_at', thirtyDaysAgo)
+            .gte('created_at', thirtyDaysAgo),
+
+        // Daily standards consultations in last 30 days
+        supabase
+            .from('analytics_events')
+            .select('created_at')
+            .eq('event_type', 'consultation')
+            .eq('target_type', 'standard')
+            .gte('created_at', thirtyDaysAgo),
+        
+        // Daily forms consultations in last 30 days
+        supabase
+            .from('analytics_events')
+            .select('created_at')
+            .eq('event_type', 'consultation')
+            .eq('target_type', 'form')
+            .gte('created_at', thirtyDaysAgo),
     ]);
     
-    if (scans.error || standardsConsultations.error || formsConsultations.error || formsFilled.error || engineConsultations.error) {
-        console.error("Error fetching analytics summary:", 
-            scans.error || standardsConsultations.error || formsConsultations.error || formsFilled.error || engineConsultations.error
-        );
+    const errors = [scans.error, standardsConsultations7Days.error, formsConsultations7Days.error, formsFilled.error, engineConsultations30Days.error, standardsConsultations30Days.error, formsConsultations30Days.error].filter(Boolean);
+    if (errors.length > 0) {
+        console.error("Error fetching analytics summary:", errors);
         // Return a default empty state on error
         return {
             scansLast7Days: 0,
@@ -156,12 +203,14 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
             formsConsultationsLast7Days: 0,
             formsFilledLast7Days: 0,
             consultationsByEngine: [],
+            consultationsByDayStandards: [],
+            consultationsByDayForms: [],
         };
     }
 
     const engineCounts: Record<string, number> = {};
-    if (engineConsultations.data) {
-        for (const event of engineConsultations.data) {
+    if (engineConsultations30Days.data) {
+        for (const event of engineConsultations30Days.data) {
             const details = event.target_details as { type?: string };
             if (details && details.type) {
                 engineCounts[details.type] = (engineCounts[details.type] || 0) + 1;
@@ -175,10 +224,12 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
 
     return {
         scansLast7Days: scans.count || 0,
-        standardsConsultationsLast7Days: standardsConsultations.count || 0,
-        formsConsultationsLast7Days: formsConsultations.count || 0,
+        standardsConsultationsLast7Days: standardsConsultations7Days.count || 0,
+        formsConsultationsLast7Days: formsConsultations7Days.count || 0,
         formsFilledLast7Days: formsFilled.count || 0,
         consultationsByEngine,
+        consultationsByDayStandards: summarizeDailyEvents(standardsConsultations30Days.data || [], 30),
+        consultationsByDayForms: summarizeDailyEvents(formsConsultations30Days.data || [], 30),
     };
 }
 
