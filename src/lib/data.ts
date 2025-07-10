@@ -72,10 +72,10 @@ export type AnalyticsEvent = {
 };
 
 export interface AnalyticsSummary {
-  scansLast7Days: number;
-  standardsConsultationsLast7Days: number;
-  formsConsultationsLast7Days: number;
-  formsFilledLast7Days: number;
+  scansLastPeriod: number;
+  standardsConsultationsLastPeriod: number;
+  formsConsultationsLastPeriod: number;
+  formsFilledLastPeriod: number;
   consultationsByEngine: { name: string; value: number }[];
   consultationsByStandard: { name: string; value: number }[];
   consultationsByForm: { name: string; value: number }[];
@@ -96,7 +96,7 @@ export const getFileType = (file: File): FileAttachment['type'] => {
 const summarizeDailyEvents = (events: { created_at: string }[], days: number): { name: string; value: number }[] => {
     const endDate = new Date();
     const startDate = subDays(endDate, days - 1);
-    const interval = eachDayOfInterval({ start: startDate, end: endDate });
+    const interval = eachDayOfInterval({ start: startOfDay(startDate), end: startOfDay(endDate) });
 
     const dailyCounts: Record<string, number> = interval.reduce((acc, date) => {
         const formattedDate = format(date, 'dd/MM');
@@ -128,13 +128,13 @@ export async function logAnalyticsEvent(event: AnalyticsEvent): Promise<boolean>
     return true;
 }
 
-export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
-    const sevenDaysAgo = subDays(new Date(), 7).toISOString();
+export async function getAnalyticsSummary(days: number = 7): Promise<AnalyticsSummary> {
+    const sinceDate = subDays(new Date(), days).toISOString();
 
     const [
         scans,
-        standardsConsultations7Days,
-        formsConsultations7Days,
+        standardsConsultations,
+        formsConsultations,
         formsFilled,
         workstationEvents,
         standardEvents,
@@ -142,34 +142,23 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         allStandards,
         allForms
     ] = await Promise.all([
-        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').gte('created_at', sevenDaysAgo),
-        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sevenDaysAgo),
-        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sevenDaysAgo),
-        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'form_filled').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').gte('created_at', sinceDate),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sinceDate),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sinceDate),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'form_filled').gte('created_at', sinceDate),
 
-        supabase.from('analytics_events').select('created_at, target_id, target_details').eq('event_type', 'consultation').eq('target_type', 'workstation').gte('created_at', sevenDaysAgo),
-        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sevenDaysAgo),
-        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id, target_details').eq('event_type', 'consultation').eq('target_type', 'workstation').gte('created_at', sinceDate),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sinceDate),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sinceDate),
         
         supabase.from('standards').select('id, name'),
         supabase.from('forms').select('id, name')
     ]);
     
-    const errors = [scans.error, standardsConsultations7Days.error, formsConsultations7Days.error, formsFilled.error, workstationEvents.error, standardEvents.error, formEvents.error, allStandards.error, allForms.error].filter(Boolean);
+    const errors = [scans.error, standardsConsultations.error, formsConsultations.error, formsFilled.error, workstationEvents.error, standardEvents.error, formEvents.error, allStandards.error, allForms.error].filter(Boolean);
     if (errors.length > 0) {
         console.error("Error fetching analytics summary:", errors);
-        return {
-            scansLast7Days: 0,
-            standardsConsultationsLast7Days: 0,
-            formsConsultationsLast7Days: 0,
-            formsFilledLast7Days: 0,
-            consultationsByEngine: [],
-            consultationsByStandard: [],
-            consultationsByForm: [],
-            consultationsByDayWorkstations: [],
-            consultationsByDayStandards: [],
-            consultationsByDayForms: [],
-        };
+        throw new Error("Failed to fetch analytics summary");
     }
 
     // Process consultations by engine type
@@ -207,16 +196,16 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     const consultationsByForm = Object.entries(formCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 10); // Top 10
 
     return {
-        scansLast7Days: scans.count || 0,
-        standardsConsultationsLast7Days: standardsConsultations7Days.count || 0,
-        formsConsultationsLast7Days: formsConsultations7Days.count || 0,
-        formsFilledLast7Days: formsFilled.count || 0,
+        scansLastPeriod: scans.count || 0,
+        standardsConsultationsLastPeriod: standardsConsultations.count || 0,
+        formsConsultationsLastPeriod: formsConsultations.count || 0,
+        formsFilledLastPeriod: formsFilled.count || 0,
         consultationsByEngine,
         consultationsByStandard,
         consultationsByForm,
-        consultationsByDayWorkstations: summarizeDailyEvents(workstationEvents.data || [], 7),
-        consultationsByDayStandards: summarizeDailyEvents(standardEvents.data || [], 7),
-        consultationsByDayForms: summarizeDailyEvents(formEvents.data || [], 7),
+        consultationsByDayWorkstations: summarizeDailyEvents(workstationEvents.data || [], days),
+        consultationsByDayStandards: summarizeDailyEvents(standardEvents.data || [], days),
+        consultationsByDayForms: summarizeDailyEvents(formEvents.data || [], days),
     };
 }
 
