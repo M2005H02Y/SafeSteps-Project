@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 import { 
@@ -15,11 +16,15 @@ import {
   FileCheck2,
   BarChart3,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Download,
+  Loader2
 } from 'lucide-react';
 import { getWorkstationsCount, getStandardsCount, getFormsCount, getAnalyticsSummary, AnalyticsSummary } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 
 const engines = [
@@ -126,6 +131,61 @@ export default function DashboardPage() {
   ]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = () => {
+    if (!analytics) {
+        toast({ title: "Erreur", description: "Les données d'analyse ne sont pas encore chargées.", variant: "destructive" });
+        return;
+    }
+    
+    setIsExporting(true);
+    toast({ title: "Génération du rapport...", description: "Veuillez patienter." });
+
+    try {
+        const wb = XLSX.utils.book_new();
+
+        // 1. Feuille de résumé
+        const summaryData = [
+            { Métrique: "QR Codes Scannés (7j)", Valeur: analytics.scansLast7Days },
+            { Métrique: "Consultations Standards (7j)", Valeur: analytics.standardsConsultationsLast7Days },
+            { Métrique: "Consultations Formulaires (7j)", Valeur: analytics.formsConsultationsLast7Days },
+            { Métrique: "Formulaires Remplis (7j)", Valeur: analytics.formsFilledLast7Days },
+        ];
+        const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Résumé");
+
+        // 2. Feuille de consultations par élément
+        const elementData = [
+            ...analytics.consultationsByEngine.map(d => ({ Type: "Engine", Élément: d.name, Vues: d.value })),
+            ...analytics.consultationsByStandard.map(d => ({ Type: "Standard", Élément: d.name, Vues: d.value })),
+            ...analytics.consultationsByForm.map(d => ({ Type: "Formulaire", Élément: d.name, Vues: d.value })),
+        ];
+        const wsElement = XLSX.utils.json_to_sheet(elementData);
+        XLSX.utils.book_append_sheet(wb, wsElement, "Consultations par Élément");
+
+        // 3. Feuille d'activité quotidienne
+        const dailyData = [
+            ...analytics.consultationsByDayWorkstations.map(d => ({ Type: "Postes de travail", Jour: d.name, Vues: d.value })),
+            ...analytics.consultationsByDayStandards.map(d => ({ Type: "Standards", Jour: d.name, Vues: d.value })),
+            ...analytics.consultationsByDayForms.map(d => ({ Type: "Formulaires", Jour: d.name, Vues: d.value })),
+        ];
+        const wsDaily = XLSX.utils.json_to_sheet(dailyData);
+        XLSX.utils.book_append_sheet(wb, wsDaily, "Activité Quotidienne");
+        
+        // Téléchargement
+        XLSX.writeFile(wb, `Rapport_Dashboard_SafeSteps_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        toast({ title: "Rapport généré !", description: "Le téléchargement a commencé.", });
+
+    } catch (error) {
+        console.error("Failed to export data", error);
+        toast({ title: "Erreur d'exportation", description: "La génération du fichier a échoué.", variant: "destructive" });
+    } finally {
+        setIsExporting(false);
+    }
+  };
+
 
   useEffect(() => {
     async function fetchAllStats() {
@@ -187,6 +247,10 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-slate-600">Vue d'ensemble de l'activité de SafeSteps.</p>
           </div>
+          <Button onClick={handleExport} disabled={loading || isExporting}>
+            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            {isExporting ? "Génération..." : "Exporter en Excel"}
+          </Button>
         </div>
 
         {/* --- STATS & ACTIONS --- */}
