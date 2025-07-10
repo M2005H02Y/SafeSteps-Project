@@ -81,7 +81,7 @@ function AnalyticsChart({ data, type = 'daily' }: { data: { name: string; value:
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <BarChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                     dataKey="name" 
@@ -167,15 +167,15 @@ export default function DashboardPage() {
   ] : [];
 
   const chartRow1 = [
-    { title: "Consultations par Engine", description: "Nombre de scans par type de poste (30j).", data: analytics?.consultationsByEngine, type: 'item' },
-    { title: "Top Standards Consultés", description: "Les standards les plus vus (30j).", data: analytics?.consultationsByStandard, type: 'item' },
-    { title: "Top Formulaires Consultés", description: "Les formulaires les plus vus (30j).", data: analytics?.consultationsByForm, type: 'item' }
+    { title: "Consultations par Engine", description: "Nombre de scans par type de poste (7j).", data: analytics?.consultationsByEngine, type: 'item' },
+    { title: "Top Standards Consultés", description: "Les standards les plus vus (7j).", data: analytics?.consultationsByStandard, type: 'item' },
+    { title: "Top Formulaires Consultés", description: "Les formulaires les plus vus (7j).", data: analytics?.consultationsByForm, type: 'item' }
   ];
 
   const chartRow2 = [
-    { title: "Scans Quotidiens des Postes", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayWorkstations, type: 'daily' },
-    { title: "Consultations Quot. des Standards", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayStandards, type: 'daily' },
-    { title: "Consultations Quot. des Formulaires", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayForms, type: 'daily' }
+    { title: "Scans Quotidiens des Postes", description: "Activité quotidienne (7j).", data: analytics?.consultationsByDayWorkstations, type: 'daily' },
+    { title: "Consultations Quot. des Standards", description: "Activité quotidienne (7j).", data: analytics?.consultationsByDayStandards, type: 'daily' },
+    { title: "Consultations Quot. des Formulaires", description: "Activité quotidienne (7j).", data: analytics?.consultationsByDayForms, type: 'daily' }
   ];
 
 
@@ -237,10 +237,10 @@ export default function DashboardPage() {
             </div>
         </div>
         
-        {/* --- CHARTS (30 DAYS) --- */}
+        {/* --- CHARTS (7 DAYS) --- */}
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément (30 derniers jours)</h2>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément (7 derniers jours)</h2>
                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                     {loading ? (
                         Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                 </div>
             </div>
             <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne (30 derniers jours)</h2>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne (7 derniers jours)</h2>
                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                     {loading ? (
                         Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)

@@ -130,7 +130,6 @@ export async function logAnalyticsEvent(event: AnalyticsEvent): Promise<boolean>
 
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     const sevenDaysAgo = subDays(new Date(), 7).toISOString();
-    const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
 
     const [
         scans,
@@ -148,9 +147,9 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sevenDaysAgo),
         supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'form_filled').gte('created_at', sevenDaysAgo),
 
-        supabase.from('analytics_events').select('created_at, target_id, target_details').eq('event_type', 'consultation').eq('target_type', 'workstation').gte('created_at', thirtyDaysAgo),
-        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', thirtyDaysAgo),
-        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', thirtyDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id, target_details').eq('event_type', 'consultation').eq('target_type', 'workstation').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sevenDaysAgo),
         
         supabase.from('standards').select('id, name'),
         supabase.from('forms').select('id, name')
@@ -215,9 +214,9 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         consultationsByEngine,
         consultationsByStandard,
         consultationsByForm,
-        consultationsByDayWorkstations: summarizeDailyEvents(workstationEvents.data || [], 30),
-        consultationsByDayStandards: summarizeDailyEvents(standardEvents.data || [], 30),
-        consultationsByDayForms: summarizeDailyEvents(formEvents.data || [], 30),
+        consultationsByDayWorkstations: summarizeDailyEvents(workstationEvents.data || [], 7),
+        consultationsByDayStandards: summarizeDailyEvents(standardEvents.data || [], 7),
+        consultationsByDayForms: summarizeDailyEvents(formEvents.data || [], 7),
     };
 }
 
