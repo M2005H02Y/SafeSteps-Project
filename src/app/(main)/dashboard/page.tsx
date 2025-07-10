@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { getWorkstationsCount, getStandardsCount, getFormsCount, getAnalyticsSummary, AnalyticsSummary } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
 
 const engines = [
@@ -51,22 +51,22 @@ function StatCardSkeleton() {
 
 function ChartSkeleton() {
     return (
-        <Card className="p-6">
+        <Card className="p-6 h-[400px] flex flex-col">
             <CardHeader className="p-0 mb-4">
                 <Skeleton className="h-6 w-1/2 mb-2" />
                 <Skeleton className="h-4 w-2/3" />
             </CardHeader>
-            <CardContent className="p-0">
-                <Skeleton className="h-[250px] w-full" />
+            <CardContent className="p-0 flex-1">
+                <Skeleton className="h-full w-full" />
             </CardContent>
         </Card>
     )
 }
 
-function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
+function AnalyticsChart({ data, type = 'daily' }: { data: { name: string; value: number }[], type?: 'daily' | 'item' }) {
     if (data.every(d => d.value === 0)) {
         return (
-            <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground p-8">
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
                 <BarChart3 className="h-12 w-12 mb-4" />
                 <h3 className="text-xl font-semibold">Pas encore de données</h3>
                 <p className="mt-2">Les données de consultation apparaîtront ici une fois collectées.</p>
@@ -74,21 +74,25 @@ function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
         )
     }
 
-    const isDailyData = data.length > 7; // Heuristic to check if it's daily data
+    const isDailyData = type === 'daily';
+    const angle = isDailyData ? -45 : (data.length > 5 ? -45 : 0);
+    const textAnchor = angle < 0 ? 'end' : 'middle';
+    const height = angle < 0 ? 70 : 30;
 
     return (
-        <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: isDailyData ? 30 : 5 }}>
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                     dataKey="name" 
                     stroke="#888888"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    angle={isDailyData ? -45 : 0}
-                    textAnchor={isDailyData ? "end" : "middle"}
-                    height={isDailyData ? 50 : 20}
-                    interval={'preserveStartEnd'}
+                    angle={angle}
+                    textAnchor={textAnchor}
+                    height={height}
+                    interval={0}
                 />
                 <YAxis 
                     stroke="#888888"
@@ -97,6 +101,7 @@ function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
                     axisLine={false}
                     tickFormatter={(value) => `${value}`}
                     allowDecimals={false}
+                    width={20}
                 />
                 <Tooltip 
                     cursor={{fill: 'hsl(var(--accent))', radius: '0.5rem'}}
@@ -161,6 +166,19 @@ export default function DashboardPage() {
       { title: "Formulaires Remplis", value: analytics.formsFilledLast7Days, icon: <FileCheck2 className="h-8 w-8 text-emerald-500"/>, description: "7 derniers jours" }
   ] : [];
 
+  const chartRow1 = [
+    { title: "Consultations par Engine", description: "Nombre de scans par type de poste (30j).", data: analytics?.consultationsByEngine, type: 'item' },
+    { title: "Top Standards Consultés", description: "Les standards les plus vus (30j).", data: analytics?.consultationsByStandard, type: 'item' },
+    { title: "Top Formulaires Consultés", description: "Les formulaires les plus vus (30j).", data: analytics?.consultationsByForm, type: 'item' }
+  ];
+
+  const chartRow2 = [
+    { title: "Scans Quotidiens des Postes", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayWorkstations, type: 'daily' },
+    { title: "Consultations Quot. des Standards", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayStandards, type: 'daily' },
+    { title: "Consultations Quot. des Formulaires", description: "Activité quotidienne (30j).", data: analytics?.consultationsByDayForms, type: 'daily' }
+  ];
+
+
   return (
     <div className="flex flex-col h-full">
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
@@ -171,6 +189,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* --- STATS & ACTIONS --- */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <>
@@ -195,16 +214,12 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* --- ANALYTICS CARDS (7 DAYS) --- */}
         <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Analyse d'Activité</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Analyse d'Activité (7 derniers jours)</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {loading ? (
-                    <>
-                        <StatCardSkeleton />
-                        <StatCardSkeleton />
-                        <StatCardSkeleton />
-                        <StatCardSkeleton />
-                    </>
+                    Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
                 ) : (
                     analyticsCards.map((stat) => (
                         <Card key={stat.title} className="glass-effect p-6 flex flex-col justify-between h-full">
@@ -222,42 +237,51 @@ export default function DashboardPage() {
             </div>
         </div>
         
-        <div className="grid lg:grid-cols-3 gap-8 items-start">
-            {loading ? <ChartSkeleton/> : (
-                <Card className="glass-effect p-6">
-                    <CardHeader className="p-0 mb-4">
-                        <CardTitle>Consultations par Engine</CardTitle>
-                        <CardDescription>Nombre de scans par type de poste (30 derniers jours).</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {analytics && <AnalyticsChart data={analytics.consultationsByEngine}/>}
-                    </CardContent>
-                </Card>
-            )}
-             {loading ? <ChartSkeleton/> : (
-                <Card className="glass-effect p-6">
-                    <CardHeader className="p-0 mb-4">
-                        <CardTitle>Consultations des Standards</CardTitle>
-                        <CardDescription>Activité quotidienne (30 derniers jours).</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {analytics && <AnalyticsChart data={analytics.consultationsByDayStandards}/>}
-                    </CardContent>
-                </Card>
-            )}
-            {loading ? <ChartSkeleton/> : (
-                <Card className="glass-effect p-6">
-                    <CardHeader className="p-0 mb-4">
-                        <CardTitle>Consultations des Formulaires</CardTitle>
-                        <CardDescription>Activité quotidienne (30 derniers jours).</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {analytics && <AnalyticsChart data={analytics.consultationsByDayForms}/>}
-                    </CardContent>
-                </Card>
-            )}
+        {/* --- CHARTS (30 DAYS) --- */}
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément (30 derniers jours)</h2>
+                <div className="grid lg:grid-cols-3 gap-8 items-start">
+                    {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
+                    ) : (
+                        chartRow1.map((chart) => (
+                            <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
+                                <CardHeader className="p-0 mb-4">
+                                    <CardTitle>{chart.title}</CardTitle>
+                                    <CardDescription>{chart.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1">
+                                    {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
+            </div>
+            <div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne (30 derniers jours)</h2>
+                <div className="grid lg:grid-cols-3 gap-8 items-start">
+                    {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
+                    ) : (
+                        chartRow2.map((chart) => (
+                            <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
+                                <CardHeader className="p-0 mb-4">
+                                    <CardTitle>{chart.title}</CardTitle>
+                                    <CardDescription>{chart.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1">
+                                    {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
-
+        
+        {/* --- CONFIG & QUICK ACTIONS --- */}
         <div className="grid lg:grid-cols-3 gap-8 items-start">
             <Card className="glass-effect p-6 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">

@@ -77,6 +77,9 @@ export interface AnalyticsSummary {
   formsConsultationsLast7Days: number;
   formsFilledLast7Days: number;
   consultationsByEngine: { name: string; value: number }[];
+  consultationsByStandard: { name: string; value: number }[];
+  consultationsByForm: { name: string; value: number }[];
+  consultationsByDayWorkstations: { name: string; value: number }[];
   consultationsByDayStandards: { name: string; value: number }[];
   consultationsByDayForms: { name: string; value: number }[];
 }
@@ -134,93 +137,75 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         standardsConsultations7Days,
         formsConsultations7Days,
         formsFilled,
-        engineConsultations30Days,
-        standardsConsultations30Days,
-        formsConsultations30Days,
+        workstationEvents,
+        standardEvents,
+        formEvents,
+        allStandards,
+        allForms
     ] = await Promise.all([
-        // Total scans (any consultation) in last 7 days
-        supabase
-            .from('analytics_events')
-            .select('id', { count: 'exact' })
-            .eq('event_type', 'consultation')
-            .gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', sevenDaysAgo),
+        supabase.from('analytics_events').select('id', { count: 'exact' }).eq('event_type', 'form_filled').gte('created_at', sevenDaysAgo),
+
+        supabase.from('analytics_events').select('created_at, target_id, target_details').eq('event_type', 'consultation').eq('target_type', 'workstation').gte('created_at', thirtyDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'standard').gte('created_at', thirtyDaysAgo),
+        supabase.from('analytics_events').select('created_at, target_id').eq('event_type', 'consultation').eq('target_type', 'form').gte('created_at', thirtyDaysAgo),
         
-        // Standards consultations in last 7 days
-        supabase
-            .from('analytics_events')
-            .select('id', { count: 'exact' })
-            .eq('event_type', 'consultation')
-            .eq('target_type', 'standard')
-            .gte('created_at', sevenDaysAgo),
-
-        // Forms consultations in last 7 days
-        supabase
-            .from('analytics_events')
-            .select('id', { count: 'exact' })
-            .eq('event_type', 'consultation')
-            .eq('target_type', 'form')
-            .gte('created_at', sevenDaysAgo),
-
-        // Forms filled in last 7 days
-        supabase
-            .from('analytics_events')
-            .select('id', { count: 'exact' })
-            .eq('event_type', 'form_filled')
-            .gte('created_at', sevenDaysAgo),
-
-        // Consultations by engine type in last 30 days
-        supabase
-            .from('analytics_events')
-            .select('target_details')
-            .eq('event_type', 'consultation')
-            .eq('target_type', 'workstation')
-            .gte('created_at', thirtyDaysAgo),
-
-        // Daily standards consultations in last 30 days
-        supabase
-            .from('analytics_events')
-            .select('created_at')
-            .eq('event_type', 'consultation')
-            .eq('target_type', 'standard')
-            .gte('created_at', thirtyDaysAgo),
-        
-        // Daily forms consultations in last 30 days
-        supabase
-            .from('analytics_events')
-            .select('created_at')
-            .eq('event_type', 'consultation')
-            .eq('target_type', 'form')
-            .gte('created_at', thirtyDaysAgo),
+        supabase.from('standards').select('id, name'),
+        supabase.from('forms').select('id, name')
     ]);
     
-    const errors = [scans.error, standardsConsultations7Days.error, formsConsultations7Days.error, formsFilled.error, engineConsultations30Days.error, standardsConsultations30Days.error, formsConsultations30Days.error].filter(Boolean);
+    const errors = [scans.error, standardsConsultations7Days.error, formsConsultations7Days.error, formsFilled.error, workstationEvents.error, standardEvents.error, formEvents.error, allStandards.error, allForms.error].filter(Boolean);
     if (errors.length > 0) {
         console.error("Error fetching analytics summary:", errors);
-        // Return a default empty state on error
         return {
             scansLast7Days: 0,
             standardsConsultationsLast7Days: 0,
             formsConsultationsLast7Days: 0,
             formsFilledLast7Days: 0,
             consultationsByEngine: [],
+            consultationsByStandard: [],
+            consultationsByForm: [],
+            consultationsByDayWorkstations: [],
             consultationsByDayStandards: [],
             consultationsByDayForms: [],
         };
     }
 
+    // Process consultations by engine type
     const engineCounts: Record<string, number> = {};
-    if (engineConsultations30Days.data) {
-        for (const event of engineConsultations30Days.data) {
+    if (workstationEvents.data) {
+        for (const event of workstationEvents.data) {
             const details = event.target_details as { type?: string };
             if (details && details.type) {
                 engineCounts[details.type] = (engineCounts[details.type] || 0) + 1;
             }
         }
     }
-    
-    const consultationsByEngine = Object.entries(engineCounts)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value);
+    const consultationsByEngine = Object.entries(engineCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+    // Process consultations by standard
+    const standardNameMap = new Map(allStandards.data?.map(s => [s.id, s.name]));
+    const standardCounts: Record<string, number> = {};
+    if (standardEvents.data) {
+        for (const event of standardEvents.data) {
+            const name = standardNameMap.get(event.target_id) || `ID: ${event.target_id.substring(0,6)}`;
+            standardCounts[name] = (standardCounts[name] || 0) + 1;
+        }
+    }
+    const consultationsByStandard = Object.entries(standardCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 10); // Top 10
+
+    // Process consultations by form
+    const formNameMap = new Map(allForms.data?.map(f => [f.id, f.name]));
+    const formCounts: Record<string, number> = {};
+    if (formEvents.data) {
+        for (const event of formEvents.data) {
+            const name = formNameMap.get(event.target_id) || `ID: ${event.target_id.substring(0,6)}`;
+            formCounts[name] = (formCounts[name] || 0) + 1;
+        }
+    }
+    const consultationsByForm = Object.entries(formCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 10); // Top 10
 
     return {
         scansLast7Days: scans.count || 0,
@@ -228,8 +213,11 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         formsConsultationsLast7Days: formsConsultations7Days.count || 0,
         formsFilledLast7Days: formsFilled.count || 0,
         consultationsByEngine,
-        consultationsByDayStandards: summarizeDailyEvents(standardsConsultations30Days.data || [], 30),
-        consultationsByDayForms: summarizeDailyEvents(formsConsultations30Days.data || [], 30),
+        consultationsByStandard,
+        consultationsByForm,
+        consultationsByDayWorkstations: summarizeDailyEvents(workstationEvents.data || [], 30),
+        consultationsByDayStandards: summarizeDailyEvents(standardEvents.data || [], 30),
+        consultationsByDayForms: summarizeDailyEvents(formEvents.data || [], 30),
     };
 }
 
