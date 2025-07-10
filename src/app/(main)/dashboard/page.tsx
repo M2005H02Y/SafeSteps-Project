@@ -24,7 +24,7 @@ import { getWorkstationsCount, getStandardsCount, getFormsCount, getAnalyticsSum
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 
 const engines = [
@@ -132,6 +132,7 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
   const handleExport = () => {
     if (!analytics) {
