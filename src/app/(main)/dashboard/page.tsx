@@ -18,7 +18,8 @@ import {
   BookOpen,
   ClipboardList,
   Download,
-  Loader2
+  Loader2,
+  FileDown
 } from 'lucide-react';
 import { getWorkstationsCount, getStandardsCount, getFormsCount, getAnalyticsSummary, AnalyticsSummary } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,6 +27,8 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGri
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 
 const engines = [
@@ -132,20 +135,21 @@ export default function DashboardPage() {
   ]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [timeRange, setTimeRange] = useState<number>(7);
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
   const { toast } = useToast();
 
-  const handleExport = () => {
+  const handleExportExcel = () => {
     if (!analytics) {
         toast({ title: "Erreur", description: "Les données d'analyse ne sont pas encore chargées.", variant: "destructive" });
         return;
     }
     
-    setIsExporting(true);
-    toast({ title: "Génération du rapport...", description: "Veuillez patienter." });
+    setIsExportingExcel(true);
+    toast({ title: "Génération du rapport Excel...", description: "Veuillez patienter." });
 
     try {
         const wb = XLSX.utils.book_new();
@@ -181,13 +185,50 @@ export default function DashboardPage() {
         // Téléchargement
         XLSX.writeFile(wb, `Rapport_Dashboard_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.xlsx`);
 
-        toast({ title: "Rapport généré !", description: "Le téléchargement a commencé.", });
+        toast({ title: "Rapport Excel généré !", description: "Le téléchargement a commencé.", });
 
     } catch (error) {
-        console.error("Failed to export data", error);
-        toast({ title: "Erreur d'exportation", description: "La génération du fichier a échoué.", variant: "destructive" });
+        console.error("Failed to export Excel data", error);
+        toast({ title: "Erreur d'exportation Excel", description: "La génération du fichier a échoué.", variant: "destructive" });
     } finally {
-        setIsExporting(false);
+        setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    const analyticsSection = document.getElementById('analytics-section');
+    if (!analyticsSection) {
+        toast({ title: "Erreur", description: "La section d'analyse est introuvable.", variant: "destructive" });
+        return;
+    }
+    
+    setIsExportingPdf(true);
+    toast({ title: "Génération du PDF...", description: "Veuillez patienter, cela peut prendre un moment." });
+
+    try {
+        const canvas = await html2canvas(analyticsSection, {
+            scale: 2, // Améliore la résolution
+            useCORS: true,
+            backgroundColor: null, // Utilise l'arrière-plan de l'élément
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`Rapport_Analytics_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.pdf`);
+        
+        toast({ title: "Rapport PDF généré !", description: "Le téléchargement a commencé." });
+
+    } catch (error) {
+        console.error("Failed to export PDF data", error);
+        toast({ title: "Erreur d'exportation PDF", description: "La génération du fichier a échoué.", variant: "destructive" });
+    } finally {
+        setIsExportingPdf(false);
     }
   };
 
@@ -265,10 +306,16 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-slate-600">Vue d'ensemble de l'activité de WorkHub Central.</p>
           </div>
-          <Button onClick={handleExport} disabled={loadingAnalytics || isExporting}>
-            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            {isExporting ? "Génération..." : `Exporter les données (${timeRange}j)`}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleExportExcel} disabled={loadingAnalytics || isExportingExcel || isExportingPdf} variant="outline">
+              {isExportingExcel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+              {isExportingExcel ? "Génération..." : "Exporter en Excel"}
+            </Button>
+            <Button onClick={handleExportPdf} disabled={loadingAnalytics || isExportingExcel || isExportingPdf} variant="outline">
+              {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+              {isExportingPdf ? "Génération..." : "Exporter en PDF"}
+            </Button>
+          </div>
         </div>
 
         {/* --- STATS & ACTIONS --- */}
@@ -297,7 +344,7 @@ export default function DashboardPage() {
         </div>
 
         {/* --- ANALYTICS SECTION --- */}
-        <div className="space-y-4">
+        <div id="analytics-section" className="space-y-4 p-4 rounded-lg bg-background/50">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <h2 className="text-2xl font-bold text-slate-900">Analyse d'Activité</h2>
                 <Tabs defaultValue={timeRange.toString()} onValueChange={(value) => setTimeRange(parseInt(value))}>
@@ -327,48 +374,48 @@ export default function DashboardPage() {
                     ))
                 )}
             </div>
-        </div>
-        
-        {/* --- CHARTS (DYNAMIC) --- */}
-        <div className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément ({timeRange} derniers jours)</h2>
-                <div className="grid lg:grid-cols-3 gap-8 items-start">
-                    {loadingAnalytics ? (
-                        Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
-                    ) : (
-                        chartRow1.map((chart) => (
-                            <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
-                                <CardHeader className="p-0 mb-4">
-                                    <CardTitle>{chart.title}</CardTitle>
-                                    <CardDescription>{chart.description}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-0 flex-1">
-                                    {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
-                                </CardContent>
-                            </Card>
-                        ))
-                    )}
+       
+            {/* --- CHARTS (DYNAMIC) --- */}
+            <div className="space-y-8 pt-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément ({timeRange} derniers jours)</h2>
+                    <div className="grid lg:grid-cols-3 gap-8 items-start">
+                        {loadingAnalytics ? (
+                            Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
+                        ) : (
+                            chartRow1.map((chart) => (
+                                <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
+                                    <CardHeader className="p-0 mb-4">
+                                        <CardTitle>{chart.title}</CardTitle>
+                                        <CardDescription>{chart.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-0 flex-1">
+                                        {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne ({timeRange} derniers jours)</h2>
-                <div className="grid lg:grid-cols-3 gap-8 items-start">
-                    {loadingAnalytics ? (
-                        Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
-                    ) : (
-                        chartRow2.map((chart) => (
-                            <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
-                                <CardHeader className="p-0 mb-4">
-                                    <CardTitle>{chart.title}</CardTitle>
-                                    <CardDescription>{chart.description}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-0 flex-1">
-                                    {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
-                                </CardContent>
-                            </Card>
-                        ))
-                    )}
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne ({timeRange} derniers jours)</h2>
+                    <div className="grid lg:grid-cols-3 gap-8 items-start">
+                        {loadingAnalytics ? (
+                            Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
+                        ) : (
+                            chartRow2.map((chart) => (
+                                <Card key={chart.title} className="glass-effect p-6 h-[400px] flex flex-col">
+                                    <CardHeader className="p-0 mb-4">
+                                        <CardTitle>{chart.title}</CardTitle>
+                                        <CardDescription>{chart.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-0 flex-1">
+                                        {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
