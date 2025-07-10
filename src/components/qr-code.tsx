@@ -8,16 +8,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Download, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import OcpLogo from '@/app/ocplogo.png';
 
-const logoUrl = '/ocplogo.png';
+interface QRCodeProps {
+    type: 'workstation' | 'standard' | 'form';
+    id: string;
+}
 
 export default function QRCode({ type, id }: QRCodeProps) {
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [isDevEnv, setIsDevEnv] = useState(false);
-  const [logoForQR, setLogoForQR] = useState<string | null>(null);
-
+  
   useEffect(() => {
-    // This component runs only on the client, so `window` is safe to use.
     if (typeof window !== 'undefined' && id) {
       const { hostname, origin } = window.location;
       
@@ -26,9 +28,6 @@ export default function QRCode({ type, id }: QRCodeProps) {
 
       const url = `${origin}/${type}/${id}`;
       setPublicUrl(url);
-
-      // We need to provide a full URL for the QR code library to fetch the image.
-      setLogoForQR(new URL(logoUrl, origin).href);
     }
   }, [type, id]);
 
@@ -45,12 +44,12 @@ export default function QRCode({ type, id }: QRCodeProps) {
     }
   };
 
-  const imageSettings = logoForQR ? {
-      src: logoForQR,
+  const imageSettings = {
+      src: OcpLogo.src,
       height: 40,
       width: 40,
       excavate: true,
-  } : undefined;
+  };
 
   return (
     <Card>

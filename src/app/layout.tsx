@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import OcpLogo from './ocplogo.png';
 
 const fontSans = Inter({
   subsets: ['latin'],
@@ -12,9 +13,7 @@ const fontSans = Inter({
 export const metadata: Metadata = {
   title: 'SafeSteps',
   description: 'Gestion des postes, standards et formulaires pour la sécurité',
-  icons: {
-    icon: '/ocplogo.png',
-  },
+  icons: [{ rel: 'icon', url: OcpLogo.src }],
 };
 
 export default function RootLayout({
