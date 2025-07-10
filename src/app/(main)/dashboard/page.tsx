@@ -158,24 +158,24 @@ export default function DashboardPage() {
 
         // 2. Feuille de consultations par élément
         const elementData = [
-            ...analytics.consultationsByEngine.map(d => ({ Type: "Engine", Élément: d.name, Vues: d.value })),
-            ...analytics.consultationsByStandard.map(d => ({ Type: "Standard", Élément: d.name, Vues: d.value })),
-            ...analytics.consultationsByForm.map(d => ({ Type: "Formulaire", Élément: d.name, Vues: d.value })),
+            ...(analytics.consultationsByEngine.length > 0 ? analytics.consultationsByEngine.map(d => ({ Type: "Engine", Élément: d.name, Vues: d.value })) : [{ Type: "Engine", Élément: "N/A", Vues: 0 }]),
+            ...(analytics.consultationsByStandard.length > 0 ? analytics.consultationsByStandard.map(d => ({ Type: "Standard", Élément: d.name, Vues: d.value })) : [{ Type: "Standard", Élément: "N/A", Vues: 0 }]),
+            ...(analytics.consultationsByForm.length > 0 ? analytics.consultationsByForm.map(d => ({ Type: "Formulaire", Élément: d.name, Vues: d.value })) : [{ Type: "Formulaire", Élément: "N/A", Vues: 0 }]),
         ];
         const wsElement = XLSX.utils.json_to_sheet(elementData);
         XLSX.utils.book_append_sheet(wb, wsElement, "Consultations par Élément");
 
         // 3. Feuille d'activité quotidienne
         const dailyData = [
-            ...analytics.consultationsByDayWorkstations.map(d => ({ Type: "Postes de travail", Jour: d.name, Vues: d.value })),
-            ...analytics.consultationsByDayStandards.map(d => ({ Type: "Standards", Jour: d.name, Vues: d.value })),
-            ...analytics.consultationsByDayForms.map(d => ({ Type: "Formulaires", Jour: d.name, Vues: d.value })),
+            ...(analytics.consultationsByDayWorkstations.length > 0 ? analytics.consultationsByDayWorkstations.map(d => ({ Type: "Postes de travail", Jour: d.name, Vues: d.value })) : [{ Type: "Postes de travail", Jour: "N/A", Vues: 0 }]),
+            ...(analytics.consultationsByDayStandards.length > 0 ? analytics.consultationsByDayStandards.map(d => ({ Type: "Standards", Jour: d.name, Vues: d.value })) : [{ Type: "Standards", Jour: "N/A", Vues: 0 }]),
+            ...(analytics.consultationsByDayForms.length > 0 ? analytics.consultationsByDayForms.map(d => ({ Type: "Formulaires", Jour: d.name, Vues: d.value })) : [{ Type: "Formulaires", Jour: "N/A", Vues: 0 }]),
         ];
         const wsDaily = XLSX.utils.json_to_sheet(dailyData);
         XLSX.utils.book_append_sheet(wb, wsDaily, "Activité Quotidienne");
         
         // Téléchargement
-        XLSX.writeFile(wb, `Rapport_Dashboard_SafeSteps_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `Rapport_Dashboard_WorkHub_${new Date().toISOString().split('T')[0]}.xlsx`);
 
         toast({ title: "Rapport généré !", description: "Le téléchargement a commencé.", });
 
@@ -246,7 +246,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600">Vue d'ensemble de l'activité de SafeSteps.</p>
+            <p className="text-slate-600">Vue d'ensemble de l'activité de WorkHub Central.</p>
           </div>
           <Button onClick={handleExport} disabled={loading || isExporting}>
             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
@@ -389,3 +389,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
