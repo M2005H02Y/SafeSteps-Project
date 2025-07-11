@@ -83,10 +83,10 @@ function AnalyticsChart({ data, type = 'daily' }: { data: { name: string; value:
         )
     }
 
-    const isDailyData = type === 'daily';
-    const angle = isDailyData ? -45 : (data.length > 5 ? -45 : 0);
+    const isItemData = type === 'item';
+    const angle = isItemData ? -45 : 0;
     const textAnchor = angle < 0 ? 'end' : 'middle';
-    const height = angle < 0 ? 70 : 30;
+    const height = isItemData && data.length > 4 ? 80 : 30; // Augmente la hauteur si beaucoup d'éléments
 
     return (
         <ResponsiveContainer width="100%" height="100%">
