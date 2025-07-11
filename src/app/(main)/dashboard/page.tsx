@@ -83,7 +83,6 @@ function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
         )
     }
     
-    // Always rotate labels and provide enough height to avoid cutoff
     const angle = -45;
     const textAnchor = 'end';
     const height = 80;
@@ -154,7 +153,6 @@ export default function DashboardPage() {
     try {
         const wb = XLSX.utils.book_new();
 
-        // 1. Feuille de résumé
         const summaryData = [
             { Métrique: `QR Codes Scannés (${timeRange}j)`, Valeur: analytics.scansLastPeriod },
             { Métrique: `Consultations Standards (${timeRange}j)`, Valeur: analytics.standardsConsultationsLastPeriod },
@@ -164,7 +162,6 @@ export default function DashboardPage() {
         const wsSummary = XLSX.utils.json_to_sheet(summaryData);
         XLSX.utils.book_append_sheet(wb, wsSummary, "Résumé");
 
-        // 2. Feuille de consultations par élément
         const elementData = [
             ...(analytics.consultationsByEngine.length > 0 ? analytics.consultationsByEngine.map(d => ({ Type: "Engine", Élément: d.name, Vues: d.value })) : [{ Type: "Engine", Élément: "N/A", Vues: 0 }]),
             ...(analytics.consultationsByStandard.length > 0 ? analytics.consultationsByStandard.map(d => ({ Type: "Standard", Élément: d.name, Vues: d.value })) : [{ Type: "Standard", Élément: "N/A", Vues: 0 }]),
@@ -173,7 +170,6 @@ export default function DashboardPage() {
         const wsElement = XLSX.utils.json_to_sheet(elementData);
         XLSX.utils.book_append_sheet(wb, wsElement, "Consultations par Élément");
 
-        // 3. Feuille d'activité quotidienne
         const dailyData = [
             ...(analytics.consultationsByDayWorkstations.length > 0 ? analytics.consultationsByDayWorkstations.map(d => ({ Type: "Postes de travail", Jour: d.name, Vues: d.value })) : [{ Type: "Postes de travail", Jour: "N/A", Vues: 0 }]),
             ...(analytics.consultationsByDayStandards.length > 0 ? analytics.consultationsByDayStandards.map(d => ({ Type: "Standards", Jour: d.name, Vues: d.value })) : [{ Type: "Standards", Jour: "N/A", Vues: 0 }]),
@@ -182,7 +178,6 @@ export default function DashboardPage() {
         const wsDaily = XLSX.utils.json_to_sheet(dailyData);
         XLSX.utils.book_append_sheet(wb, wsDaily, "Activité Quotidienne");
         
-        // Téléchargement
         XLSX.writeFile(wb, `Rapport_Dashboard_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.xlsx`);
 
         toast({ title: "Rapport Excel généré !", description: "Le téléchargement a commencé.", });
@@ -207,9 +202,9 @@ export default function DashboardPage() {
 
     try {
         const canvas = await html2canvas(analyticsSection, {
-            scale: 2, // Améliore la résolution
+            scale: 2,
             useCORS: true,
-            backgroundColor: null, // Utilise l'arrière-plan de l'élément
+            backgroundColor: null,
             windowWidth: analyticsSection.scrollWidth,
             windowHeight: analyticsSection.scrollHeight,
         });
@@ -477,5 +472,5 @@ export default function DashboardPage() {
       </main>
     </div>
   );
-}
 
+    
