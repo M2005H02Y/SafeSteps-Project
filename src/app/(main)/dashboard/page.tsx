@@ -141,6 +141,13 @@ export default function DashboardPage() {
 
   const { toast } = useToast();
 
+  const getFormattedTimestamp = () => {
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+    return `${date}_${time}`;
+  };
+
   const handleExportExcel = () => {
     if (!analytics) {
         toast({ title: "Erreur", description: "Les données d'analyse ne sont pas encore chargées.", variant: "destructive" });
@@ -178,7 +185,7 @@ export default function DashboardPage() {
         const wsDaily = XLSX.utils.json_to_sheet(dailyData);
         XLSX.utils.book_append_sheet(wb, wsDaily, "Activité Quotidienne");
         
-        XLSX.writeFile(wb, `Rapport_Dashboard_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.xlsx`);
+        XLSX.writeFile(wb, `Rapport_SafeSteps_${getFormattedTimestamp()}_${timeRange}j.xlsx`);
 
         toast({ title: "Rapport Excel généré !", description: "Le téléchargement a commencé.", });
 
@@ -203,7 +210,6 @@ export default function DashboardPage() {
     const chartContainers = analyticsSection.querySelectorAll<HTMLElement>('.pdf-chart-grid');
     const originalStyles: { element: HTMLElement, display: string, gridTemplateColumns: string }[] = [];
 
-    // Temporarily change layout for better canvas capture
     const originalSectionDisplay = analyticsSection.style.display;
     analyticsSection.style.display = 'block';
 
@@ -223,7 +229,7 @@ export default function DashboardPage() {
             scale: 2,
             useCORS: true,
             backgroundColor: null,
-            windowWidth: 1200, // A fixed larger width for consistency
+            windowWidth: 1200,
             windowHeight: analyticsSection.scrollHeight,
         });
         
@@ -238,7 +244,7 @@ export default function DashboardPage() {
         const pdfHeight = pdf.internal.pageSize.getHeight();
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`Rapport_Analytics_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.pdf`);
+        pdf.save(`Rapport_SafeSteps_${getFormattedTimestamp()}_${timeRange}j.pdf`);
         
         toast({ title: "Rapport PDF généré !", description: "Le téléchargement a commencé." });
 
@@ -247,7 +253,6 @@ export default function DashboardPage() {
         toast({ title: "Erreur d'exportation PDF", description: "La génération du fichier a échoué.", variant: "destructive" });
     } finally {
         setIsExportingPdf(false);
-        // Restore original styles
         analyticsSection.style.display = originalSectionDisplay;
         originalStyles.forEach(({ element, display, gridTemplateColumns }) => {
             element.style.display = display;
@@ -332,7 +337,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600">Vue d'ensemble de l'activité de WorkHub Central.</p>
+            <p className="text-slate-600">Vue d'ensemble de l'activité de SafeSteps.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -503,5 +508,7 @@ export default function DashboardPage() {
 
     
 
+
+    
 
     
