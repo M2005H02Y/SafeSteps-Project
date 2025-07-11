@@ -200,22 +200,33 @@ export default function DashboardPage() {
     setIsExportingPdf(true);
     toast({ title: "Génération du PDF...", description: "Veuillez patienter, cela peut prendre un moment." });
 
+    const chartContainers = analyticsSection.querySelectorAll<HTMLElement>('.pdf-chart-grid');
+    const originalStyles: { element: HTMLElement, display: string, gridTemplateColumns: string }[] = [];
+
     // Temporarily change layout for better canvas capture
-    const originalStyle = analyticsSection.style.display;
+    const originalSectionDisplay = analyticsSection.style.display;
     analyticsSection.style.display = 'block';
+
+    chartContainers.forEach(container => {
+        originalStyles.push({ element: container, display: container.style.display, gridTemplateColumns: container.style.gridTemplateColumns });
+        container.style.display = 'flex';
+        container.style.flexWrap = 'wrap';
+        container.style.gap = '1rem';
+        Array.from(container.children).forEach(child => {
+            (child as HTMLElement).style.flex = '1 1 calc(50% - 1rem)';
+            (child as HTMLElement).style.minWidth = 'calc(50% - 1rem)';
+        });
+    });
 
     try {
         const canvas = await html2canvas(analyticsSection, {
             scale: 2,
             useCORS: true,
             backgroundColor: null,
-            windowWidth: analyticsSection.scrollWidth,
+            windowWidth: 1200, // A fixed larger width for consistency
             windowHeight: analyticsSection.scrollHeight,
         });
-
-        // Restore original layout
-        analyticsSection.style.display = originalStyle;
-
+        
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
             orientation: 'p',
@@ -236,8 +247,16 @@ export default function DashboardPage() {
         toast({ title: "Erreur d'exportation PDF", description: "La génération du fichier a échoué.", variant: "destructive" });
     } finally {
         setIsExportingPdf(false);
-        // Ensure style is restored even if there's an error
-        analyticsSection.style.display = originalStyle;
+        // Restore original styles
+        analyticsSection.style.display = originalSectionDisplay;
+        originalStyles.forEach(({ element, display, gridTemplateColumns }) => {
+            element.style.display = display;
+            element.style.gridTemplateColumns = gridTemplateColumns;
+            Array.from(element.children).forEach(child => {
+              (child as HTMLElement).style.flex = '';
+              (child as HTMLElement).style.minWidth = '';
+            });
+        });
     }
   };
 
@@ -398,7 +417,7 @@ export default function DashboardPage() {
             <div className="space-y-8 pt-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-4">Consultations par Élément ({timeRange} derniers jours)</h2>
-                    <div className="grid lg:grid-cols-3 gap-8 items-start">
+                    <div className="grid lg:grid-cols-3 gap-8 items-start pdf-chart-grid">
                         {loadingAnalytics ? (
                             Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
                         ) : (
@@ -418,7 +437,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-4">Activité Quotidienne ({timeRange} derniers jours)</h2>
-                    <div className="grid lg:grid-cols-3 gap-8 items-start">
+                    <div className="grid lg:grid-cols-3 gap-8 items-start pdf-chart-grid">
                         {loadingAnalytics ? (
                             Array.from({ length: 3 }).map((_, i) => <ChartSkeleton key={i} />)
                         ) : (
@@ -481,5 +500,8 @@ export default function DashboardPage() {
       </main>
     </div>
   );
+
+    
+
 
     
