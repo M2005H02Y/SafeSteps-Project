@@ -72,7 +72,7 @@ function ChartSkeleton() {
     )
 }
 
-function AnalyticsChart({ data, type = 'daily' }: { data: { name: string; value: number }[], type?: 'daily' | 'item' }) {
+function AnalyticsChart({ data }: { data: { name: string; value: number }[] }) {
     if (data.every(d => d.value === 0)) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
@@ -82,11 +82,11 @@ function AnalyticsChart({ data, type = 'daily' }: { data: { name: string; value:
             </div>
         )
     }
-
-    const isItemData = type === 'item';
-    const angle = isItemData ? -45 : 0;
-    const textAnchor = angle < 0 ? 'end' : 'middle';
-    const height = isItemData && data.length > 4 ? 80 : 30; // Augmente la hauteur si beaucoup d'éléments
+    
+    // Always rotate labels and provide enough height to avoid cutoff
+    const angle = -45;
+    const textAnchor = 'end';
+    const height = 80;
 
     return (
         <ResponsiveContainer width="100%" height="100%">
@@ -216,29 +216,15 @@ export default function DashboardPage() {
 
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
-            orientation: 'p',
+            orientation: 'landscape',
             unit: 'px',
-            format: 'a4',
+            format: [canvas.width, canvas.height],
         });
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = imgWidth / imgHeight;
         
-        let newImgWidth = pdfWidth;
-        let newImgHeight = newImgWidth / ratio;
-
-        if (newImgHeight > pdfHeight) {
-            newImgHeight = pdfHeight;
-            newImgWidth = newImgHeight * ratio;
-        }
-
-        const xOffset = (pdfWidth - newImgWidth) / 2;
-        const yOffset = (pdfHeight - newImgHeight) / 2;
-        
-        pdf.addImage(imgData, 'PNG', xOffset, yOffset, newImgWidth, newImgHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         pdf.save(`Rapport_Analytics_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.pdf`);
         
         toast({ title: "Rapport PDF généré !", description: "Le téléchargement a commencé." });
@@ -305,15 +291,15 @@ export default function DashboardPage() {
   ] : [];
 
   const chartRow1 = [
-    { title: "Consultations par Engine", description: `Nombre de scans par type de poste (${timeRange}j).`, data: analytics?.consultationsByEngine, type: 'item' },
-    { title: "Top Standards Consultés", description: `Les standards les plus vus (${timeRange}j).`, data: analytics?.consultationsByStandard, type: 'item' },
-    { title: "Top Formulaires Consultés", description: `Les formulaires les plus vus (${timeRange}j).`, data: analytics?.consultationsByForm, type: 'item' }
+    { title: "Consultations par Engine", description: `Nombre de scans par type de poste (${timeRange}j).`, data: analytics?.consultationsByEngine },
+    { title: "Top Standards Consultés", description: `Les standards les plus vus (${timeRange}j).`, data: analytics?.consultationsByStandard },
+    { title: "Top Formulaires Consultés", description: `Les formulaires les plus vus (${timeRange}j).`, data: analytics?.consultationsByForm }
   ];
 
   const chartRow2 = [
-    { title: "Scans Quotidiens des Postes", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayWorkstations, type: 'daily' },
-    { title: "Consultations Quot. des Standards", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayStandards, type: 'daily' },
-    { title: "Consultations Quot. des Formulaires", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayForms, type: 'daily' }
+    { title: "Scans Quotidiens des Postes", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayWorkstations },
+    { title: "Consultations Quot. des Standards", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayStandards },
+    { title: "Consultations Quot. des Formulaires", description: `Activité quotidienne (${timeRange}j).`, data: analytics?.consultationsByDayForms }
   ];
 
 
@@ -419,7 +405,7 @@ export default function DashboardPage() {
                                         <CardDescription>{chart.description}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="p-0 flex-1">
-                                        {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                        {chart.data && <AnalyticsChart data={chart.data} />}
                                     </CardContent>
                                 </Card>
                             ))
@@ -439,7 +425,7 @@ export default function DashboardPage() {
                                         <CardDescription>{chart.description}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="p-0 flex-1">
-                                        {chart.data && <AnalyticsChart data={chart.data} type={chart.type as 'daily' | 'item'} />}
+                                        {chart.data && <AnalyticsChart data={chart.data} />}
                                     </CardContent>
                                 </Card>
                             ))
@@ -492,3 +478,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
