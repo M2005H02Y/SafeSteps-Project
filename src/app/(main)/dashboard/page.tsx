@@ -210,16 +210,35 @@ export default function DashboardPage() {
             scale: 2, // Améliore la résolution
             useCORS: true,
             backgroundColor: null, // Utilise l'arrière-plan de l'élément
+            windowWidth: analyticsSection.scrollWidth,
+            windowHeight: analyticsSection.scrollHeight,
         });
 
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
-            orientation: 'landscape',
+            orientation: 'p',
             unit: 'px',
-            format: [canvas.width, canvas.height]
+            format: 'a4',
         });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = imgWidth / imgHeight;
+        
+        let newImgWidth = pdfWidth;
+        let newImgHeight = newImgWidth / ratio;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        if (newImgHeight > pdfHeight) {
+            newImgHeight = pdfHeight;
+            newImgWidth = newImgHeight * ratio;
+        }
+
+        const xOffset = (pdfWidth - newImgWidth) / 2;
+        const yOffset = (pdfHeight - newImgHeight) / 2;
+        
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, newImgWidth, newImgHeight);
         pdf.save(`Rapport_Analytics_WorkHub_${new Date().toISOString().split('T')[0]}_${timeRange}j.pdf`);
         
         toast({ title: "Rapport PDF généré !", description: "Le téléchargement a commencé." });
@@ -307,11 +326,21 @@ export default function DashboardPage() {
             <p className="text-slate-600">Vue d'ensemble de l'activité de WorkHub Central.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleExportExcel} disabled={loadingAnalytics || isExportingExcel || isExportingPdf} variant="outline">
+            <Button 
+                onClick={handleExportExcel} 
+                disabled={loadingAnalytics || isExportingExcel || isExportingPdf} 
+                variant="outline"
+                className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200"
+            >
               {isExportingExcel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
               {isExportingExcel ? "Génération..." : "Exporter en Excel"}
             </Button>
-            <Button onClick={handleExportPdf} disabled={loadingAnalytics || isExportingExcel || isExportingPdf} variant="outline">
+            <Button 
+                onClick={handleExportPdf} 
+                disabled={loadingAnalytics || isExportingExcel || isExportingPdf} 
+                variant="outline"
+                className="bg-red-100 border-red-300 text-red-800 hover:bg-red-200"
+            >
               {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
               {isExportingPdf ? "Génération..." : "Exporter en PDF"}
             </Button>
