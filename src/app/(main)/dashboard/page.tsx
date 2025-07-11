@@ -200,6 +200,10 @@ export default function DashboardPage() {
     setIsExportingPdf(true);
     toast({ title: "Génération du PDF...", description: "Veuillez patienter, cela peut prendre un moment." });
 
+    // Temporarily change layout for better canvas capture
+    const originalStyle = analyticsSection.style.display;
+    analyticsSection.style.display = 'block';
+
     try {
         const canvas = await html2canvas(analyticsSection, {
             scale: 2,
@@ -209,9 +213,12 @@ export default function DashboardPage() {
             windowHeight: analyticsSection.scrollHeight,
         });
 
+        // Restore original layout
+        analyticsSection.style.display = originalStyle;
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
-            orientation: 'landscape',
+            orientation: 'p',
             unit: 'px',
             format: [canvas.width, canvas.height],
         });
@@ -229,6 +236,8 @@ export default function DashboardPage() {
         toast({ title: "Erreur d'exportation PDF", description: "La génération du fichier a échoué.", variant: "destructive" });
     } finally {
         setIsExportingPdf(false);
+        // Ensure style is restored even if there's an error
+        analyticsSection.style.display = originalStyle;
     }
   };
 
