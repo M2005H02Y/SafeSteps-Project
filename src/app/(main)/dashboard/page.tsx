@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -343,8 +343,7 @@ export default function DashboardPage() {
             <Button 
                 onClick={handleExportExcel} 
                 disabled={loadingAnalytics || isExportingExcel || isExportingPdf} 
-                variant="outline"
-                className="bg-green-100 border-green-300 text-green-800 hover:bg-green-200"
+                className="bg-green-600 text-white hover:bg-green-700"
             >
               {isExportingExcel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
               {isExportingExcel ? "Génération..." : "Exporter en Excel"}
@@ -352,8 +351,7 @@ export default function DashboardPage() {
             <Button 
                 onClick={handleExportPdf} 
                 disabled={loadingAnalytics || isExportingExcel || isExportingPdf} 
-                variant="outline"
-                className="bg-red-100 border-red-300 text-red-800 hover:bg-red-200"
+                className="bg-red-600 text-white hover:bg-red-700"
             >
               {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
               {isExportingPdf ? "Génération..." : "Exporter en PDF"}
