@@ -232,6 +232,7 @@ export default function FormDetailPage() {
                     </CardContent>
                 </Card>
              )}
+            <FormMetadata form={form} />
              <Card>
                 <CardHeader>
                     <CardTitle>Aperçu du tableau</CardTitle>
@@ -245,7 +246,6 @@ export default function FormDetailPage() {
 
           <div className="space-y-6">
             <QRCode type="form" id={id} />
-             <FormMetadata form={form} />
              {otherFiles.length > 0 && (
               <Card>
                 <CardHeader>
