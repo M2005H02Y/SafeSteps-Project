@@ -38,8 +38,6 @@ export default function EditFormPage() {
   const [reference, setReference] = useState('');
   const [edition, setEdition] = useState('');
   const [issueDate, setIssueDate] = useState<Date | undefined>();
-  const [dateInputValue, setDateInputValue] = useState('');
-  
   const [pageCount, setPageCount] = useState<number | ''>('');
   
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -62,10 +60,7 @@ export default function EditFormPage() {
           setEdition(formData.edition || '');
           const loadedDate = formData.issue_date ? new Date(formData.issue_date) : undefined;
           setIssueDate(loadedDate);
-          setDateInputValue(loadedDate ? format(loadedDate, 'dd/MM/yyyy') : '');
-
           setPageCount(formData.page_count ?? '');
-          
           setFiles(formData.files || []);
 
           if (formData.table_data) {
@@ -83,12 +78,11 @@ export default function EditFormPage() {
 
   const handleDateSelect = (date: Date | undefined) => {
     setIssueDate(date);
-    setDateInputValue(date ? format(date, 'dd/MM/yyyy') : '');
   };
 
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateInputValue(e.target.value);
-    const parsedDate = parse(e.target.value, 'dd/MM/yyyy', new Date());
+    const value = e.target.value;
+    const parsedDate = parse(value, 'dd/MM/yyyy', new Date());
     if (!isNaN(parsedDate.getTime())) {
         setIssueDate(parsedDate);
     } else {
@@ -226,7 +220,7 @@ export default function EditFormPage() {
                             <Input
                                 id="form-issue-date"
                                 placeholder="jj/mm/aaaa"
-                                value={dateInputValue}
+                                value={issueDate ? format(issueDate, 'dd/MM/yyyy') : ''}
                                 onChange={handleDateInputChange}
                                 className="pr-10"
                             />
