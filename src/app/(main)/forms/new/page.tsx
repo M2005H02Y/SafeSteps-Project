@@ -16,7 +16,7 @@ import FileUpload from '@/components/file-upload';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
@@ -33,6 +33,7 @@ export default function NewFormPage() {
   const [reference, setReference] = useState('');
   const [edition, setEdition] = useState('');
   const [issueDate, setIssueDate] = useState<Date | undefined>();
+  const [dateInputValue, setDateInputValue] = useState('');
   const [pageCount, setPageCount] = useState<number | ''>('');
 
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -40,6 +41,22 @@ export default function NewFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const tableRef = useRef<{ getTableData: () => TableData }>(null);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setIssueDate(date);
+    setDateInputValue(date ? format(date, 'dd/MM/yyyy') : '');
+  };
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateInputValue(e.target.value);
+    const parsedDate = parse(e.target.value, 'dd/MM/yyyy', new Date());
+    if (!isNaN(parsedDate.getTime())) {
+        setIssueDate(parsedDate);
+    } else {
+        setIssueDate(undefined);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,19 +143,25 @@ export default function NewFormPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="form-issue-date">Date d'émission</Label>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !issueDate && "text-muted-foreground"
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {issueDate ? format(issueDate, "dd/MM/yyyy") : <span>Choisir une date</span>}
-                        </Button>
-                    </PopoverTrigger>
+                 <Popover>
+                    <div className="relative">
+                        <Input
+                            id="form-issue-date"
+                            placeholder="jj/mm/aaaa"
+                            value={dateInputValue}
+                            onChange={handleDateInputChange}
+                            className="pr-10"
+                        />
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:bg-transparent"
+                            >
+                                <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                    </div>
                     <PopoverContent className="w-auto p-0">
                         <Calendar
                             mode="single"
@@ -146,7 +169,7 @@ export default function NewFormPage() {
                             fromYear={new Date().getFullYear() - 10}
                             toYear={new Date().getFullYear() + 5}
                             selected={issueDate}
-                            onSelect={setIssueDate}
+                            onSelect={handleDateSelect}
                             initialFocus
                             locale={fr}
                         />
