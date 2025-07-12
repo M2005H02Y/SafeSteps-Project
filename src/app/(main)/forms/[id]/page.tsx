@@ -116,7 +116,7 @@ function FormMetadata({form}: {form: Form}) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Métadonnées</CardTitle>
+                <CardTitle>Spécification</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
                 {metadataItems.map(item => (
