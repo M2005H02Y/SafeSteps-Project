@@ -43,14 +43,13 @@ export interface CellData {
   colspan?: number;
   rowspan?: number;
   merged?: boolean;
-  header?: string;
+  isHeader?: boolean;
 }
 
 export interface TableData {
   rows: number;
   cols: number;
   data: Record<string, CellData>;
-  headers?: string[];
 }
 
 export type Form = {

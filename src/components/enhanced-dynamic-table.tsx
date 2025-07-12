@@ -5,7 +5,7 @@ import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RotateCcw, Merge, Split, Trash2, Undo2, Redo2 } from 'lucide-react';
+import { Plus, RotateCcw, Merge, Split, Trash2, Undo2, Redo2, Heading2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableData, CellData } from '@/lib/data';
 
@@ -19,7 +19,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
   const { toast } = useToast();
   
   const [history, setHistory] = useState<TableData[]>([
-    initialData || { rows: 3, cols: 3, data: {}, headers: [] }
+    initialData || { rows: 3, cols: 3, data: {} }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const tableState = history[historyIndex];
@@ -58,7 +58,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
           }
         }
       }
-      return { ...tableState, data: cleanedData, headers: tableState.headers?.slice(0, tableState.cols) };
+      return { ...tableState, data: cleanedData };
     }
   }));
 
@@ -91,7 +91,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
   };
 
   const addRow = (atIndex: number) => {
-    const { rows, cols, data, headers } = tableState;
+    const { rows, cols, data } = tableState;
     const newRows = rows + 1;
     const newData: Record<string, CellData> = {};
 
@@ -111,11 +111,11 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
     }
     
-    updateTableState({ rows: newRows, cols, data: newData, headers });
+    updateTableState(prev => ({ ...prev, rows: newRows, data: newData }));
   };
   
   const deleteRow = (atIndex: number) => {
-    const { rows, cols, headers, data } = tableState;
+    const { rows, cols, data } = tableState;
 
     if (rows <= 1) {
       toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une ligne.", variant: "destructive" });
@@ -124,7 +124,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     const newRows = rows - 1;
     let newData: Record<string, CellData> = {};
 
-    // Copy cells to new positions, adjusting for the deleted row
     for (let r = 0; r < rows; r++) {
       if (r === atIndex) continue;
       const newR = r > atIndex ? r - 1 : r;
@@ -137,7 +136,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       }
     }
 
-    // Adjust rowspans of cells that spanned across the deleted row
     for (let r = 0; r < atIndex; r++) {
       for (let c = 0; c < cols; c++) {
         const key = getCellKey(r, c);
@@ -147,42 +145,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
       }
     }
-
-    // Unmerge cells that might have been part of a deleted merged area
-    for (let c = 0; c < cols; c++) {
-        const key = getCellKey(atIndex, c);
-        const cell = data[key];
-        if (cell?.merged) {
-            // Find the master cell for this merged area
-            let masterR = atIndex;
-            let masterC = c;
-            let found = false;
-            while(masterR >= 0 && !found) {
-                masterC = c;
-                while(masterC >=0 && !found) {
-                    const masterKey = getCellKey(masterR, masterC);
-                    const masterCell = data[masterKey];
-                    if (masterCell && !masterCell.merged && (masterR + (masterCell.rowspan || 1) > atIndex) && (masterC + (masterCell.colspan || 1) > c)) {
-                        found = true;
-                    } else {
-                        masterC--;
-                    }
-                }
-                if(!found) masterR--;
-            }
-
-            if(found) {
-                const masterKey = getCellKey(masterR, masterC);
-                const newMasterKey = getCellKey(masterR > atIndex ? masterR - 1 : masterR, masterC);
-                const newMasterCell = {...newData[newMasterKey]};
-                if (newMasterCell.rowspan) {
-                    newMasterCell.rowspan--;
-                }
-                newData[newMasterKey] = newMasterCell;
-            }
-        }
-    }
-
+    
     const finalData = { ...newData };
     for (const key in finalData) {
       const cell = finalData[key];
@@ -202,15 +165,13 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       }
     }
 
-    updateTableState({ rows: newRows, cols, data: finalData, headers });
+    updateTableState(prev => ({ ...prev, rows: newRows, data: finalData }));
   };
   
   const addCol = (atIndex: number) => {
-    const { rows, cols, data, headers } = tableState;
+    const { rows, cols, data } = tableState;
     const newCols = cols + 1;
     const newData: Record<string, CellData> = {};
-    const newHeaders = [...(headers || [])];
-    newHeaders.splice(atIndex, 0, '');
 
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
@@ -228,11 +189,11 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
     }
 
-    updateTableState({ rows, cols: newCols, data: newData, headers: newHeaders });
+    updateTableState(prev => ({ ...prev, cols: newCols, data: newData }));
   };
 
   const deleteCol = (atIndex: number) => {
-    const { rows, cols, data, headers } = tableState;
+    const { rows, cols, data } = tableState;
 
     if (cols <= 1) {
         toast({ title: "Impossible de supprimer", description: "Le tableau doit contenir au moins une colonne.", variant: "destructive" });
@@ -240,9 +201,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     }
     const newCols = cols - 1;
     let newData: Record<string, CellData> = {};
-    const newHeaders = (headers || []).filter((_, i) => i !== atIndex);
     
-    // Copy cells to new positions, adjusting for the deleted column
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         if (c === atIndex) continue;
@@ -255,7 +214,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
       }
     }
 
-    // Adjust colspans of cells that spanned across the deleted column
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < atIndex; c++) {
         const key = getCellKey(r, c);
@@ -264,39 +222,6 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
           newData[key] = { ...cell, colspan: cell.colspan - 1 };
         }
       }
-    }
-
-    // Unmerge cells that might have been part of a deleted merged area
-    for (let r = 0; r < rows; r++) {
-        const key = getCellKey(r, atIndex);
-        const cell = data[key];
-        if (cell?.merged) {
-             let masterR = r;
-            let masterC = atIndex;
-            let found = false;
-            while(masterR >= 0 && !found) {
-                masterC = atIndex;
-                while(masterC >=0 && !found) {
-                    const masterKey = getCellKey(masterR, masterC);
-                    const masterCell = data[masterKey];
-                    if (masterCell && !masterCell.merged && (masterR + (masterCell.rowspan || 1) > r) && (masterC + (masterCell.colspan || 1) > atIndex)) {
-                        found = true;
-                    } else {
-                        masterC--;
-                    }
-                }
-                if(!found) masterR--;
-            }
-            if(found) {
-                const masterKey = getCellKey(masterR, masterC);
-                const newMasterKey = getCellKey(masterR, masterC > atIndex ? masterC - 1 : masterC);
-                const newMasterCell = {...newData[newMasterKey]};
-                if (newMasterCell.colspan) {
-                    newMasterCell.colspan--;
-                }
-                newData[newMasterKey] = newMasterCell;
-            }
-        }
     }
     
     const finalData = { ...newData };
@@ -317,7 +242,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         }
       }
     }
-    updateTableState({ rows, cols: newCols, data: finalData, headers: newHeaders });
+    updateTableState(prev => ({...prev, cols: newCols, data: finalData }));
   };
 
 
@@ -342,6 +267,7 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
 
     let mergedContent = '';
     const newData = { ...tableState.data };
+    let isHeaderMerge = false;
 
     for (let r = minRow; r <= maxRow; r++) {
       for (let c = minCol; c <= maxCol; c++) {
@@ -353,11 +279,12 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
 
         const cell = newData[key];
         if (cell) {
+          if (cell.isHeader) isHeaderMerge = true;
           if (cell.content) mergedContent += cell.content + ' ';
         }
 
         if (r === minRow && c === minCol) {
-          newData[key] = { ...(newData[key] || {content: ''}), content: mergedContent.trim(), colspan, rowspan, merged: false };
+          newData[key] = { ...(newData[key] || {content: ''}), content: mergedContent.trim(), colspan, rowspan, merged: false, isHeader: isHeaderMerge };
         } else {
           newData[key] = { ...(newData[key] || {content: ''}), merged: true, content: '' };
         }
@@ -398,6 +325,25 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
     toast({ title: "Cellules défusionnées", description: "La cellule a été divisée avec succès." });
   };
 
+  const toggleHeader = () => {
+    if (selectedCells.size === 0) {
+      toast({ title: "Aucune cellule sélectionnée", description: "Veuillez sélectionner une ou plusieurs cellules.", variant: "destructive" });
+      return;
+    }
+
+    const newData = { ...tableState.data };
+    const isAnyHeader = Array.from(selectedCells).some(key => newData[key]?.isHeader);
+
+    selectedCells.forEach(key => {
+      newData[key] = {
+        ...(newData[key] || { content: '' }),
+        isHeader: !isAnyHeader
+      };
+    });
+
+    updateTableState(prev => ({ ...prev, data: newData }));
+  };
+
   const renderCell = (r: number, c: number) => {
     const key = getCellKey(r, c);
     const cell = tableState.data[key];
@@ -405,19 +351,22 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
 
     const showSplitButton = (cell?.colspan && cell.colspan > 1) || (cell?.rowspan && cell.rowspan > 1);
 
+    const CellComponent = cell?.isHeader ? 'th' : 'td';
+
     return (
-      <td
+      <CellComponent
         key={key}
         colSpan={cell?.colspan}
         rowSpan={cell?.rowspan}
         className={cn(
           "border border-slate-300 p-1 relative min-h-[60px] align-top group",
-          selectedCells.has(key) ? "bg-blue-100 ring-2 ring-blue-500 z-10" : "bg-white hover:bg-slate-50"
+          selectedCells.has(key) ? "bg-blue-100 ring-2 ring-blue-500 z-10" : "bg-white hover:bg-slate-50",
+          cell?.isHeader && "bg-slate-100 font-bold"
         )}
         onClick={(e) => handleCellClick(r, c, e)}
       >
         <textarea
-            placeholder="Contenu..."
+            placeholder={cell?.isHeader ? "En-tête..." : "Contenu..."}
             className="w-full text-xs p-1 border-none focus:ring-0 resize-none bg-transparent h-full"
             value={cell?.content || ''}
             onChange={(e) => updateCellData(r, c, { content: e.target.value })}
@@ -426,21 +375,13 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
         <div className="absolute bottom-1 right-1 flex gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
             {showSplitButton && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); splitCell(r,c); }}><Split className="h-4 w-4"/></Button>}
         </div>
-      </td>
+      </CellComponent>
     );
   };
   
   const resetTable = () => {
-    updateTableState({ rows: 3, cols: 3, data: {}, headers: [] });
+    updateTableState({ rows: 3, cols: 3, data: {} });
     setSelectedCells(new Set());
-  }
-  
-  const handleHeaderChange = (index: number, value: string) => {
-      updateTableState(prev => {
-        const newHeaders = [...(prev.headers || [])];
-        newHeaders[index] = value;
-        return {...prev, headers: newHeaders};
-      });
   }
 
   return (
@@ -455,14 +396,16 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
                 Rétablir
             </Button>
             <Button type="button" variant="outline" onClick={mergeCells} disabled={selectedCells.size < 2}><Merge className="mr-2 h-4 w-4"/>Fusionner</Button>
+            <Button type="button" variant="outline" onClick={toggleHeader} disabled={selectedCells.size < 1}><Heading2 className="mr-2 h-4 w-4"/>Convertir en En-tête</Button>
             <Button type="button" variant="outline" onClick={resetTable}><RotateCcw className="mr-2 h-4 w-4"/>Réinitialiser</Button>
         </div>
 
         <div className="relative overflow-auto p-4 bg-slate-100/50 rounded-lg">
             <table className="border-collapse w-full" style={{ tableLayout: 'fixed' }}>
-                <thead>
+                <tbody>
+                    {/* Corner and Column controls */}
                     <tr className="group">
-                        <th className="border-b border-r border-slate-300 bg-slate-100 w-[40px] relative">
+                        <td className="border-r border-b border-slate-300 bg-slate-200 w-[40px] relative">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button type="button" size="icon" variant="secondary" className="h-6 w-6 rounded-full shadow-md" onClick={() => addRow(0)}>
                                     <Plus className="h-4 w-4"/>
@@ -473,15 +416,9 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
                                     <Plus className="h-4 w-4"/>
                                 </Button>
                             </div>
-                        </th>
+                        </td>
                         {[...Array(tableState.cols)].map((_, c) => (
-                            <th key={c} className="border-b border-r border-slate-300 p-1 bg-slate-100 relative group/col">
-                                <Input
-                                    placeholder={`Col ${c + 1}`}
-                                    className="text-sm font-bold border-none bg-transparent focus:ring-0 text-center"
-                                    value={tableState.headers?.[c] || ''}
-                                    onChange={(e) => handleHeaderChange(c, e.target.value)}
-                                />
+                            <td key={c} className="border-r border-b border-slate-300 p-1 bg-slate-200 relative group/col h-[40px]">
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover/col:opacity-100 transition-opacity">
                                     <Button type="button" size="icon" variant="destructive" className="h-6 w-6 rounded-full" onClick={() => deleteCol(c)}>
                                         <Trash2 className="h-3 w-3"/>
@@ -492,14 +429,14 @@ const EnhancedDynamicTable = forwardRef(({ initialData }: EnhancedDynamicTablePr
                                         <Plus className="h-4 w-4"/>
                                     </Button>
                                 </div>
-                            </th>
+                            </td>
                         ))}
                     </tr>
-                </thead>
-                <tbody>
+
+                    {/* Table body with row controls */}
                     {[...Array(tableState.rows)].map((_, r) => (
                         <tr key={r} className="group/row">
-                            <td className="border-r border-b border-slate-300 bg-slate-100 w-[40px] relative">
+                            <td className="border-r border-b border-slate-300 bg-slate-200 w-[40px] relative">
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
                                     <Button type="button" size="icon" variant="destructive" className="h-6 w-6 rounded-full" onClick={() => deleteRow(r)}>
                                         <Trash2 className="h-3 w-3"/>

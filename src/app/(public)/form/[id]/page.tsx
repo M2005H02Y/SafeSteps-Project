@@ -25,39 +25,69 @@ function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
 
     const renderCell = (r: number, c: number) => {
         const key = getCellKey(r, c);
-        const cell = tableData.data[key] || { content: '' };
-        if (cell.merged) return null;
+        const cell = tableData.data[key];
+        if (cell?.merged) return null;
+
+        const CellComponent = cell?.isHeader ? 'th' : 'td';
+        const cellStyle = cell?.isHeader 
+            ? "border border-slate-400 p-2 bg-slate-200 text-sm font-semibold text-left"
+            : "border border-slate-300 p-2 text-sm bg-white";
 
         return (
-            <td
+            <CellComponent
                 key={key}
-                colSpan={cell.colspan}
-                rowSpan={cell.rowspan}
-                className="border border-slate-300 p-2 text-sm bg-white"
+                colSpan={cell?.colspan}
+                rowSpan={cell?.rowspan}
+                className={cellStyle}
             >
-                <div>{cell.content}</div>
-            </td>
+                <div>{cell?.content}</div>
+            </CellComponent>
         );
     }
+
+    // Determine the number of header rows
+    let headerRows = 0;
+    if (tableData && tableData.rows > 0 && tableData.cols > 0) {
+      let isHeaderRow = true;
+      for (let r = 0; r < tableData.rows && isHeaderRow; r++) {
+        let rowIsAllHeaders = true;
+        for (let c = 0; c < tableData.cols; c++) {
+          const key = getCellKey(r, c);
+          if (!tableData.data[key]?.merged && !tableData.data[key]?.isHeader) {
+            rowIsAllHeaders = false;
+            break;
+          }
+        }
+        if (rowIsAllHeaders) {
+          headerRows++;
+        } else {
+          isHeaderRow = false;
+        }
+      }
+    }
+
 
     return (
         <div className="overflow-auto rounded-md border bg-slate-100 p-2">
             <table className="w-full border-collapse">
-                <thead>
-                    <tr>
-                        {[...Array(tableData.cols)].map((_, c) => (
-                            <th key={c} className="border border-slate-300 p-2 bg-slate-200 text-sm font-medium text-left">
-                                {tableData.headers?.[c] || `Colonne ${c + 1}`}
-                            </th>
+                {headerRows > 0 && (
+                    <thead>
+                        {[...Array(headerRows)].map((_, r) => (
+                            <tr key={`hr-${r}`}>
+                                {[...Array(tableData.cols)].map((_, c) => renderCell(r, c))}
+                            </tr>
                         ))}
-                    </tr>
-                </thead>
+                    </thead>
+                )}
                 <tbody>
-                    {[...Array(tableData.rows)].map((_, r) => (
-                        <tr key={r}>
-                            {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
-                        </tr>
-                    ))}
+                    {[...Array(tableData.rows - headerRows)].map((_, r_offset) => {
+                       const r = r_offset + headerRows;
+                       return (
+                           <tr key={`br-${r}`}>
+                                {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
+                           </tr>
+                       )
+                    })}
                 </tbody>
             </table>
         </div>

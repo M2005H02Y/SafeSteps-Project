@@ -86,55 +86,69 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
   const generateExcelBlob = (): Blob | null => {
     try {
-      const headerRow = tableData.headers || Array(tableData.cols).fill('').map((_, i) => `Colonne ${i+1}`);
-      const aoa: (string | null)[][] = [headerRow];
+      const aoa: (string | null)[][] = [];
       const merges = [];
-
+  
+      let headerRows = 0;
+      let isHeaderRow = true;
+      for (let r = 0; r < tableData.rows && isHeaderRow; r++) {
+        let rowIsAllHeaders = true;
+        for (let c = 0; c < tableData.cols; c++) {
+          const key = getCellKey(r, c);
+          if (!tableData.data[key]?.merged && !tableData.data[key]?.isHeader) {
+            rowIsAllHeaders = false;
+            break;
+          }
+        }
+        if (rowIsAllHeaders) headerRows++;
+        else isHeaderRow = false;
+      }
+  
       for (let r = 0; r < tableData.rows; r++) {
         const rowData: (string | null)[] = [];
         for (let c = 0; c < tableData.cols; c++) {
           const key = getCellKey(r, c);
           const cell = tableData.data[key];
-
+  
           if (cell?.merged) {
             rowData.push(null);
             continue;
           }
-
+  
           const originalContent = cell?.content || '';
           const filledContent = filledData[key] || '';
-          const fullContent = [originalContent, filledContent].filter(Boolean).join('\n\n');
+          const fullContent = cell?.isHeader ? originalContent : [originalContent, filledContent].filter(Boolean).join('\n\n');
           rowData.push(fullContent);
-
+  
           if (cell?.colspan || cell?.rowspan) {
             const rowspan = cell.rowspan || 1;
             const colspan = cell.colspan || 1;
             if (rowspan > 1 || colspan > 1) {
               merges.push({
-                s: { r: r + 1, c: c },
-                e: { r: r + rowspan - 1 + 1, c: c + colspan - 1 }
+                s: { r: r, c: c },
+                e: { r: r + rowspan - 1, c: c + colspan - 1 }
               });
             }
           }
         }
         aoa.push(rowData);
       }
-
+  
       const worksheet = XLSX.utils.aoa_to_sheet(aoa);
       worksheet['!merges'] = merges;
       
-      const colWidths = headerRow.map((h, i) => {
-        let max_width = h.length;
-        for (let r = 1; r < aoa.length; r++) {
-          if (aoa[r][i]) {
-            const cell_length = aoa[r][i]!.split('\n')[0].length;
-            if (cell_length > max_width) {
-              max_width = cell_length;
+      const colWidths = Array.from({ length: tableData.cols }).map((_, c) => {
+        let max_width = 0;
+        for (let r = 0; r < aoa.length; r++) {
+            if (aoa[r][c]) {
+                const cell_length = aoa[r][c]!.split('\n')[0].length;
+                if (cell_length > max_width) {
+                    max_width = cell_length;
+                }
             }
-          }
         }
         return { wch: Math.min(max_width + 2, 60) };
-      });
+    });
       worksheet['!cols'] = colWidths;
       
       const workbook = XLSX.utils.book_new();
@@ -149,7 +163,6 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
   const handleGenerateZip = async () => {
     setIsGenerating(true);
-    // Revoke any existing blob URL to prevent memory leaks
     if (zipBlobUrl) {
       URL.revokeObjectURL(zipBlobUrl);
     }
@@ -175,7 +188,6 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         setZipBlobUrl(URL.createObjectURL(zipBlob));
         toast({ title: "Fichiers prêts !", description: "Vous pouvez maintenant télécharger le fichier ZIP." });
         
-        // Log the "form_filled" event
         logAnalyticsEvent({
             event_type: 'form_filled',
             target_type: 'form',
@@ -192,6 +204,40 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
   const zipFilename = `${formName}_${generateTimestamp()}.zip`;
 
+  const renderGridCell = (r: number, c: number) => {
+    const key = getCellKey(r, c);
+    const cellData = tableData.data[key];
+    if (cellData?.merged) return null;
+
+    if (cellData?.isHeader) {
+      return (
+        <div
+          key={key}
+          className="flex flex-col gap-2 p-3 border rounded-lg bg-slate-200 justify-center items-center"
+          style={{ gridColumn: `span ${cellData?.colspan || 1}`, gridRow: `span ${cellData?.rowspan || 1}` }}
+        >
+          <Label className="text-base font-semibold text-slate-900 text-center">{cellData?.content}</Label>
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        key={key} 
+        className="flex flex-col gap-2 p-3 border rounded-lg bg-slate-50"
+        style={{ gridColumn: `span ${cellData?.colspan || 1}`, gridRow: `span ${cellData?.rowspan || 1}` }}
+      >
+        <Label className="text-sm font-medium text-slate-800">{cellData?.content || ''}</Label>
+        <Textarea
+          placeholder="Votre réponse..."
+          value={filledData[key] || ''}
+          onChange={(e) => handleInputChange(key, e.target.value)}
+          className="h-24 bg-white"
+        />
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
@@ -201,27 +247,7 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         <ScrollArea className="flex-grow pr-6">
           <div id="printable-table-container-for-fill" className="p-4 bg-white grid gap-4" style={{ gridTemplateColumns: `repeat(${tableData.cols}, 1fr)` }}>
             {Array.from({ length: tableData.rows }).map((_, r) =>
-              Array.from({ length: tableData.cols }).map((_, c) => {
-                const key = getCellKey(r, c);
-                const cellData = tableData.data[key];
-                if (cellData?.merged) return null;
-                
-                return (
-                  <div 
-                    key={key} 
-                    className="flex flex-col gap-2 p-3 border rounded-lg bg-slate-50"
-                    style={{ gridColumn: `span ${cellData?.colspan || 1}`, gridRow: `span ${cellData?.rowspan || 1}` }}
-                  >
-                    <Label className="text-sm font-medium text-slate-800">{cellData?.content || (tableData.headers?.[c] || `Colonne ${c+1}`)}</Label>
-                    <Textarea
-                      placeholder="Votre réponse..."
-                      value={filledData[key] || ''}
-                      onChange={(e) => handleInputChange(key, e.target.value)}
-                      className="h-24 bg-white"
-                    />
-                  </div>
-                );
-              })
+              Array.from({ length: tableData.cols }).map((_, c) => renderGridCell(r, c))
             )}
           </div>
         </ScrollArea>
@@ -253,20 +279,11 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         </DialogFooter>
 
         {/* Hidden printable element for PDF generation */}
-        <div className="absolute -left-[9999px] top-0 w-[1000px]">
-            <div id="printable-table-container" className="p-4 bg-white">
-                <h2 className="text-2xl font-bold mb-4 text-black">{formName}</h2>
-                <p className="text-sm mb-4 text-black">Rempli le: {generateTimestamp()}</p>
+        <div className="absolute -left-[9999px] top-0 w-[1200px]">
+            <div id="printable-table-container" className="p-8 bg-white">
+                <h2 className="text-3xl font-bold mb-2 text-black">{formName}</h2>
+                <p className="text-lg mb-6 text-black">Rempli le: {generateTimestamp().replace('_', ' à ')}</p>
                 <table className="border-collapse w-full text-black">
-                    <thead>
-                        <tr>
-                            {Array.from({ length: tableData.cols }).map((_, c) => (
-                                <th key={`h-${c}`} className="border border-black p-2 bg-slate-200 text-sm font-bold text-left">
-                                    {tableData.headers?.[c] || `Colonne ${c + 1}`}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
                     <tbody>
                         {Array.from({ length: tableData.rows }).map((_, r) => (
                             <tr key={`r-${r}`}>
@@ -277,17 +294,28 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
 
                                     const originalContent = cell?.content || '';
                                     const filledContent = filledData[key] || '';
+                                    
+                                    const CellComponent = cell?.isHeader ? 'th' : 'td';
+                                    const cellStyle = {
+                                      border: '1px solid black',
+                                      padding: '8px',
+                                      verticalAlign: 'top',
+                                      fontSize: '14px',
+                                      backgroundColor: cell?.isHeader ? '#E2E8F0' : '#FFFFFF',
+                                    };
 
                                     return (
-                                        <td
+                                        <CellComponent
                                             key={key}
                                             colSpan={cell?.colspan || 1}
                                             rowSpan={cell?.rowspan || 1}
-                                            className="border border-black p-2 align-top text-xs"
+                                            style={cellStyle}
                                         >
-                                            <div className="font-semibold">{originalContent}</div>
-                                            <div className="mt-1 text-blue-800 whitespace-pre-wrap">{filledContent}</div>
-                                        </td>
+                                            <div style={{fontWeight: cell?.isHeader ? 'bold' : 'normal'}}>{originalContent}</div>
+                                            {!cell?.isHeader && filledContent && (
+                                                <div style={{marginTop: '4px', color: '#1E40AF', whiteSpace: 'pre-wrap'}}>{filledContent}</div>
+                                            )}
+                                        </CellComponent>
                                     );
                                 })}
                             </tr>
