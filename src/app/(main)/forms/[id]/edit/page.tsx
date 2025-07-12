@@ -96,7 +96,7 @@ export default function EditFormPage() {
         name,
         reference,
         edition,
-        issue_date: issueDate ? issueDate.toISOString() : null,
+        issue_date: issueDate ? issueDate.toISOString().split('T')[0] : null,
         page_count: pageCount === '' ? null : Number(pageCount),
         table_data: finalTableData,
         files
