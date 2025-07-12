@@ -19,6 +19,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function NewFormPage() {
   const router = useRouter();
@@ -129,15 +136,19 @@ export default function NewFormPage() {
                         )}
                         >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {issueDate ? format(issueDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                        {issueDate ? format(issueDate, "dd/MM/yyyy") : <span>Choisir une date</span>}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                         <Calendar
-                        mode="single"
-                        selected={issueDate}
-                        onSelect={setIssueDate}
-                        initialFocus
+                            mode="single"
+                            captionLayout="dropdown-buttons"
+                            fromYear={new Date().getFullYear() - 10}
+                            toYear={new Date().getFullYear() + 5}
+                            selected={issueDate}
+                            onSelect={setIssueDate}
+                            initialFocus
+                            locale={fr}
                         />
                     </PopoverContent>
                 </Popover>
