@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 function PageSkeleton() {
     return (
@@ -93,7 +95,10 @@ function FormsPageContent() {
   }, []);
 
   const filteredForms = useMemo(() => {
-    return forms.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return forms.filter(f => 
+      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (f.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [forms, searchTerm]);
 
   const openDeleteDialog = (id: string) => {
@@ -132,7 +137,7 @@ function FormsPageContent() {
                 <div className="relative max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Rechercher un formulaire..." 
+                    placeholder="Rechercher par nom, référence..." 
                     className="pl-9 bg-slate-50"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -169,13 +174,16 @@ function FormsPageContent() {
                             <CardHeader>
                                 <CardTitle className="truncate" title={form.name}>{form.name}</CardTitle>
                                 <CardDescription>
-                                     Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                     {form.reference ? <Badge variant="outline">{form.reference}</Badge> : 'Aucune référence'}
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-grow">
+                            <CardContent className="flex-grow space-y-2">
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <FileTextIcon className="h-4 w-4" />
                                     <span>{form.table_data ? 'Formulaire avec tableau' : 'Formulaire simple'}</span>
+                                </div>
+                                 <div className="text-xs text-muted-foreground">
+                                     Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2">

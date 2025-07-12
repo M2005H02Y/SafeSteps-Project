@@ -8,16 +8,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { addForm, TableData, FileAttachment } from '@/lib/data';
 import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function NewFormPage() {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [reference, setReference] = useState('');
+  const [edition, setEdition] = useState('');
+  const [issueDate, setIssueDate] = useState<Date | undefined>();
+  const [pageCount, setPageCount] = useState<number | ''>('');
+
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isTableEnabled, setIsTableEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +49,15 @@ export default function NewFormPage() {
     
     try {
       const tableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
-      const success = await addForm({ name, table_data: tableData, files });
+      const success = await addForm({ 
+        name, 
+        reference,
+        edition,
+        issue_date: issueDate ? issueDate.toISOString() : null,
+        page_count: pageCount === '' ? null : Number(pageCount),
+        table_data: tableData, 
+        files 
+      });
 
       if (success) {
         toast({
@@ -85,10 +103,56 @@ export default function NewFormPage() {
           <CardHeader>
             <CardTitle>Détails du formulaire</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="form-name">Nom du formulaire</Label>
               <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+               <div className="space-y-2">
+                <Label htmlFor="form-reference">Référence</Label>
+                <Input id="form-reference" placeholder="ex: FRM-SEC-001" value={reference} onChange={e => setReference(e.target.value)} />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="form-edition">Édition</Label>
+                <Input id="form-edition" placeholder="ex: V2.1" value={edition} onChange={e => setEdition(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="form-issue-date">Date d'émission</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !issueDate && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {issueDate ? format(issueDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={issueDate}
+                        onSelect={setIssueDate}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="form-page-count">Nombre de pages</Label>
+                <Input 
+                    id="form-page-count" 
+                    type="number" 
+                    placeholder="ex: 3" 
+                    value={pageCount} 
+                    onChange={e => setPageCount(e.target.value === '' ? '' : parseInt(e.target.value, 10))} 
+                    min="1"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

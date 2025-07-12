@@ -55,6 +55,10 @@ export interface TableData {
 export type Form = {
   id: string;
   name: string;
+  reference: string | null;
+  edition: string | null;
+  issue_date: string | null;
+  page_count: number | null;
   last_updated: string;
   table_data?: TableData;
   files?: FileAttachment[];

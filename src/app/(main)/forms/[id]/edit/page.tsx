@@ -8,13 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getFormById, updateForm, Form, TableData, FileAttachment } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import EnhancedDynamicTable from '@/components/enhanced-dynamic-table';
 import FileUpload from '@/components/file-upload';
 import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function EditFormPage() {
   const router = useRouter();
@@ -23,6 +28,11 @@ export default function EditFormPage() {
   
   const [form, setForm] = useState<Form | null>(null);
   const [name, setName] = useState('');
+  const [reference, setReference] = useState('');
+  const [edition, setEdition] = useState('');
+  const [issueDate, setIssueDate] = useState<Date | undefined>();
+  const [pageCount, setPageCount] = useState<number | ''>('');
+  
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [tableData, setTableData] = useState<TableData | undefined>(undefined);
   const [isTableEnabled, setIsTableEnabled] = useState(false);
@@ -39,6 +49,11 @@ export default function EditFormPage() {
         if (formData) {
           setForm(formData);
           setName(formData.name);
+          setReference(formData.reference || '');
+          setEdition(formData.edition || '');
+          setIssueDate(formData.issue_date ? new Date(formData.issue_date) : undefined);
+          setPageCount(formData.page_count ?? '');
+          
           setFiles(formData.files || []);
 
           if (formData.table_data) {
@@ -69,7 +84,15 @@ export default function EditFormPage() {
     
     try {
       const finalTableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
-      const success = await updateForm(id, { name, table_data: finalTableData, files });
+      const success = await updateForm(id, { 
+        name,
+        reference,
+        edition,
+        issue_date: issueDate ? issueDate.toISOString() : null,
+        page_count: pageCount === '' ? null : Number(pageCount),
+        table_data: finalTableData, 
+        files 
+      });
 
       if (success) {
         toast({
@@ -102,7 +125,15 @@ export default function EditFormPage() {
         </PageHeader>
         <Card>
           <CardHeader><CardTitle><Skeleton className="h-6 w-1/3" /></CardTitle></CardHeader>
-          <CardContent><Skeleton className="h-10 w-full" /></CardContent>
+          <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <div className="grid grid-cols-4 gap-4">
+                 <Skeleton className="h-10 w-full" />
+                 <Skeleton className="h-10 w-full" />
+                 <Skeleton className="h-10 w-full" />
+                 <Skeleton className="h-10 w-full" />
+              </div>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle><Skeleton className="h-6 w-1/4" /></CardTitle></CardHeader>
@@ -149,6 +180,52 @@ export default function EditFormPage() {
                 <Label htmlFor="form-name">Nom du formulaire</Label>
                 <Input id="form-name" placeholder="ex: Check-list quotidienne de l'équipement" required value={name} onChange={e => setName(e.target.value)} />
               </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="form-reference">Référence</Label>
+                    <Input id="form-reference" placeholder="ex: FRM-SEC-001" value={reference} onChange={e => setReference(e.target.value)} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="form-edition">Édition</Label>
+                    <Input id="form-edition" placeholder="ex: V2.1" value={edition} onChange={e => setEdition(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="form-issue-date">Date d'émission</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !issueDate && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {issueDate ? format(issueDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={issueDate}
+                            onSelect={setIssueDate}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="form-page-count">Nombre de pages</Label>
+                    <Input 
+                        id="form-page-count" 
+                        type="number" 
+                        placeholder="ex: 3" 
+                        value={pageCount} 
+                        onChange={e => setPageCount(e.target.value === '' ? '' : parseInt(e.target.value, 10))} 
+                        min="1"
+                    />
+                </div>
+            </div>
           </CardContent>
         </Card>
 

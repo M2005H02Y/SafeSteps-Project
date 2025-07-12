@@ -54,7 +54,11 @@ Supabase sera notre source de vérité pour toutes les données (postes, standar
       name text not null,
       table_data jsonb,
       files jsonb,
-      last_updated timestamp with time zone default timezone('utc'::text, now()) not null
+      last_updated timestamp with time zone default timezone('utc'::text, now()) not null,
+      reference text,
+      edition text,
+      issue_date date,
+      page_count integer
     );
 
     -- Activer la sécurité au niveau des lignes (RLS) - Étape CRUCIALE

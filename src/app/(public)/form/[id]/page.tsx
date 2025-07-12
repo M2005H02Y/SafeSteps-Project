@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import ImprovedFillableTable from '@/components/improved-fillable-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import OcpLogo from '@/app/ocplogo.png';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
@@ -162,6 +164,13 @@ export default function FormPublicPage() {
     
     const imageFiles = form.files?.filter(f => f.type === 'image') || [];
     const otherFiles = form.files?.filter(f => f.type !== 'image') || [];
+    
+    const metadataItems = [
+        { label: "Référence", value: form.reference },
+        { label: "Édition", value: form.edition },
+        { label: "Date d'émission", value: form.issue_date ? format(new Date(form.issue_date), "dd MMMM yyyy", { locale: fr }) : null },
+        { label: "Pages", value: form.page_count },
+    ].filter(item => item.value);
 
     return (
         <>
@@ -177,9 +186,13 @@ export default function FormPublicPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-2xl">{form.name}</CardTitle>
-                            <CardDescription>
-                                Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                            </CardDescription>
+                            <div className="text-sm text-muted-foreground pt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                {metadataItems.map(item => (
+                                    <div key={item.label}>
+                                        <span className="font-semibold">{item.label}:</span> {item.value}
+                                    </div>
+                                ))}
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {imageFiles.length > 0 && (
@@ -242,11 +255,9 @@ export default function FormPublicPage() {
             </div>
              {isFillModalOpen && (
                 <ImprovedFillableTable
-                    formName={form.name}
-                    tableData={form.table_data}
+                    form={form}
                     isOpen={isFillModalOpen}
                     onClose={() => setIsFillModalOpen(false)}
-                    formId={form.id}
                 />
             )}
         </>

@@ -9,31 +9,29 @@ import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { TableData, logAnalyticsEvent } from '@/lib/data';
+import { Form, TableData, logAnalyticsEvent } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
 import { Download, Loader2, FileArchive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ImprovedFillableTableProps {
-  formName: string;
-  tableData?: TableData;
+  form: Form;
   isOpen: boolean;
   onClose: () => void;
-  formId: string;
 }
 
 const getCellKey = (row: number, col: number) => `${row}-${col}`;
 
-export default function ImprovedFillableTable({ formName, tableData, isOpen, onClose, formId }: ImprovedFillableTableProps) {
+export default function ImprovedFillableTable({ form, isOpen, onClose }: ImprovedFillableTableProps) {
   const { toast } = useToast();
   const [filledData, setFilledData] = useState<Record<string, string>>({});
   const [zipBlobUrl, setZipBlobUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    // Cleanup function to revoke the blob URL when the component unmounts
-    // or when a new blob URL is created.
     return () => {
       if (zipBlobUrl) {
         URL.revokeObjectURL(zipBlobUrl);
@@ -41,16 +39,15 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     };
   }, [zipBlobUrl]);
 
-  // Reset state when the dialog is closed.
   useEffect(() => {
     if (!isOpen) {
       setIsGenerating(false);
       setZipBlobUrl(null);
-      // We keep filledData so the user doesn't lose their work if they accidentally close the modal.
     }
   }, [isOpen]);
 
-  if (!tableData) return null;
+  if (!form.table_data) return null;
+  const tableData = form.table_data;
 
   const handleInputChange = (key: string, value: string) => {
     setFilledData(prev => ({ ...prev, [key]: value }));
@@ -181,8 +178,8 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     try {
         const zip = new JSZip();
         const timestamp = generateTimestamp();
-        zip.file(`${formName}_${timestamp}.pdf`, pdfBlob);
-        zip.file(`${formName}_${timestamp}.xlsx`, excelBlob);
+        zip.file(`${form.name}_${timestamp}.pdf`, pdfBlob);
+        zip.file(`${form.name}_${timestamp}.xlsx`, excelBlob);
 
         const zipBlob = await zip.generateAsync({ type: "blob" });
         setZipBlobUrl(URL.createObjectURL(zipBlob));
@@ -191,7 +188,7 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         logAnalyticsEvent({
             event_type: 'form_filled',
             target_type: 'form',
-            target_id: formId,
+            target_id: form.id,
         });
 
     } catch (e) {
@@ -202,7 +199,7 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
     }
   };
 
-  const zipFilename = `${formName}_${generateTimestamp()}.zip`;
+  const zipFilename = `${form.name}_${generateTimestamp()}.zip`;
 
   const renderGridCell = (r: number, c: number) => {
     const key = getCellKey(r, c);
@@ -237,12 +234,19 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
       </div>
     );
   };
+  
+  const metadataItems = [
+    { label: "Référence", value: form.reference },
+    { label: "Édition", value: form.edition },
+    { label: "Date d'émission", value: form.issue_date ? format(new Date(form.issue_date), "dd MMMM yyyy", { locale: fr }) : null },
+    { label: "Pages", value: form.page_count },
+  ].filter(item => item.value);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Remplir le formulaire: {formName}</DialogTitle>
+          <DialogTitle>Remplir le formulaire: {form.name}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-grow pr-6">
           <div id="printable-table-container-for-fill" className="p-4 bg-white grid gap-4" style={{ gridTemplateColumns: `repeat(${tableData.cols}, 1fr)` }}>
@@ -281,8 +285,15 @@ export default function ImprovedFillableTable({ formName, tableData, isOpen, onC
         {/* Hidden printable element for PDF generation */}
         <div className="absolute -left-[9999px] top-0 w-[1200px]">
             <div id="printable-table-container" className="p-8 bg-white">
-                <h2 className="text-3xl font-bold mb-2 text-black">{formName}</h2>
-                <p className="text-lg mb-6 text-black">Rempli le: {generateTimestamp().replace('_', ' à ')}</p>
+                <h2 className="text-3xl font-bold mb-2 text-black">{form.name}</h2>
+                <p className="text-lg mb-4 text-black">Rempli le: {generateTimestamp().replace('_', ' à ')}</p>
+                <div className="text-sm text-black mb-6 flex flex-wrap gap-x-6 gap-y-2 border-y py-2">
+                    {metadataItems.map(item => (
+                        <div key={item.label}>
+                            <span className="font-bold">{item.label}:</span> {item.value}
+                        </div>
+                    ))}
+                </div>
                 <table className="border-collapse w-full text-black">
                     <tbody>
                         {Array.from({ length: tableData.rows }).map((_, r) => (

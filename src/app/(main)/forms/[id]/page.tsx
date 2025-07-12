@@ -13,6 +13,9 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImprovedFillableTable from '@/components/improved-fillable-table';
 import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
@@ -100,6 +103,33 @@ function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     );
 }
 
+function FormMetadata({form}: {form: Form}) {
+    const metadataItems = [
+        { label: "Référence", value: form.reference },
+        { label: "Édition", value: form.edition },
+        { label: "Date d'émission", value: form.issue_date ? format(new Date(form.issue_date), "dd/MM/yyyy") : null },
+        { label: "Nb. de pages", value: form.page_count },
+    ].filter(item => item.value);
+
+    if (metadataItems.length === 0) return null;
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Métadonnées</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {metadataItems.map(item => (
+                    <div key={item.label} className="flex justify-between items-center text-sm">
+                        <span className="font-medium text-muted-foreground">{item.label}</span>
+                        <span className="font-semibold">{item.value}</span>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function FormDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -141,6 +171,7 @@ export default function FormDetailPage() {
           </div>
           <div className="space-y-6">
             <Skeleton className="h-[250px] w-full" />
+             <Skeleton className="h-[150px] w-full" />
           </div>
         </div>
       </div>
@@ -157,7 +188,7 @@ export default function FormDetailPage() {
   return (
     <>
     <div className="flex flex-col h-full">
-      <PageHeader title={form.name}>
+      <PageHeader title={form.name} description={`Mis à jour le ${new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`}>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => router.push('/forms')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -214,6 +245,7 @@ export default function FormDetailPage() {
 
           <div className="space-y-6">
             <QRCode type="form" id={id} />
+             <FormMetadata form={form} />
              {otherFiles.length > 0 && (
               <Card>
                 <CardHeader>
@@ -241,11 +273,9 @@ export default function FormDetailPage() {
     
     {isFillModalOpen && (
         <ImprovedFillableTable
-            formName={form.name}
-            tableData={form.table_data}
+            form={form}
             isOpen={isFillModalOpen}
             onClose={() => setIsFillModalOpen(false)}
-            formId={id}
         />
     )}
     </>
