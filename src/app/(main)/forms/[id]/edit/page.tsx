@@ -91,15 +91,18 @@ export default function EditFormPage() {
     
     try {
       const finalTableData = isTableEnabled ? tableRef.current?.getTableData() : undefined;
-      const success = await updateForm(id, { 
+      
+      const payload: Partial<Omit<Form, 'id' | 'last_updated'>> = {
         name,
         reference,
         edition,
         issue_date: issueDate ? issueDate.toISOString() : null,
         page_count: pageCount === '' ? null : Number(pageCount),
-        table_data: finalTableData, 
-        files 
-      });
+        table_data: finalTableData,
+        files
+      };
+      
+      const success = await updateForm(id, payload);
 
       if (success) {
         toast({
