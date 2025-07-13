@@ -181,13 +181,16 @@ export function WorkstationSafetyForm({
 
     const [otherEpiValue, setOtherEpiValue] = useState('');
     const [otherPermitValue, setOtherPermitValue] = useState('');
-
+    
+    // This effect ensures that we initialize the "other" text fields
+    // if the initial data contains a custom value.
     useEffect(() => {
-        const otherEpi = initialEpi.find(item => !epiItems.some(predefined => predefined.label === item));
+        const otherEpi = initialEpi.find(item => !epiItems.some(predefined => predefined.label === item) && item !== OTHER_EPI_LABEL);
         if (otherEpi) {
             setOtherEpiValue(otherEpi);
         }
-        const otherPermit = initialPermits.find(item => !permitItems.some(predefined => predefined.label === item));
+
+        const otherPermit = initialPermits.find(item => !permitItems.some(predefined => predefined.label === item) && item !== OTHER_PERMIT_LABEL);
         if (otherPermit) {
             setOtherPermitValue(otherPermit);
         }
@@ -198,7 +201,9 @@ export function WorkstationSafetyForm({
         const otherIndex = finalSelection.indexOf(OTHER_EPI_LABEL);
         
         if (otherIndex > -1) {
+            // Remove the placeholder label
             finalSelection.splice(otherIndex, 1);
+            // Add the actual text value if it's not empty
             if (otherEpiValue.trim()) {
                 finalSelection.push(otherEpiValue.trim());
             }
@@ -219,16 +224,47 @@ export function WorkstationSafetyForm({
         onPermitsChange(finalSelection);
     };
 
+    // This effect synchronizes the main state when the "other" text field changes
     useEffect(() => {
-        handleEpiChange(initialEpi);
+        const isOtherEpiSelected = initialEpi.some(item => 
+            !epiItems.some(predefined => predefined.label === item) || item === OTHER_EPI_LABEL
+        );
+
+        if (isOtherEpiSelected) {
+            const newEpi = initialEpi.filter(item => 
+                epiItems.some(predefined => predefined.label === item) || item === OTHER_EPI_LABEL
+            );
+            if (otherEpiValue.trim()) {
+                newEpi.push(otherEpiValue.trim());
+            } else {
+                 newEpi.push(OTHER_EPI_LABEL)
+            }
+            onEpiChange(newEpi);
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [otherEpiValue]);
 
     useEffect(() => {
-        handlePermitChange(initialPermits);
+        const isOtherPermitSelected = initialPermits.some(item => 
+            !permitItems.some(predefined => predefined.label === item) || item === OTHER_PERMIT_LABEL
+        );
+        if (isOtherPermitSelected) {
+            const newPermits = initialPermits.filter(item => 
+                permitItems.some(predefined => predefined.label === item) || item === OTHER_PERMIT_LABEL
+            );
+            if (otherPermitValue.trim()) {
+                newPermits.push(otherPermitValue.trim());
+            } else {
+                newPermits.push(OTHER_PERMIT_LABEL)
+            }
+            onPermitsChange(newPermits);
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [otherPermitValue]);
     
+    // Determine the checked state for the "Autre" checkbox
+    const isOtherEpiChecked = initialEpi.some(item => !epiItems.some(predefined => predefined.label === item) || item === OTHER_EPI_LABEL);
+    const isOtherPermitChecked = initialPermits.some(item => !permitItems.some(predefined => predefined.label === item) || item === OTHER_PERMIT_LABEL);
 
     return (
         <Card>
@@ -263,3 +299,5 @@ export function WorkstationSafetyForm({
         </Card>
     );
 }
+
+    
