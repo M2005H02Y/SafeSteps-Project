@@ -39,7 +39,11 @@ import {
   Thermometer,
   Leaf,
   Bot,
-  Drama
+  Drama,
+  Users,
+  Award,
+  Wrench,
+  AlertTriangle
 } from 'lucide-react';
 import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -103,6 +107,8 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   const hasSafetyData = (workstation.epi && workstation.epi.length > 0) || 
                        (workstation.special_permits && workstation.special_permits.length > 0) || 
                        (workstation.risks && workstation.risks.length > 0);
+  
+  const hasAdditionalInfo = workstation.human_resources || workstation.required_authorizations || workstation.material_resources || workstation.specific_instructions;
   
   const predefinedEpiLabels = Object.keys(safetyIconMap);
 
@@ -210,6 +216,20 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                   )}
                 </CardContent>
              </Card>
+          )}
+
+          {hasAdditionalInfo && (
+            <Card>
+                <CardHeader>
+                  <CardTitle>Informations Complémentaires</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {workstation.human_resources && <div><h4 className="font-semibold flex items-center gap-2 mb-1"><Users className="h-5 w-5 text-primary"/>Moyens Humains</h4><p className="text-muted-foreground text-sm whitespace-pre-wrap">{workstation.human_resources}</p></div>}
+                    {workstation.required_authorizations && <div><h4 className="font-semibold flex items-center gap-2 mb-1"><Award className="h-5 w-5 text-primary"/>Habilitations</h4><p className="text-muted-foreground text-sm whitespace-pre-wrap">{workstation.required_authorizations}</p></div>}
+                    {workstation.material_resources && <div><h4 className="font-semibold flex items-center gap-2 mb-1"><Wrench className="h-5 w-5 text-primary"/>Moyens Matériels</h4><p className="text-muted-foreground text-sm whitespace-pre-wrap">{workstation.material_resources}</p></div>}
+                    {workstation.specific_instructions && <div><h4 className="font-semibold flex items-center gap-2 mb-1"><AlertTriangle className="h-5 w-5 text-primary"/>Consignes Particulières</h4><p className="text-muted-foreground text-sm whitespace-pre-wrap">{workstation.specific_instructions}</p></div>}
+                </CardContent>
+            </Card>
           )}
         
         </div>

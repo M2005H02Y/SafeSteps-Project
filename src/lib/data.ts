@@ -34,6 +34,10 @@ export type Workstation = {
   epi?: string[];
   special_permits?: string[];
   risks?: Risk[];
+  human_resources?: string | null;
+  required_authorizations?: string | null;
+  material_resources?: string | null;
+  specific_instructions?: string | null;
 };
 
 export type Standard = {

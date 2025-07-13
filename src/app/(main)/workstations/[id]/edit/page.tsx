@@ -42,6 +42,12 @@ export default function EditWorkstationPage() {
   const [specialPermits, setSpecialPermits] = useState<string[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
 
+  // New text fields
+  const [humanResources, setHumanResources] = useState('');
+  const [requiredAuthorizations, setRequiredAuthorizations] = useState('');
+  const [materialResources, setMaterialResources] = useState('');
+  const [specificInstructions, setSpecificInstructions] = useState('');
+
   const OTHER_ENGINE_VALUE = 'AUTRE';
 
   useEffect(() => {
@@ -76,6 +82,12 @@ export default function EditWorkstationPage() {
           setEpi(wsData.epi || []);
           setSpecialPermits(wsData.special_permits || []);
           setRisks(wsData.risks || []);
+
+          // Set initial new fields
+          setHumanResources(wsData.human_resources || '');
+          setRequiredAuthorizations(wsData.required_authorizations || '');
+          setMaterialResources(wsData.material_resources || '');
+          setSpecificInstructions(wsData.specific_instructions || '');
 
         }
         setIsLoading(false);
@@ -112,6 +124,10 @@ export default function EditWorkstationPage() {
         epi,
         special_permits: specialPermits,
         risks,
+        human_resources: humanResources,
+        required_authorizations: requiredAuthorizations,
+        material_resources: materialResources,
+        specific_instructions: specificInstructions,
       });
 
       if (success) {
@@ -231,6 +247,31 @@ export default function EditWorkstationPage() {
           onPermitsChange={setSpecialPermits}
           onRisksChange={setRisks}
         />
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Ressources et Consignes (Optionnel)</CardTitle>
+                <CardDescription>Détaillez les moyens humains, matériels, habilitations et consignes spécifiques.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="human-resources">Moyens Humains Nécessaires</Label>
+                    <Textarea id="human-resources" placeholder="ex: 1 opérateur, 1 superviseur..." value={humanResources} onChange={e => setHumanResources(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="required-authorizations">Habilitations Nécessaires</Label>
+                    <Textarea id="required-authorizations" placeholder="ex: Habilitation électrique B1V, CACES 3..." value={requiredAuthorizations} onChange={e => setRequiredAuthorizations(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="material-resources">Moyens Matériels Nécessaires</Label>
+                    <Textarea id="material-resources" placeholder="ex: Pont roulant, chariot élévateur, outils spécifiques..." value={materialResources} onChange={e => setMaterialResources(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="specific-instructions">Consignes de Sécurité Particulières</Label>
+                    <Textarea id="specific-instructions" placeholder="ex: Port du harnais obligatoire, consignation machine avant intervention..." value={specificInstructions} onChange={e => setSpecificInstructions(e.target.value)} />
+                </div>
+            </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
