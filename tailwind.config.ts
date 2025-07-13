@@ -2,6 +2,14 @@ import type {Config} from 'tailwindcss';
 
 const colors = require('tailwindcss/colors');
 
+// To silence the deprecation warnings, we can remove the deprecated colors
+// before spreading them into the theme.
+delete (colors as any)['lightBlue'];
+delete (colors as any)['warmGray'];
+delete (colors as any)['trueGray'];
+delete (colors as any)['coolGray'];
+delete (colors as any)['blueGray'];
+
 export default {
   darkMode: ['class'],
   content: [
