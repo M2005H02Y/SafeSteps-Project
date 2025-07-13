@@ -31,7 +31,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 
-const engines = [
+const engins = [
   "NIV KOM", "ARR CAT", "Bulls D9", "Bulls D11", "Camion ravitaillement GO CAT", 
   "Chargeuse 992K", "Chargeuse 994F", "NIV CAT", "Paydozer KOM", 
   "Sondeuse DKS", "Sondeuse SKF"
@@ -459,10 +459,10 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-bold text-slate-900">Engins Configurés</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-3">
-                  {engines.map(engine => (
-                    <Link key={engine} href={`/workstations?engine=${encodeURIComponent(engine)}`} className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors">
+                  {engins.map(engin => (
+                    <Link key={engin} href={`/workstations?engine=${encodeURIComponent(engin)}`} className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors">
                       <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span>{engine}</span>
+                      <span>{engin}</span>
                     </Link>
                   ))}
                   <Link href="/workstations/new?newEngine=true" className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
@@ -489,7 +489,6 @@ export default function DashboardPage() {
                 </div>
             </div>
         </div>
-
       </main>
     </div>
   );
