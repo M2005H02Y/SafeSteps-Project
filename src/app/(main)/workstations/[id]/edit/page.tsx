@@ -208,10 +208,10 @@ export default function EditWorkstationPage() {
                 <Input id="ws-name" placeholder="ex: Ligne d'assemblage Alpha" required value={name} onChange={(e) => setName(e.target.value)} />
               </div>
                <div className="space-y-2">
-                <Label htmlFor="ws-type">Type d'engine</Label>
+                <Label htmlFor="ws-type">Type d'engin</Label>
                  <Select onValueChange={setType} value={type} required>
                     <SelectTrigger id="ws-type">
-                        <SelectValue placeholder="Sélectionnez un type d'engine" />
+                        <SelectValue placeholder="Sélectionnez un type d'engin" />
                     </SelectTrigger>
                     <SelectContent>
                         {engineTypes.map(engine => (
@@ -223,7 +223,7 @@ export default function EditWorkstationPage() {
                    {type === OTHER_ENGINE_VALUE && (
                     <Input
                         id="ws-custom-type"
-                        placeholder="Entrez le nom de l'engine"
+                        placeholder="Entrez le nom de l'engin"
                         required
                         value={customType}
                         onChange={e => setCustomType(e.target.value)}
@@ -286,3 +286,5 @@ export default function EditWorkstationPage() {
     </form>
   );
 }
+
+    

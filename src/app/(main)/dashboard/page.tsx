@@ -170,7 +170,7 @@ export default function DashboardPage() {
         XLSX.utils.book_append_sheet(wb, wsSummary, "Résumé");
 
         const elementData = [
-            ...(analytics.consultationsByEngine.length > 0 ? analytics.consultationsByEngine.map(d => ({ Type: "Engine", Élément: d.name, Vues: d.value })) : [{ Type: "Engine", Élément: "N/A", Vues: 0 }]),
+            ...(analytics.consultationsByEngine.length > 0 ? analytics.consultationsByEngine.map(d => ({ Type: "Engin", Élément: d.name, Vues: d.value })) : [{ Type: "Engin", Élément: "N/A", Vues: 0 }]),
             ...(analytics.consultationsByStandard.length > 0 ? analytics.consultationsByStandard.map(d => ({ Type: "Standard", Élément: d.name, Vues: d.value })) : [{ Type: "Standard", Élément: "N/A", Vues: 0 }]),
             ...(analytics.consultationsByForm.length > 0 ? analytics.consultationsByForm.map(d => ({ Type: "Formulaire", Élément: d.name, Vues: d.value })) : [{ Type: "Formulaire", Élément: "N/A", Vues: 0 }]),
         ];
@@ -309,7 +309,7 @@ export default function DashboardPage() {
   ] : [];
 
   const chartRow1 = [
-    { title: "Consultations par Engine", description: `Nombre de scans par type de poste (${timeRange}j).`, data: analytics?.consultationsByEngine },
+    { title: "Consultations par Engin", description: `Nombre de scans par type de poste (${timeRange}j).`, data: analytics?.consultationsByEngine },
     { title: "Top Standards Consultés", description: `Les standards les plus vus (${timeRange}j).`, data: analytics?.consultationsByStandard },
     { title: "Top Formulaires Consultés", description: `Les formulaires les plus vus (${timeRange}j).`, data: analytics?.consultationsByForm }
   ];
@@ -456,7 +456,7 @@ export default function DashboardPage() {
             <Card className="glass-effect p-6 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                   <Cog className="h-6 w-6 text-primary" />
-                  <h3 className="text-xl font-bold text-slate-900">Engines Configurés</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Engins Configurés</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-x-6 gap-y-3">
                   {engines.map(engine => (
@@ -467,7 +467,7 @@ export default function DashboardPage() {
                   ))}
                   <Link href="/workstations/new?newEngine=true" className="flex items-center gap-2 text-sm text-slate-700 hover:text-primary transition-colors cursor-pointer">
                       <div className="h-2 w-2 rounded-full bg-slate-300"></div>
-                      <span>Ajouter un engine...</span>
+                      <span>Ajouter un engin...</span>
                   </Link>
               </div>
             </Card>
@@ -493,4 +493,5 @@ export default function DashboardPage() {
       </main>
     </div>
   );
- 
+
+    

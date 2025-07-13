@@ -268,7 +268,7 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
 function PageSkeleton() {
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <PageHeader title="Postes de Travail" description="Gestion des 11 types d'engines industriels">
+        <PageHeader title="Postes de Travail" description="Gestion des types d'engins industriels">
           <Skeleton className="h-10 w-36" />
         </PageHeader>
         <main className="flex-1 p-4 md:p-6 overflow-hidden">
@@ -390,7 +390,7 @@ function WorkstationsPageContent() {
     <>
       <div className="flex flex-col h-full overflow-hidden">
         <div className="print-hidden">
-          <PageHeader title="Postes de Travail" description={engineFilter ? `Filtré par: ${engineFilter}` : "Gestion des 11 types d'engines industriels"}>
+          <PageHeader title="Postes de Travail" description={engineFilter ? `Filtré par: ${engineFilter}` : "Gestion des types d'engins industriels"}>
             <Button asChild className="gradient-primary">
                 <Link href="/workstations/new">
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -510,3 +510,5 @@ export default function WorkstationsPage() {
     </Suspense>
   )
 }
+
+    

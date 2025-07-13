@@ -19,7 +19,7 @@ import OcpLogo from '@/app/ocplogo.png';
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", subLabel: "Vue d'ensemble", icon: LayoutGrid },
-  { href: "/workstations", label: "Postes de Travail", subLabel: "Gestion des engines", icon: Cog },
+  { href: "/workstations", label: "Postes de Travail", subLabel: "Gestion des engins", icon: Cog },
   { href: "/standards", label: "Standards", subLabel: "Documents standards", icon: FileText },
   { href: "/forms", label: "Formulaires", subLabel: "Formulaires configurables", icon: File },
 ];
@@ -71,3 +71,5 @@ export default function AppSidebar() {
     </>
   );
 }
+
+    
