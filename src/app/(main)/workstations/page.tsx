@@ -23,7 +23,23 @@ import {
   ShieldCheck,
   HardHat,
   FileCheck,
-  Biohazard
+  Biohazard,
+  Shirt,
+  Footprints,
+  Hand,
+  Glasses,
+  Wind,
+  EarOff,
+  Activity,
+  Shield,
+  FileText,
+  Mountain,
+  Flame,
+  Atom,
+  Thermometer,
+  Leaf,
+  Bot,
+  Drama
 } from 'lucide-react';
 import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +60,34 @@ import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+
+const safetyIconMap: { [key: string]: React.ReactNode } = {
+  // EPI
+  'Tenue de Travail': <Shirt className="h-4 w-4 text-muted-foreground" />,
+  'Casque': <HardHat className="h-4 w-4 text-muted-foreground" />,
+  'Chaussures de sécurité': <Footprints className="h-4 w-4 text-muted-foreground" />,
+  'Gants de sécurité ordinaires': <Hand className="h-4 w-4 text-muted-foreground" />,
+  'Lunettes de Protection Ordinaires': <Glasses className="h-4 w-4 text-muted-foreground" />,
+  'Masque à gaz': <Wind className="h-4 w-4 text-muted-foreground" />,
+  'Casque anti-Bruit': <EarOff className="h-4 w-4 text-muted-foreground" />,
+  'Harnais de sécurité': <Activity className="h-4 w-4 text-muted-foreground" />,
+  'Écran Facial': <Shield className="h-4 w-4 text-muted-foreground" />,
+  'Masque anti-poussière': <Wind className="h-4 w-4 text-muted-foreground" />,
+  // Permis
+  'Autorisation de Travail': <FileText className="h-4 w-4 text-muted-foreground" />,
+  'Plan de Consignation': <FileText className="h-4 w-4 text-muted-foreground" />,
+  'Espace Confiné': <Search className="h-4 w-4 text-muted-foreground" />,
+  'Travaux en Hauteur': <Mountain className="h-4 w-4 text-muted-foreground" />,
+  'Permis de Fouille': <Search className="h-4 w-4 text-muted-foreground" />,
+  'Permis de Feu': <Flame className="h-4 w-4 text-muted-foreground" />,
+  // Risques
+  'Dangers Chimiques': <Atom className="h-5 w-5 text-destructive" />,
+  'Dangers Physiques': <Thermometer className="h-5 w-5 text-destructive" />,
+  'Dangers Environnementaux': <Leaf className="h-5 w-5 text-destructive" />,
+  'Dangers Biologiques': <Biohazard className="h-5 w-5 text-destructive" />,
+  'Dangers Ergonomiques': <Bot className="h-5 w-5 text-destructive" />,
+  'Autres Dangers': <Drama className="h-5 w-5 text-destructive" />,
+};
 
 
 // Component for displaying workstation details
@@ -106,16 +150,26 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                   {workstation.epi && workstation.epi.length > 0 && (
                     <div>
                       <h3 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>Équipements de Protection Individuelle (EPI)</h3>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {workstation.epi.map(item => <li key={item}>{item}</li>)}
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        {workstation.epi.map(item => (
+                          <li key={item} className="flex items-center gap-3">
+                            {safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />}
+                            <span>{item}</span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}
                   {workstation.special_permits && workstation.special_permits.length > 0 && (
                      <div>
                       <h3 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h3>
-                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {workstation.special_permits.map(item => <li key={item}>{item}</li>)}
+                       <ul className="space-y-2 text-sm text-muted-foreground">
+                        {workstation.special_permits.map(item => (
+                          <li key={item} className="flex items-center gap-3">
+                            {safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />}
+                            <span>{item}</span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -125,8 +179,11 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                        <div className="space-y-2 text-sm">
                         {workstation.risks.map(risk => (
                           <div key={risk.category} className="p-2 border-l-4 border-destructive/50 bg-destructive/10 rounded-r-md">
-                            <p className="font-semibold text-destructive">{risk.category}</p>
-                            <p className="text-muted-foreground pl-2">{risk.description}</p>
+                            <p className="font-semibold text-destructive flex items-center gap-2">
+                              {safetyIconMap[risk.category] || <Biohazard className="h-5 w-5 text-destructive" />} 
+                              {risk.category}
+                            </p>
+                            <p className="text-muted-foreground pl-9">{risk.description}</p>
                           </div>
                         ))}
                       </div>

@@ -12,10 +12,54 @@ import {
     ShieldCheck,
     HardHat,
     FileCheck,
-    Biohazard
+    Biohazard,
+    Shirt,
+    Footprints,
+    Hand,
+    Glasses,
+    Wind,
+    EarOff,
+    Activity,
+    Shield,
+    FileText,
+    Mountain,
+    Flame,
+    Atom,
+    Thermometer,
+    Leaf,
+    Bot,
+    Drama
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OcpLogo from '@/app/ocplogo.png';
+
+const safetyIconMap: { [key: string]: React.ReactNode } = {
+  // EPI
+  'Tenue de Travail': <Shirt className="h-4 w-4 text-muted-foreground" />,
+  'Casque': <HardHat className="h-4 w-4 text-muted-foreground" />,
+  'Chaussures de sécurité': <Footprints className="h-4 w-4 text-muted-foreground" />,
+  'Gants de sécurité ordinaires': <Hand className="h-4 w-4 text-muted-foreground" />,
+  'Lunettes de Protection Ordinaires': <Glasses className="h-4 w-4 text-muted-foreground" />,
+  'Masque à gaz': <Wind className="h-4 w-4 text-muted-foreground" />,
+  'Casque anti-Bruit': <EarOff className="h-4 w-4 text-muted-foreground" />,
+  'Harnais de sécurité': <Activity className="h-4 w-4 text-muted-foreground" />,
+  'Écran Facial': <Shield className="h-4 w-4 text-muted-foreground" />,
+  'Masque anti-poussière': <Wind className="h-4 w-4 text-muted-foreground" />,
+  // Permis
+  'Autorisation de Travail': <FileText className="h-4 w-4 text-muted-foreground" />,
+  'Plan de Consignation': <FileText className="h-4 w-4 text-muted-foreground" />,
+  'Espace Confiné': <Search className="h-4 w-4 text-muted-foreground" />,
+  'Travaux en Hauteur': <Mountain className="h-4 w-4 text-muted-foreground" />,
+  'Permis de Fouille': <Search className="h-4 w-4 text-muted-foreground" />,
+  'Permis de Feu': <Flame className="h-4 w-4 text-muted-foreground" />,
+  // Risques
+  'Dangers Chimiques': <Atom className="h-5 w-5 text-destructive" />,
+  'Dangers Physiques': <Thermometer className="h-5 w-5 text-destructive" />,
+  'Dangers Environnementaux': <Leaf className="h-5 w-5 text-destructive" />,
+  'Dangers Biologiques': <Biohazard className="h-5 w-5 text-destructive" />,
+  'Dangers Ergonomiques': <Bot className="h-5 w-5 text-destructive" />,
+  'Autres Dangers': <Drama className="h-5 w-5 text-destructive" />,
+};
 
 async function WorkstationPublicPage({ params }: { params: { id: string } }) {
   const workstation = await getWorkstationById(params.id);
@@ -67,18 +111,28 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                   {workstation.epi && workstation.epi.length > 0 && (
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>EPI Requis</h4>
-                      <div className="flex flex-wrap gap-2">
-                          {workstation.epi.map(item => <Badge variant="outline" key={item}>{item}</Badge>)}
-                      </div>
+                      <ul className="space-y-2 text-sm">
+                          {workstation.epi.map(item => (
+                            <li key={item} className="flex items-center gap-3 text-muted-foreground">
+                              {safetyIconMap[item] || <FileIcon className="h-4 w-4" />}
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                      </ul>
                     </div>
                   )}
 
                   {workstation.special_permits && workstation.special_permits.length > 0 && (
                      <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h4>
-                       <div className="flex flex-wrap gap-2">
-                          {workstation.special_permits.map(item => <Badge variant="outline" key={item}>{item}</Badge>)}
-                      </div>
+                       <ul className="space-y-2 text-sm">
+                          {workstation.special_permits.map(item => (
+                            <li key={item} className="flex items-center gap-3 text-muted-foreground">
+                              {safetyIconMap[item] || <FileIcon className="h-4 w-4" />}
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                      </ul>
                     </div>
                   )}
 
@@ -88,8 +142,11 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                        <div className="space-y-2 text-sm">
                         {workstation.risks.map(risk => (
                           <div key={risk.category} className="p-2 border-l-4 border-destructive/50 bg-destructive/10 rounded-r-md">
-                            <p className="font-semibold text-destructive">{risk.category}</p>
-                            <p className="text-muted-foreground pl-2">{risk.description}</p>
+                            <p className="font-semibold text-destructive flex items-center gap-2">
+                               {safetyIconMap[risk.category] || <Biohazard className="h-5 w-5 text-destructive" />}
+                               {risk.category}
+                            </p>
+                            <p className="text-muted-foreground pl-9">{risk.description}</p>
                           </div>
                         ))}
                       </div>
