@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Risk } from '@/lib/data';
 import { 
-    HardHat, FileCheck, Biohazard, ShieldQuestion, Construction, Wind, Ear, Fall, Eye, Footprints, Thermometer,
-    FileText, Search, Mountain, Fire, Atom, Leaf, Bot, Drama, Ban
+    HardHat, FileCheck, Biohazard, ShieldQuestion, Construction, Wind, Ear, Activity, Eye, Footprints, Thermometer,
+    FileText, Search, Mountain, Flame, Atom, Leaf, Bot, Drama, Ban
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Textarea } from './ui/textarea';
 
 // --- Data Definitions ---
 const epiItems = [
@@ -22,7 +23,7 @@ const epiItems = [
     { id: 'lunettes-protection', label: 'Lunettes de Protection Ordinaires', icon: <Eye /> },
     { id: 'masque-a-gaz', label: 'Masque à gaz', icon: <Wind /> },
     { id: 'casque-anti-bruit', label: 'Casque anti-Bruit', icon: <Ear /> },
-    { id: 'harnais-securite', label: 'Harnais de sécurité', icon: <Fall /> },
+    { id: 'harnais-securite', label: 'Harnais de sécurité', icon: <Activity /> },
     { id: 'ecran-facial', label: 'Écran Facial', icon: <ShieldQuestion /> },
     { id: 'masque-anti-poussiere', label: 'Masque anti-poussière', icon: <Wind /> },
 ];
@@ -33,7 +34,7 @@ const permitItems = [
     { id: 'espace-confine', label: 'Espace Confiné', icon: <Search /> },
     { id: 'travaux-hauteur', label: 'Travaux en Hauteur', icon: <Mountain /> },
     { id: 'permis-fouille', label: 'Permis de Fouille', icon: <Construction /> },
-    { id: 'permis-de-feu', label: 'Permis de Feu', icon: <Fire /> },
+    { id: 'permis-de-feu', label: 'Permis de Feu', icon: <Flame /> },
 ];
 
 const riskCategories = [
