@@ -103,6 +103,8 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   const hasSafetyData = (workstation.epi && workstation.epi.length > 0) || 
                        (workstation.special_permits && workstation.special_permits.length > 0) || 
                        (workstation.risks && workstation.risks.length > 0);
+  
+  const predefinedEpiLabels = Object.keys(safetyIconMap);
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
@@ -151,12 +153,21 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                     <div>
                       <h3 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>Équipements de Protection Individuelle (EPI)</h3>
                       <ul className="space-y-2 text-sm text-muted-foreground">
-                        {workstation.epi.map(item => (
-                          <li key={item} className="flex items-center gap-3">
-                            {safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />}
-                            <span>{item}</span>
-                          </li>
-                        ))}
+                        {workstation.epi.map(item => {
+                          const isPredefined = predefinedEpiLabels.includes(item);
+                          const label = isPredefined ? item : `Autre EPI: ${item}`;
+                          const icon = safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />;
+                          
+                          // Hide the generic "Autre (EPI)" label if a custom one exists
+                          if (item === 'Autre (EPI)') return null;
+
+                          return (
+                            <li key={item} className="flex items-center gap-3">
+                              {icon}
+                              <span>{label}</span>
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}
@@ -164,12 +175,20 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
                      <div>
                       <h3 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h3>
                        <ul className="space-y-2 text-sm text-muted-foreground">
-                        {workstation.special_permits.map(item => (
-                          <li key={item} className="flex items-center gap-3">
-                            {safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />}
-                            <span>{item}</span>
-                          </li>
-                        ))}
+                        {workstation.special_permits.map(item => {
+                          const isPredefined = predefinedEpiLabels.includes(item);
+                          const label = isPredefined ? item : `Autre Permis: ${item}`;
+                          const icon = safetyIconMap[item] || <FileIcon className="h-4 w-4 text-muted-foreground" />;
+
+                          if (item === 'Autre (Permis)') return null;
+
+                          return (
+                            <li key={item} className="flex items-center gap-3">
+                              {icon}
+                              <span>{label}</span>
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}

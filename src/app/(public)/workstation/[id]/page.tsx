@@ -28,7 +28,8 @@ import {
     Thermometer,
     Leaf,
     Bot,
-    Drama
+    Drama,
+    Search
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OcpLogo from '@/app/ocplogo.png';
@@ -80,6 +81,8 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                        (workstation.special_permits && workstation.special_permits.length > 0) || 
                        (workstation.risks && workstation.risks.length > 0);
 
+  const predefinedSafetyLabels = Object.keys(safetyIconMap);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
       <main className="w-full max-w-2xl mx-auto space-y-6">
@@ -112,12 +115,20 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                     <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>EPI Requis</h4>
                       <ul className="space-y-2 text-sm">
-                          {workstation.epi.map(item => (
-                            <li key={item} className="flex items-center gap-3 text-muted-foreground">
-                              {safetyIconMap[item] || <FileIcon className="h-4 w-4" />}
-                              <span>{item}</span>
-                            </li>
-                          ))}
+                          {workstation.epi.map(item => {
+                            const isPredefined = predefinedSafetyLabels.includes(item);
+                            const label = isPredefined ? item : `Autre EPI: ${item}`;
+                            const icon = safetyIconMap[item] || <FileIcon className="h-4 w-4" />;
+                            
+                            if (item === 'Autre (EPI)') return null;
+
+                            return (
+                                <li key={item} className="flex items-center gap-3 text-muted-foreground">
+                                    {icon}
+                                    <span>{label}</span>
+                                </li>
+                            );
+                          })}
                       </ul>
                     </div>
                   )}
@@ -126,12 +137,20 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                      <div>
                       <h4 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h4>
                        <ul className="space-y-2 text-sm">
-                          {workstation.special_permits.map(item => (
-                            <li key={item} className="flex items-center gap-3 text-muted-foreground">
-                              {safetyIconMap[item] || <FileIcon className="h-4 w-4" />}
-                              <span>{item}</span>
-                            </li>
-                          ))}
+                          {workstation.special_permits.map(item => {
+                            const isPredefined = predefinedSafetyLabels.includes(item);
+                            const label = isPredefined ? item : `Autre Permis: ${item}`;
+                            const icon = safetyIconMap[item] || <FileIcon className="h-4 w-4" />;
+
+                            if (item === 'Autre (Permis)') return null;
+
+                            return (
+                                <li key={item} className="flex items-center gap-3 text-muted-foreground">
+                                    {icon}
+                                    <span>{label}</span>
+                                </li>
+                            );
+                          })}
                       </ul>
                     </div>
                   )}
