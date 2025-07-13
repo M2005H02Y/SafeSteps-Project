@@ -16,6 +16,12 @@ export const engineTypes = [
   "Sondeuse DKS", "Sondeuse SKF"
 ];
 
+// --- NOUVEAUX TYPES POUR LA SÉCURITÉ ---
+export type Risk = {
+  category: string;
+  description: string;
+};
+
 // Types matching the Supabase table structure
 export type Workstation = {
   id: string;
@@ -25,6 +31,9 @@ export type Workstation = {
   created_at: string;
   image?: string;
   files?: FileAttachment[];
+  epi?: string[];
+  special_permits?: string[];
+  risks?: Risk[];
 };
 
 export type Standard = {

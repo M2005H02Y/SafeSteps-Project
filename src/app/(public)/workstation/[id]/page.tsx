@@ -3,7 +3,17 @@ import { notFound } from 'next/navigation';
 import { getWorkstationById, Workstation, logAnalyticsEvent } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
-import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { 
+    File as FileIcon, 
+    FileText as FileTextIcon, 
+    Download, 
+    ImageIcon, 
+    FileSpreadsheet,
+    ShieldCheck,
+    HardHat,
+    FileCheck,
+    Biohazard
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OcpLogo from '@/app/ocplogo.png';
 
@@ -21,6 +31,10 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
   } else {
     notFound();
   }
+
+  const hasSafetyData = (workstation.epi && workstation.epi.length > 0) || 
+                       (workstation.special_permits && workstation.special_permits.length > 0) || 
+                       (workstation.risks && workstation.risks.length > 0);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
@@ -45,10 +59,48 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                 <CardDescription>{workstation.description}</CardDescription>
             )}
           </CardHeader>
-          {workstation.files && workstation.files.length > 0 && (
-             <CardContent>
-                <h3 className="text-lg font-semibold mb-2">Fichiers joints</h3>
-                <div className="space-y-2">
+          <CardContent className="space-y-6">
+            {hasSafetyData && (
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="font-bold text-lg flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-primary"/> Informations de Sécurité</h3>
+                  
+                  {workstation.epi && workstation.epi.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>EPI Requis</h4>
+                      <div className="flex flex-wrap gap-2">
+                          {workstation.epi.map(item => <Badge variant="outline" key={item}>{item}</Badge>)}
+                      </div>
+                    </div>
+                  )}
+
+                  {workstation.special_permits && workstation.special_permits.length > 0 && (
+                     <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h4>
+                       <div className="flex flex-wrap gap-2">
+                          {workstation.special_permits.map(item => <Badge variant="outline" key={item}>{item}</Badge>)}
+                      </div>
+                    </div>
+                  )}
+
+                  {workstation.risks && workstation.risks.length > 0 && (
+                     <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-2"><Biohazard className="h-5 w-5"/>Risques Identifiés</h4>
+                       <div className="space-y-2 text-sm">
+                        {workstation.risks.map(risk => (
+                          <div key={risk.category} className="p-2 border-l-4 border-destructive/50 bg-destructive/10 rounded-r-md">
+                            <p className="font-semibold text-destructive">{risk.category}</p>
+                            <p className="text-muted-foreground pl-2">{risk.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+            )}
+
+            {workstation.files && workstation.files.length > 0 && (
+                <div className="space-y-2 border-t pt-4">
+                  <h3 className="text-lg font-semibold mb-2">Fichiers joints</h3>
                   {workstation.files.map(file => (
                     <a href={file.url} key={file.name} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-md border bg-background/50 hover:bg-accent/80 transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
@@ -62,8 +114,8 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
                     </a>
                   ))}
                 </div>
-              </CardContent>
-          )}
+            )}
+          </CardContent>
         </Card>
       </main>
     </div>

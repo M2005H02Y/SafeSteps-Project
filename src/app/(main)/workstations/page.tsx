@@ -20,6 +20,10 @@ import {
   FileSpreadsheet,
   Edit,
   File as FileIcon,
+  ShieldCheck,
+  HardHat,
+  FileCheck,
+  Biohazard
 } from 'lucide-react';
 import { getWorkstations, deleteWorkstation, Workstation } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +55,10 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
   const handlePrint = () => {
     window.print();
   };
+
+  const hasSafetyData = (workstation.epi && workstation.epi.length > 0) || 
+                       (workstation.special_permits && workstation.special_permits.length > 0) || 
+                       (workstation.risks && workstation.risks.length > 0);
 
   return (
     <ScrollArea className="h-[calc(100vh-160px)] no-scroll-for-print">
@@ -88,6 +96,45 @@ function WorkstationDetails({ workstation }: { workstation: Workstation | null }
               </CardContent>
             )}
           </Card>
+
+          {hasSafetyData && (
+             <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-primary"/> Informations de Sécurité</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {workstation.epi && workstation.epi.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2 mb-2"><HardHat className="h-5 w-5"/>Équipements de Protection Individuelle (EPI)</h3>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {workstation.epi.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {workstation.special_permits && workstation.special_permits.length > 0 && (
+                     <div>
+                      <h3 className="font-semibold flex items-center gap-2 mb-2"><FileCheck className="h-5 w-5"/>Permis Spéciaux</h3>
+                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {workstation.special_permits.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {workstation.risks && workstation.risks.length > 0 && (
+                     <div>
+                      <h3 className="font-semibold flex items-center gap-2 mb-2"><Biohazard className="h-5 w-5"/>Principaux Risques Identifiés</h3>
+                       <div className="space-y-2 text-sm">
+                        {workstation.risks.map(risk => (
+                          <div key={risk.category} className="p-2 border-l-4 border-destructive/50 bg-destructive/10 rounded-r-md">
+                            <p className="font-semibold text-destructive">{risk.category}</p>
+                            <p className="text-muted-foreground pl-2">{risk.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+             </Card>
+          )}
         
         </div>
 

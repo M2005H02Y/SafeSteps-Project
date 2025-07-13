@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { getWorkstationById, updateWorkstation, FileAttachment, Workstation, engineTypes } from '@/lib/data';
+import { getWorkstationById, updateWorkstation, FileAttachment, Workstation, engineTypes, Risk } from '@/lib/data';
 import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -20,7 +20,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { WorkstationSafetyForm } from '@/components/workstation-safety-form';
 
 export default function EditWorkstationPage() {
   const router = useRouter();
@@ -35,6 +36,11 @@ export default function EditWorkstationPage() {
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Safety states
+  const [epi, setEpi] = useState<string[]>([]);
+  const [specialPermits, setSpecialPermits] = useState<string[]>([]);
+  const [risks, setRisks] = useState<Risk[]>([]);
 
   const OTHER_ENGINE_VALUE = 'AUTRE';
 
@@ -65,6 +71,11 @@ export default function EditWorkstationPage() {
               allFiles.push(...wsData.files);
           }
           setFiles(allFiles);
+
+          // Set initial safety data
+          setEpi(wsData.epi || []);
+          setSpecialPermits(wsData.special_permits || []);
+          setRisks(wsData.risks || []);
 
         }
         setIsLoading(false);
@@ -97,7 +108,10 @@ export default function EditWorkstationPage() {
         type: finalType,
         description, 
         image: mainImage?.url,
-        files: otherFiles
+        files: otherFiles,
+        epi,
+        special_permits: specialPermits,
+        risks,
       });
 
       if (success) {
@@ -208,6 +222,15 @@ export default function EditWorkstationPage() {
             </div>
           </CardContent>
         </Card>
+
+        <WorkstationSafetyForm
+          initialEpi={epi}
+          initialPermits={specialPermits}
+          initialRisks={risks}
+          onEpiChange={setEpi}
+          onPermitsChange={setSpecialPermits}
+          onRisksChange={setRisks}
+        />
 
         <Card>
           <CardHeader>

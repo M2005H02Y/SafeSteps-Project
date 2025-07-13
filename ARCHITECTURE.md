@@ -33,7 +33,10 @@ Supabase sera notre source de vérité pour toutes les données (postes, standar
       description text,
       image text,
       files jsonb,
-      created_at timestamp with time zone default timezone('utc'::text, now()) not null
+      created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+      epi jsonb,
+      special_permits jsonb,
+      risks jsonb
     );
 
     -- Création de la table pour les Standards
@@ -91,13 +94,12 @@ Supabase sera notre source de vérité pour toutes les données (postes, standar
 
     ```
     
-    > **MISE À JOUR IMPORTANTE :** Si vous avez déjà créé la table `forms` et que vous devez simplement ajouter les nouvelles colonnes, exécutez la commande suivante à la place :
+    > **MISE À JOUR IMPORTANTE :** Si vous avez déjà créé la table `workstations` et que vous devez simplement ajouter les nouvelles colonnes de sécurité, exécutez la commande suivante à la place :
     > ```sql
-    > alter table public.forms
-    > add column if not exists reference text,
-    > add column if not exists edition text,
-    > add column if not exists issue_date date,
-    > add column if not exists page_count integer;
+    > alter table public.workstations
+    > add column if not exists epi jsonb,
+    > add column if not exists special_permits jsonb,
+    > add column if not exists risks jsonb;
     > ```
 
 3.  **Récupérez vos clés Supabase :**

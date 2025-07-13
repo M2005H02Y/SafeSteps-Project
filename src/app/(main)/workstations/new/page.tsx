@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import FileUpload from '@/components/file-upload';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { addWorkstation, FileAttachment, engineTypes } from '@/lib/data';
+import { addWorkstation, FileAttachment, engineTypes, Risk } from '@/lib/data';
 import { useState, useEffect, Suspense } from 'react';
 import {
   Select,
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from '@/components/ui/skeleton';
+import { WorkstationSafetyForm } from '@/components/workstation-safety-form';
 
 function PageSkeleton() {
   return (
@@ -78,6 +79,11 @@ function NewWorkstationPageContent() {
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Safety states
+  const [epi, setEpi] = useState<string[]>([]);
+  const [specialPermits, setSpecialPermits] = useState<string[]>([]);
+  const [risks, setRisks] = useState<Risk[]>([]);
+
   const OTHER_ENGINE_VALUE = 'AUTRE';
 
   useEffect(() => {
@@ -110,7 +116,10 @@ function NewWorkstationPageContent() {
         type: finalType, 
         description, 
         image: mainImage?.url,
-        files: otherFiles
+        files: otherFiles,
+        epi,
+        special_permits: specialPermits,
+        risks,
       });
 
       if (success) {
@@ -192,6 +201,15 @@ function NewWorkstationPageContent() {
             </div>
           </CardContent>
         </Card>
+
+        <WorkstationSafetyForm
+          initialEpi={[]}
+          initialPermits={[]}
+          initialRisks={[]}
+          onEpiChange={setEpi}
+          onPermitsChange={setSpecialPermits}
+          onRisksChange={setRisks}
+        />
 
         <Card>
           <CardHeader>
