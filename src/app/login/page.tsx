@@ -30,7 +30,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-md p-2">
+            <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-md p-4">
                 <Image src={OcpLogo} alt="SafeSteps Logo" width={96} height={96} className="h-full w-full object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
