@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Cog, FileText, File } from "lucide-react";
+import { LayoutGrid, Cog, FileText, File, LogOut } from "lucide-react";
 import Image from "next/image";
 import {
   SidebarHeader,
@@ -13,9 +13,13 @@ import {
   SidebarMenuButton,
   useSidebar,
   SidebarGroupLabel,
+  SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import OcpLogo from '@/app/ocplogo.png';
+import { logout } from "@/app/login/actions";
+import { Button } from "./ui/button";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", subLabel: "Vue d'ensemble", icon: LayoutGrid },
@@ -68,8 +72,28 @@ export default function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+
+      <SidebarFooter className="mt-auto">
+        <SidebarSeparator />
+        <form action={logout}>
+             <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        type="submit"
+                        tooltip={{ children: "Déconnexion", side: "right" }}
+                        className="h-auto p-2"
+                    >
+                        <div className="flex items-center gap-3">
+                            <LogOut className="h-5 w-5 shrink-0" />
+                            <div className={cn("flex flex-col overflow-hidden transition-all duration-200", state === "collapsed" ? "w-0" : "w-full")}>
+                                <span className="font-medium text-sm text-white">Déconnexion</span>
+                            </div>
+                        </div>
+                   </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </form>
+      </SidebarFooter>
     </>
   );
 }
-
-    
