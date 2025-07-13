@@ -1,6 +1,6 @@
 # Guide de Déploiement Complet pour WorkHub Central
 
-Félicitations pour avoir terminé votre projet ! Ce document vous guide pas à pas pour prendre le projet que vous avez exporté, le configurer sur votre ordinateur, le publier sur GitHub, et le déployer en production avec Vercel et Supabase.
+Félicitations pour avoir terminé votre projet ! Ce document vous guide pas à pas pour prendre le projet que vous avez dans cet environnement, le configurer, le publier sur GitHub, et le déployer en production avec Vercel et Supabase.
 
 ---
 
@@ -36,7 +36,11 @@ Supabase sera notre source de vérité pour toutes les données (postes, standar
       created_at timestamp with time zone default timezone('utc'::text, now()) not null,
       epi jsonb,
       special_permits jsonb,
-      risks jsonb
+      risks jsonb,
+      human_resources text,
+      required_authorizations text,
+      material_resources text,
+      specific_instructions text
     );
 
     -- Création de la table pour les Standards
@@ -93,14 +97,6 @@ Supabase sera notre source de vérité pour toutes les données (postes, standar
     create policy "Anyone can read analytics events." on public.analytics_events for select using (true);
 
     ```
-    
-    > **MISE À JOUR IMPORTANTE :** Si vous avez déjà créé la table `workstations` et que vous devez simplement ajouter les nouvelles colonnes de sécurité, exécutez la commande suivante à la place :
-    > ```sql
-    > alter table public.workstations
-    > add column if not exists epi jsonb,
-    > add column if not exists special_permits jsonb,
-    > add column if not exists risks jsonb;
-    > ```
 
 3.  **Récupérez vos clés Supabase :**
     *   Dans **Project Settings** (icône d'engrenage) > **API**.
@@ -124,10 +120,10 @@ Cloudinary gère le téléversement des images et des fichiers.
 
 ## Étape 2 : Configuration de votre Environnement Local
 
-Une fois le projet téléchargé et décompressé sur votre ordinateur :
+Votre projet est déjà prêt dans cet environnement de développement. Il vous suffit de le connecter aux services externes.
 
-1.  **Ouvrez un terminal** à la racine du projet.
-2.  **Installez les dépendances** en exécutant la commande :
+1.  **Ovrez un terminal** à la racine du projet (ou utilisez le terminal intégré via `Terminal > New Terminal`).
+2.  **Installez les dépendances** (si ce n'est pas déjà fait) en exécutant la commande :
     ```bash
     npm install
     ```
@@ -149,7 +145,7 @@ Une fois le projet téléchargé et décompressé sur votre ordinateur :
     ```bash
     npm run dev
     ```
-    Ouvrez votre navigateur à l'adresse [http://localhost:9003](http://localhost:9003). L'application devrait fonctionner !
+    Ovrez votre navigateur à l'adresse [http://localhost:9003](http://localhost:9003). L'application devrait fonctionner !
 
 > 🚨 **Que faire si j'obtiens une erreur "Clés manquantes" ?**
 > C'est presque toujours un problème avec le fichier `.env.local`. Vérifiez :
@@ -177,7 +173,7 @@ Pour que Vercel puisse déployer votre site, le code doit être sur GitHub.
 C'est la méthode la plus simple et la plus fiable.
 
 1.  Sur la page de votre dépôt GitHub vide, cliquez sur le lien **`uploading an existing file`**.
-2.  Ouvrez le dossier de votre projet sur votre ordinateur.
+2.  Ovrez le dossier de votre projet sur votre ordinateur.
 3.  Sélectionnez **tous les fichiers et dossiers** SAUF :
     *   le dossier `node_modules` (très lourd et inutile)
     *   le dossier `.next` (fichiers de build temporaires)
