@@ -8,23 +8,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Risk } from '@/lib/data';
 import { 
-    HardHat, FileCheck, Biohazard, ShieldQuestion, Construction, Wind, Ear, Activity, Eye, Footprints, Thermometer,
-    FileText, Search, Mountain, Flame, Atom, Leaf, Bot, Drama, Ban
+    HardHat, FileCheck, Biohazard, Shield, Wind, EarOff, Activity, Eye, Footprints, Thermometer,
+    FileText, Search, Mountain, Flame, Atom, Leaf, Bot, Drama, Ban, Shirt, Hand, Glasses
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from './ui/textarea';
 
 // --- Data Definitions ---
 const epiItems = [
-    { id: 'tenue-de-travail', label: 'Tenue de Travail', icon: <Construction /> },
+    { id: 'tenue-de-travail', label: 'Tenue de Travail', icon: <Shirt /> },
     { id: 'casque', label: 'Casque', icon: <HardHat /> },
     { id: 'chaussures-securite', label: 'Chaussures de sécurité', icon: <Footprints /> },
-    { id: 'gants-securite', label: 'Gants de sécurité ordinaires', icon: <Construction /> },
-    { id: 'lunettes-protection', label: 'Lunettes de Protection Ordinaires', icon: <Eye /> },
+    { id: 'gants-securite', label: 'Gants de sécurité ordinaires', icon: <Hand /> },
+    { id: 'lunettes-protection', label: 'Lunettes de Protection Ordinaires', icon: <Glasses /> },
     { id: 'masque-a-gaz', label: 'Masque à gaz', icon: <Wind /> },
-    { id: 'casque-anti-bruit', label: 'Casque anti-Bruit', icon: <Ear /> },
+    { id: 'casque-anti-bruit', label: 'Casque anti-Bruit', icon: <EarOff /> },
     { id: 'harnais-securite', label: 'Harnais de sécurité', icon: <Activity /> },
-    { id: 'ecran-facial', label: 'Écran Facial', icon: <ShieldQuestion /> },
+    { id: 'ecran-facial', label: 'Écran Facial', icon: <Shield /> },
     { id: 'masque-anti-poussiere', label: 'Masque anti-poussière', icon: <Wind /> },
 ];
 
@@ -33,7 +33,7 @@ const permitItems = [
     { id: 'plan-consignation', label: 'Plan de Consignation', icon: <FileText /> },
     { id: 'espace-confine', label: 'Espace Confiné', icon: <Search /> },
     { id: 'travaux-hauteur', label: 'Travaux en Hauteur', icon: <Mountain /> },
-    { id: 'permis-fouille', label: 'Permis de Fouille', icon: <Construction /> },
+    { id: 'permis-fouille', label: 'Permis de Fouille', icon: <Search /> },
     { id: 'permis-de-feu', label: 'Permis de Feu', icon: <Flame /> },
 ];
 
@@ -299,5 +299,7 @@ export function WorkstationSafetyForm({
         </Card>
     );
 }
+
+    
 
     
