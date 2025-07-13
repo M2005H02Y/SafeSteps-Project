@@ -203,9 +203,9 @@ function NewWorkstationPageContent() {
         </Card>
 
         <WorkstationSafetyForm
-          initialEpi={[]}
-          initialPermits={[]}
-          initialRisks={[]}
+          initialEpi={epi}
+          initialPermits={specialPermits}
+          initialRisks={risks}
           onEpiChange={setEpi}
           onPermitsChange={setSpecialPermits}
           onRisksChange={setRisks}
