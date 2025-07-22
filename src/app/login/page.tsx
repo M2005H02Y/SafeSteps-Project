@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Image from "next/image";
 import OcpLogo from '@/app/ocplogo.png';
 import { cn } from "@/lib/utils";
+import LoginBg from '../../../public/login-bg.jpg';
 
 function LoginButton() {
   const { pending } = useFormStatus();
@@ -28,8 +29,11 @@ export default function LoginPage() {
   const [errorMessage, dispatch] = useActionState(authenticate, undefined);
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4 bg-login-background bg-cover bg-center">
-      <div className="absolute inset-0 bg-slate-900/50 z-0"/>
+    <main 
+        className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center"
+        style={{ backgroundImage: `url(${LoginBg.src})` }}
+    >
+      <div className="absolute inset-0 bg-slate-900/50"/>
       <div className="relative z-10 w-full max-w-sm space-y-6 text-center">
         <div className="flex flex-col items-center">
             <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-white p-4 shadow-md">
@@ -44,7 +48,7 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
                 <form action={dispatch} className="space-y-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                         <Label htmlFor="username" className="text-white">Nom d'utilisateur</Label>
                         <Input
                         id="username"
@@ -54,7 +58,7 @@ export default function LoginPage() {
                         required
                         />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                         <Label htmlFor="password" className="text-white">Code d'accès</Label>
                         <Input
                         id="password"
