@@ -12,6 +12,7 @@ import { AlertCircle, LogIn } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Image from "next/image";
 import OcpLogo from '@/app/ocplogo.png';
+import { cn } from "@/lib/utils";
 
 function LoginButton() {
   const { pending } = useFormStatus();
@@ -29,8 +30,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-4 bg-login-background bg-cover bg-center">
       <div className="absolute inset-0 bg-slate-900/50 z-0"/>
-      <div className="relative z-10 w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center text-center">
+      <div className="relative z-10 w-full max-w-sm space-y-6 text-center">
+        <div className="flex flex-col items-center">
             <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-white p-4 shadow-md">
                 <Image src={OcpLogo} alt="SafeSteps Logo" width={128} height={128} className="h-full w-full object-contain" />
             </div>
