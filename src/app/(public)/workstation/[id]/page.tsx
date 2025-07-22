@@ -90,13 +90,14 @@ async function WorkstationPublicPage({ params }: { params: { id: string } }) {
   const predefinedSafetyLabels = Object.keys(safetyIconMap);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
-      <main className="w-full max-w-2xl mx-auto space-y-6">
+    <div className="flex flex-col items-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+      <main className="w-full max-w-2xl mx-auto space-y-8">
         <div className="text-center">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md p-2">
-                <Image src={OcpLogo} alt="SafeSteps Logo" width={80} height={80} className="h-full w-full object-contain" />
+            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-lg p-2">
+                <Image src={OcpLogo} alt="SafeSteps Logo" width={96} height={96} className="h-full w-full object-contain rounded-full" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
+            <h1 className="text-4xl font-bold text-slate-900">SafeSteps</h1>
+            <p className="text-muted-foreground mt-1">Votre sécurité, notre priorité.</p>
         </div>
         
         <Card className="overflow-hidden">

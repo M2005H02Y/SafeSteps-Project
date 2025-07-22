@@ -17,7 +17,7 @@ function LoginButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="w-full" aria-disabled={pending}>
+    <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white" aria-disabled={pending}>
        {pending ? 'Connexion en cours...' : <><LogIn className="mr-2 h-4 w-4" /> Se connecter</>}
     </Button>
   );
@@ -27,24 +27,24 @@ export default function LoginPage() {
   const [errorMessage, dispatch] = useActionState(authenticate, undefined);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-sm space-y-6">
+    <main className="flex min-h-screen items-center justify-center p-4 bg-login-background bg-cover bg-center">
+      <div className="absolute inset-0 bg-slate-900/50 z-0"/>
+      <div className="relative z-10 w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-md p-4">
-                <Image src={OcpLogo} alt="SafeSteps Logo" width={96} height={96} className="h-full w-full object-contain" />
+            <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-white p-4 shadow-md">
+                <Image src={OcpLogo} alt="SafeSteps Logo" width={128} height={128} className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
-            <p className="text-muted-foreground">Procédures & Sécurité</p>
+            <h1 className="text-3xl font-bold text-white drop-shadow-md">SafeSteps</h1>
+            <p className="text-slate-200 mt-2">Votre Sécurité, Notre Priorité</p>
         </div>
-        <Card>
+        <Card className="bg-slate-800/50 backdrop-blur-sm border-white/20">
             <CardHeader>
-                <CardTitle>Connexion</CardTitle>
-                <CardDescription>Veuillez entrer vos identifiants pour accéder à l'application.</CardDescription>
+                {/* Titles removed as requested */}
             </CardHeader>
             <CardContent>
                 <form action={dispatch} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="username">Nom d'utilisateur</Label>
+                        <Label htmlFor="username" className="text-white">Nom d'utilisateur</Label>
                         <Input
                         id="username"
                         name="username"
@@ -54,7 +54,7 @@ export default function LoginPage() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password">Code d'accès</Label>
+                        <Label htmlFor="password" className="text-white">Code d'accès</Label>
                         <Input
                         id="password"
                         name="password"

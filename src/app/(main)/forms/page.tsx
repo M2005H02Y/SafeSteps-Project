@@ -13,8 +13,9 @@ import {
   Trash2,
   FileText as FileTextIcon,
   Edit,
+  Table,
 } from 'lucide-react';
-import { getForms, deleteForm, Form } from '@/lib/data';
+import { getForms, deleteForm, Form, getStandards, Standard } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -29,7 +30,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function PageSkeleton() {
     return (
@@ -40,7 +42,8 @@ function PageSkeleton() {
         <main className="flex-1 p-4 md:p-6">
             <div className="mb-6">
                  <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Skeleton className="h-9 w-full max-w-sm" />
                         <Skeleton className="h-9 w-full max-w-sm" />
                     </CardContent>
                 </Card>
@@ -72,34 +75,39 @@ function PageSkeleton() {
 function FormsPageContent() {
   const router = useRouter();
   const [forms, setForms] = useState<Form[]>([]);
+  const [standards, setStandards] = useState<Standard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStandardId, setSelectedStandardId] = useState<string>('all');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [formToDelete, setFormToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const refreshForms = async () => {
+  const refreshData = async () => {
     setLoading(true);
     try {
-      const freshData = await getForms();
-      setForms(freshData);
+      const [formsData, standardsData] = await Promise.all([getForms(), getStandards()]);
+      setForms(formsData);
+      setStandards(standardsData);
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de charger les formulaires.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible de charger les données.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    refreshForms();
+    refreshData();
   }, []);
 
   const filteredForms = useMemo(() => {
-    return forms.filter(f => 
-      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (f.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [forms, searchTerm]);
+    return forms
+      .filter(f => selectedStandardId === 'all' ? true : f.standard_id === selectedStandardId)
+      .filter(f => 
+        f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (f.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }, [forms, searchTerm, selectedStandardId]);
 
   const openDeleteDialog = (id: string) => {
     setFormToDelete(id);
@@ -111,7 +119,7 @@ function FormsPageContent() {
       const success = await deleteForm(formToDelete);
       if (success) {
         toast({ title: "Formulaire supprimé" });
-        refreshForms();
+        refreshData();
       } else {
         toast({ title: "Erreur", description: "La suppression du formulaire a échoué.", variant: "destructive" });
       }
@@ -119,6 +127,20 @@ function FormsPageContent() {
     }
   };
   
+  const getFormTypeInfo = (form: Form) => {
+    const types = [];
+    if (form.content_blocks?.some(b => b.type === 'paragraph')) {
+        types.push({ icon: <FileTextIcon className="h-4 w-4" />, text: 'Paragraphe' });
+    }
+    if (form.content_blocks?.some(b => b.type === 'table')) {
+        types.push({ icon: <Table className="h-4 w-4" />, text: 'Tableau' });
+    }
+    if (types.length === 0) {
+       return [{ icon: <FileTextIcon className="h-4 w-4" />, text: 'Simple' }];
+    }
+    return types;
+  };
+
   return (
     <>
       <div className="flex flex-col h-full">
@@ -134,14 +156,29 @@ function FormsPageContent() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
             <Card className="mb-6 glass-effect">
               <CardContent className="p-4">
-                <div className="relative max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Rechercher par nom, référence..." 
-                    className="pl-9 bg-slate-50"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Rechercher par nom, référence..." 
+                        className="pl-9 bg-slate-50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <div className="relative">
+                       <Select onValueChange={setSelectedStandardId} value={selectedStandardId}>
+                          <SelectTrigger className="w-full bg-slate-50">
+                              <SelectValue placeholder="Filtrer par standard..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="all">Tous les standards</SelectItem>
+                              {standards.map(standard => (
+                                  <SelectItem key={standard.id} value={standard.id}>{standard.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                    </div>
                 </div>
               </CardContent>
             </Card>
@@ -168,55 +205,62 @@ function FormsPageContent() {
                 </div>
             ) : filteredForms.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredForms.map((form) => (
-                    <Link href={`/forms/${form.id}`} key={form.id} className="block hover:-translate-y-1 transition-transform duration-200">
-                        <Card className="h-full flex flex-col glass-effect hover:shadow-xl transition-shadow">
-                            <CardHeader>
-                                <CardTitle className="truncate" title={form.name}>{form.name}</CardTitle>
-                                <CardDescription>
-                                     {form.reference ? <Badge variant="outline">{form.reference}</Badge> : 'Aucune référence'}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-2">
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <FileTextIcon className="h-4 w-4" />
-                                    <span>{form.table_data ? 'Formulaire avec tableau' : 'Formulaire simple'}</span>
-                                </div>
-                                 <div className="text-xs text-muted-foreground">
-                                     Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2">
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-slate-600 hover:bg-slate-200"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        router.push(`/forms/${form.id}/edit`);
-                                    }}
-                                >
-                                    <Edit className="h-4 w-4" />
-                                    <span className="sr-only">Modifier</span>
-                                </Button>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        openDeleteDialog(form.id);
-                                    }}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Supprimer</span>
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </Link>
-                    ))}
+                    {filteredForms.map((form) => {
+                      const typeInfo = getFormTypeInfo(form);
+                      return (
+                      <Link href={`/forms/${form.id}`} key={form.id} className="block hover:-translate-y-1 transition-transform duration-200">
+                          <Card className="h-full flex flex-col glass-effect hover:shadow-xl transition-shadow">
+                              <CardHeader>
+                                  <CardTitle className="truncate" title={form.name}>{form.name}</CardTitle>
+                                  <CardDescription>
+                                      {form.reference ? <Badge variant="outline">{form.reference}</Badge> : 'Aucune référence'}
+                                  </CardDescription>
+                              </CardHeader>
+                              <CardContent className="flex-grow space-y-2">
+                                  <div className="text-sm text-muted-foreground flex items-center gap-x-4 gap-y-1 flex-wrap">
+                                    <span className="font-semibold">Contenu:</span>
+                                    {typeInfo.map(info => (
+                                      <div key={info.text} className="flex items-center gap-1.5">
+                                        {info.icon}
+                                        <span>{info.text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground pt-2">
+                                      Mis à jour le {new Date(form.last_updated).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                  </div>
+                              </CardContent>
+                              <CardFooter className="flex justify-end gap-2">
+                                  <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-8 w-8 text-slate-600 hover:bg-slate-200"
+                                      onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          router.push(`/forms/${form.id}/edit`);
+                                      }}
+                                  >
+                                      <Edit className="h-4 w-4" />
+                                      <span className="sr-only">Modifier</span>
+                                  </Button>
+                                  <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                      onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          openDeleteDialog(form.id);
+                                      }}
+                                  >
+                                      <Trash2 className="h-4 w-4" />
+                                      <span className="sr-only">Supprimer</span>
+                                  </Button>
+                              </CardFooter>
+                          </Card>
+                      </Link>
+                    )})}
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64 border-2 border-dashed rounded-lg">

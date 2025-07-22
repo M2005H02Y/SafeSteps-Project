@@ -65,6 +65,16 @@ export interface TableData {
   data: Record<string, CellData>;
 }
 
+// --- NOUVEAUX TYPES POUR LES BLOCS DE FORMULAIRE ---
+export type ContentBlock = {
+  id: string; // To uniquely identify a block for react keys
+  type: 'paragraph' | 'table';
+  // Use one of the following based on type
+  template?: string; // for paragraph
+  data?: TableData; // for table
+};
+
+
 export type Form = {
   id: string;
   name: string;
@@ -73,8 +83,11 @@ export type Form = {
   issue_date: string | null;
   page_count: number | null;
   last_updated: string;
-  table_data?: TableData;
+  table_data?: TableData | null; // Kept for backward compatibility
   files?: FileAttachment[];
+  paragraph_template?: string | null; // Kept for backward compatibility
+  content_blocks?: ContentBlock[] | null; // The new modular structure
+  standard_id?: string | null; // <-- NOUVEAU: Pour lier au standard
 };
 
 // --- Analytics Types ---
@@ -371,6 +384,17 @@ export async function getFormById(id: string): Promise<Form | undefined> {
         console.error(`Error fetching form ${id}:`, error);
         return undefined;
     }
+    // Backward compatibility: if content_blocks is null/undefined, create it from old fields
+    if (data && !data.content_blocks) {
+        const blocks: ContentBlock[] = [];
+        if (data.paragraph_template) {
+            blocks.push({ id: 'legacy_p', type: 'paragraph', template: data.paragraph_template });
+        }
+        if (data.table_data) {
+            blocks.push({ id: 'legacy_t', type: 'table', data: data.table_data });
+        }
+        data.content_blocks = blocks;
+    }
     return data;
 }
 
@@ -391,3 +415,6 @@ export async function deleteForm(id: string): Promise<boolean> {
     }
     return true;
 }
+
+// A FAIRE: Vous devrez peut-être ajouter cette colonne `standard_id` à votre table `forms` dans Supabase manuellement.
+// ALTER TABLE public.forms ADD COLUMN standard_id UUID REFERENCES public.standards(id) ON DELETE SET NULL;

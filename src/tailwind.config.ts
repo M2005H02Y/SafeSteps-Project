@@ -10,7 +10,6 @@ delete (colors as any)['trueGray'];
 delete (colors as any)['coolGray'];
 delete (colors as any)['blueGray'];
 
-
 export default {
   darkMode: ['class'],
   content: [
@@ -81,6 +80,7 @@ export default {
       },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(to right, hsl(var(--primary)), hsl(221, 83%, 63%))',
+        'login-background': "url('/login-bg.jpg')",
       },
       borderRadius: {
         lg: 'var(--radius)',

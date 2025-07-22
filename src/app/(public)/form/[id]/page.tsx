@@ -2,13 +2,13 @@
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
-import { getFormById, Form, logAnalyticsEvent } from '@/lib/data';
+import { getFormById, Form, logAnalyticsEvent, ContentBlock } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import Image from 'next/image';
-import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet, ExternalLink } from 'lucide-react';
+import { File as FileIcon, FileText as FileTextIcon, Download, ImageIcon, FileSpreadsheet, ExternalLink, Table } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import ImprovedFillableTable from '@/components/improved-fillable-table';
+import FillableFormModal from '@/components/fillable-form-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import OcpLogo from '@/app/ocplogo.png';
 import { format } from 'date-fns';
@@ -16,11 +16,7 @@ import { fr } from 'date-fns/locale';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
-        return (
-            <div className="text-center text-muted-foreground p-8">
-                <p>Ce formulaire n'a pas de tableau de données.</p>
-            </div>
-        );
+        return null;
     }
     
     const getCellKey = (r: number, c: number) => `${r}-${c}`;
@@ -96,13 +92,30 @@ function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     );
 }
 
+function ParagraphPreview({ template }: { template: string | null | undefined }) {
+  if (!template) return null;
+
+  const previewHtml = template.replace(/\[([^\]]+)\]/g, 
+    '<span class="font-semibold text-primary bg-primary/10 p-1 rounded-sm mx-1">$&</span>'
+  );
+
+  return (
+    <div 
+      className="p-4 border rounded-md bg-background/50 text-sm prose prose-sm max-w-none"
+      dangerouslySetInnerHTML={{ __html: previewHtml }}
+    />
+  );
+}
+
+
 function PublicPageSkeleton() {
     return (
          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
             <main className="w-full max-w-4xl mx-auto space-y-6">
                 <div className="text-center">
-                    <Skeleton className="h-20 w-20 rounded-full mx-auto mb-4" />
+                    <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4" />
                     <Skeleton className="h-8 w-48 mx-auto" />
+                    <Skeleton className="h-4 w-64 mx-auto mt-2" />
                 </div>
                 <Card>
                     <CardHeader>
@@ -112,9 +125,6 @@ function PublicPageSkeleton() {
                     <CardContent>
                         <Skeleton className="h-48 w-full" />
                     </CardContent>
-                    <CardFooter>
-                         <Skeleton className="h-10 w-48" />
-                    </CardFooter>
                 </Card>
             </main>
         </div>
@@ -137,7 +147,6 @@ export default function FormPublicPage() {
                     const f = await getFormById(id);
                     if (f) {
                         setForm(f);
-                        // Fire-and-forget logging
                         logAnalyticsEvent({
                             event_type: 'consultation',
                             target_type: 'form',
@@ -164,6 +173,7 @@ export default function FormPublicPage() {
     
     const imageFiles = form.files?.filter(f => f.type === 'image') || [];
     const otherFiles = form.files?.filter(f => f.type !== 'image') || [];
+    const canBeFilled = form.content_blocks && form.content_blocks.length > 0;
     
     const metadataItems = [
         { label: "Référence", value: form.reference },
@@ -174,27 +184,52 @@ export default function FormPublicPage() {
 
     return (
         <>
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
-                <main className="w-full max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-col items-center min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+                <main className="w-full max-w-4xl mx-auto space-y-8">
                     <div className="text-center">
-                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md p-2">
-                            <Image src={OcpLogo} alt="SafeSteps Logo" width={80} height={80} className="h-full w-full object-contain" />
+                        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-lg p-2">
+                            <Image src={OcpLogo} alt="SafeSteps Logo" width={96} height={96} className="h-full w-full object-contain rounded-full" />
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900">SafeSteps</h1>
+                        <h1 className="text-4xl font-bold text-slate-900">SafeSteps</h1>
+                        <p className="text-muted-foreground mt-1">Votre sécurité, notre priorité.</p>
                     </div>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-2xl">{form.name}</CardTitle>
-                            <div className="text-sm text-muted-foreground pt-2 flex flex-wrap gap-x-4 gap-y-1">
-                                {metadataItems.map(item => (
-                                    <div key={item.label}>
-                                        <span className="font-semibold">{item.label}:</span> {item.value}
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                                <div className="flex-1">
+                                    <CardTitle className="text-2xl">{form.name}</CardTitle>
+                                    <div className="text-sm text-muted-foreground pt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                        {metadataItems.map(item => (
+                                            <div key={item.label}>
+                                                <span className="font-semibold">{item.label}:</span> {item.value}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                </div>
+                                 {canBeFilled && (
+                                    <Button onClick={() => setIsFillModalOpen(true)} className="w-full sm:w-auto">
+                                        <FileTextIcon className="mr-2 h-4 w-4" />
+                                        Remplir le formulaire
+                                    </Button>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
+                             {canBeFilled && (
+                                <div className="bg-slate-100 rounded-lg p-4 space-y-4">
+                                    <p className="text-center text-muted-foreground text-sm">
+                                        Bienvenue sur SafeSteps. Remplissez ce formulaire en cliquant sur le bouton ci-dessus.
+                                    </p>
+                                    {form.content_blocks?.map(block => (
+                                        <div key={block.id}>
+                                            {block.type === 'paragraph' && <ParagraphPreview template={block.template} />}
+                                            {block.type === 'table' && <ReadOnlyTable tableData={block.data}/>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {imageFiles.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-semibold mb-2">Images jointes</h3>
@@ -234,27 +269,12 @@ export default function FormPublicPage() {
                                     </div>
                                 </div>
                             )}
-
-                            {form.table_data && (
-                            <div>
-                                    <h3 className="text-lg font-semibold mb-2">Structure du formulaire</h3>
-                                    <ReadOnlyTable tableData={form.table_data}/>
-                                </div>
-                            )}
                         </CardContent>
-                        {form.table_data && (
-                            <CardFooter>
-                                <Button onClick={() => setIsFillModalOpen(true)}>
-                                    <FileTextIcon className="mr-2 h-4 w-4" />
-                                    Remplir et Exporter
-                                </Button>
-                            </CardFooter>
-                        )}
                     </Card>
                 </main>
             </div>
-             {isFillModalOpen && (
-                <ImprovedFillableTable
+             {isFillModalOpen && canBeFilled && (
+                <FillableFormModal
                     form={form}
                     isOpen={isFillModalOpen}
                     onClose={() => setIsFillModalOpen(false)}

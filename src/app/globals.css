@@ -81,6 +81,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Basic Prose styles for rendered HTML */
+  .prose {
+    h3 { @apply text-center text-lg font-bold; }
+    strong, b { @apply font-bold; }
+    em, i { @apply italic; }
+    u { @apply underline; }
+    p { @apply my-2; }
+  }
 }
 
 @layer components {

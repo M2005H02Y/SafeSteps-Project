@@ -2,16 +2,16 @@
 "use client";
 
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { getFormById, Form } from '@/lib/data';
+import { getFormById, Form, ContentBlock } from '@/lib/data';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Edit, FileText as FileTextIcon, ExternalLink, File as FileIcon, ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Edit, FileText as FileTextIcon, ExternalLink, File as FileIcon, ImageIcon, FileSpreadsheet, Table } from 'lucide-react';
 import QRCode from '@/components/qr-code';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import ImprovedFillableTable from '@/components/improved-fillable-table';
+import FillableFormModal from '@/components/fillable-form-modal';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -19,12 +19,7 @@ import { fr } from 'date-fns/locale';
 
 function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
     if (!tableData || !tableData.rows || !tableData.cols) {
-        return (
-            <div className="text-center text-muted-foreground p-8">
-                <p>Ce formulaire n'a pas de tableau configuré.</p>
-                <p className="text-sm">Modifiez le formulaire pour en créer un.</p>
-            </div>
-        );
+        return null; // Don't render anything if no table data
     }
     
     const getCellKey = (r: number, c: number) => `${r}-${c}`;
@@ -74,40 +69,73 @@ function ReadOnlyTable({ tableData }: { tableData: Form['table_data'] }) {
 
 
     return (
-        <div 
-            className="overflow-auto rounded-md border p-2 resize bg-background shadow-sm"
-            style={{ minHeight: '250px' }}
-        >
-            <table className="w-full h-full border-collapse min-w-[40rem]">
-                {headerRows > 0 && (
-                    <thead>
-                        {[...Array(headerRows)].map((_, r) => (
-                            <tr key={`hr-${r}`}>
-                                {[...Array(tableData.cols)].map((_, c) => renderCell(r, c))}
-                            </tr>
-                        ))}
-                    </thead>
-                )}
-                <tbody>
-                    {[...Array(tableData.rows - headerRows)].map((_, r_offset) => {
-                       const r = r_offset + headerRows;
-                       return (
-                           <tr key={`br-${r}`}>
-                                {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
-                           </tr>
-                       )
-                    })}
-                </tbody>
-            </table>
-        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Table className="h-5 w-5" /> Bloc Tableau</CardTitle>
+                <CardDescription>Ceci est la structure du formulaire que vous avez créée.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div 
+                    className="overflow-auto rounded-md border p-2 resize bg-background shadow-sm"
+                    style={{ minHeight: '250px' }}
+                >
+                    <table className="w-full h-full border-collapse min-w-[40rem]">
+                        {headerRows > 0 && (
+                            <thead>
+                                {[...Array(headerRows)].map((_, r) => (
+                                    <tr key={`hr-${r}`}>
+                                        {[...Array(tableData.cols)].map((_, c) => renderCell(r, c))}
+                                    </tr>
+                                ))}
+                            </thead>
+                        )}
+                        <tbody>
+                            {[...Array(tableData.rows - headerRows)].map((_, r_offset) => {
+                            const r = r_offset + headerRows;
+                            return (
+                                <tr key={`br-${r}`}>
+                                    {[...Array(tableData.cols)].map((_, c) => renderCell(r,c))}
+                                </tr>
+                            )
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
+
+function ParagraphPreview({ template }: { template: string | null | undefined }) {
+  if (!template) return null;
+
+  // Replace dynamic fields like [field] with a styled span for preview
+  const previewHtml = template.replace(/\[([^\]]+)\]/g, 
+    '<span class="font-semibold text-primary bg-primary/10 p-1 rounded-sm mx-1">$&</span>'
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><FileTextIcon className="h-5 w-5" /> Bloc Paragraphe</CardTitle>
+        <CardDescription>Ceci est le modèle de texte que les opérateurs rempliront.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div 
+          className="p-4 border rounded-md bg-background/50 text-sm prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: previewHtml }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function FormMetadata({form}: {form: Form}) {
     const metadataItems = [
         { label: "Référence", value: form.reference },
         { label: "Édition", value: form.edition },
-        { label: "Date d'émission", value: form.issue_date ? format(new Date(form.issue_date), "dd/MM/yyyy") : null },
+        { label: "Date d'émission", value: form.issue_date ? format(new Date(form.issue_date + 'T00:00:00Z'), "dd/MM/yyyy") : null },
         { label: "Nb. de pages", value: form.page_count },
     ].filter(item => item.value);
 
@@ -184,6 +212,7 @@ export default function FormDetailPage() {
 
   const imageFiles = form.files?.filter(f => f.type === 'image') || [];
   const otherFiles = form.files?.filter(f => f.type !== 'image') || [];
+  const canBeFilled = form.content_blocks && form.content_blocks.length > 0;
 
   return (
     <>
@@ -200,10 +229,12 @@ export default function FormDetailPage() {
               Modifier
             </Link>
           </Button>
-          <Button onClick={() => setIsFillModalOpen(true)}>
-            <FileTextIcon className="mr-2 h-4 w-4" />
-            Remplir le formulaire
-          </Button>
+          {canBeFilled && (
+            <Button onClick={() => setIsFillModalOpen(true)}>
+              <FileTextIcon className="mr-2 h-4 w-4" />
+              Remplir le formulaire
+            </Button>
+          )}
         </div>
       </PageHeader>
 
@@ -233,15 +264,23 @@ export default function FormDetailPage() {
                 </Card>
              )}
             <FormMetadata form={form} />
-             <Card>
-                <CardHeader>
-                    <CardTitle>Aperçu du tableau</CardTitle>
-                    <CardDescription>Ceci est la structure du formulaire que vous avez créée. Vous pouvez redimensionner ce bloc.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ReadOnlyTable tableData={form.table_data}/>
-                </CardContent>
-             </Card>
+            {form.content_blocks?.map(block => {
+              if (block.type === 'table') {
+                return <ReadOnlyTable key={block.id} tableData={block.data}/>
+              }
+              if (block.type === 'paragraph') {
+                return <ParagraphPreview key={block.id} template={block.template} />
+              }
+              return null;
+            })}
+            
+            { !canBeFilled && (
+                <Card>
+                    <CardContent className="p-6 text-center text-muted-foreground">
+                        Ce formulaire n'a pas de contenu interactif. Modifiez-le pour en ajouter.
+                    </CardContent>
+                </Card>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -271,8 +310,8 @@ export default function FormDetailPage() {
       </main>
     </div>
     
-    {isFillModalOpen && (
-        <ImprovedFillableTable
+    {isFillModalOpen && canBeFilled && (
+        <FillableFormModal
             form={form}
             isOpen={isFillModalOpen}
             onClose={() => setIsFillModalOpen(false)}
